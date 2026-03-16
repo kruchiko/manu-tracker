@@ -7,7 +7,7 @@ export const createOrderSchema = z.object({
   notes: z.string().optional().default(""),
 });
 
-export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+export type CreateOrderInput = z.input<typeof createOrderSchema>;
 
 export interface Order {
   id: number;

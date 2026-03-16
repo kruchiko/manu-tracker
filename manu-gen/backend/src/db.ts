@@ -1,9 +1,9 @@
-import Database from "better-sqlite3";
+import Database, { type Database as DatabaseType } from "better-sqlite3";
 import path from "node:path";
 
 const DB_PATH = process.env.DB_PATH ?? path.join(process.cwd(), "manu-gen.db");
 
-const db = new Database(DB_PATH);
+const db: DatabaseType = new Database(DB_PATH);
 
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
