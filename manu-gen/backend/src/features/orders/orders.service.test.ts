@@ -108,3 +108,38 @@ describe("listOrders", () => {
     expect(orders[1].customer_name).toBe("A");
   });
 });
+
+describe("generateQrCode", () => {
+  it("should return a PNG buffer for a valid order", async () => {
+    const order = ordersService.createOrder({
+      customer_name: "AlphaTech",
+      product_type: "Dental Crown",
+      quantity: 5,
+    });
+    const buffer = await ordersService.generateQrCode(order.id);
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+    expect(buffer[0]).toBe(0x89); // PNG magic byte
+    expect(buffer[1]).toBe(0x50); // 'P'
+  });
+
+  it("should throw AppError 404 when order does not exist", async () => {
+    await expect(ordersService.generateQrCode(999)).rejects.toThrow(AppError);
+  });
+});
+
+describe("generateQrDataUrl", () => {
+  it("should return a data URL string for a valid order", async () => {
+    const order = ordersService.createOrder({
+      customer_name: "AlphaTech",
+      product_type: "Implant",
+      quantity: 3,
+    });
+    const dataUrl = await ordersService.generateQrDataUrl(order.id);
+    expect(dataUrl).toMatch(/^data:image\/png;base64,/);
+  });
+
+  it("should throw AppError 404 when order does not exist", async () => {
+    await expect(ordersService.generateQrDataUrl(999)).rejects.toThrow(AppError);
+  });
+});

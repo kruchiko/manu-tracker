@@ -1,3 +1,4 @@
+import QRCode from "qrcode";
 import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { CreateOrderInput, Order } from "./orders.schema.js";
@@ -57,4 +58,23 @@ export function getOrderByTrayCode(trayCode: string): Order {
 
 export function listOrders(): Order[] {
   return db.prepare("SELECT * FROM orders ORDER BY id DESC").all() as Order[];
+}
+
+export async function generateQrCode(id: number): Promise<Buffer> {
+  const order = getOrderById(id);
+  return QRCode.toBuffer(order.tray_code, {
+    type: "png",
+    width: 300,
+    margin: 2,
+    errorCorrectionLevel: "H",
+  });
+}
+
+export async function generateQrDataUrl(id: number): Promise<string> {
+  const order = getOrderById(id);
+  return QRCode.toDataURL(order.tray_code, {
+    width: 300,
+    margin: 2,
+    errorCorrectionLevel: "H",
+  });
 }
