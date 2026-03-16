@@ -1,0 +1,27 @@
+name: CI — manu-orch
+
+on:
+  push:
+    branches: [main]
+    paths: [manu-orch/**]
+  pull_request:
+    branches: [main]
+    paths: [manu-orch/**]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: manu-orch
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - run: uv sync
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest
