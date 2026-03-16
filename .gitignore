@@ -1,8 +1,6 @@
 # Dependencies
 node_modules/
-.yarn/cache/
-.yarn/unplugged/
-.yarn/install-state.gz
+.yarn/
 .pnp.*
 __pycache__/
 .venv/
