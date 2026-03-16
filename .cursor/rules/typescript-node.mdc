@@ -1,0 +1,82 @@
+---
+description: TypeScript/Node.js standards for manu-gen backend and frontend
+globs: manu-gen/**/*.ts,manu-gen/**/*.tsx
+alwaysApply: false
+---
+
+# TypeScript / Node.js Standards
+
+## Principles
+
+- DRY: extract repeated logic into shared utils or services
+- KISS: prefer simple, readable code over clever abstractions
+- YAGNI: don't build what isn't needed yet
+- Fail fast: validate inputs early, throw meaningful errors
+- Single responsibility: one function/module = one job
+
+## TypeScript
+
+- Strict mode always (`"strict": true`)
+- No `any` — use `unknown` and narrow with type guards
+- Prefer `interface` for public APIs, `type` for unions/composition
+- Explicit return types on all exported functions
+- Use `as const` for literal objects/arrays that shouldn't widen
+
+## Architecture
+
+Feature-based folder structure:
+
+```
+src/
+  features/
+    orders/
+      orders.service.ts
+      orders.controller.ts
+      orders.schema.ts
+      orders.test.ts
+  shared/
+    utils/
+    middleware/
+    errors/
+  config/
+  db.ts
+  index.ts
+```
+
+- Keep business logic out of route handlers
+- Services handle logic, controllers handle HTTP
+- Controllers parse request → call service → send response
+- Use dependency injection over direct imports for testability
+
+## Error Handling
+
+Custom error classes with status codes:
+
+```typescript
+export class AppError extends Error {
+  constructor(
+    public statusCode: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "AppError";
+  }
+}
+```
+
+- Never swallow errors silently
+- Log errors with context (request id, operation name)
+- Centralise error handling in middleware, not in each route
+
+## Async
+
+- Always `await` or `return` promises — never fire-and-forget
+- Use `Promise.all()` for independent async operations
+- Never mix `async/await` with raw `.then()` chains
+
+## Testing
+
+- Unit test pure functions and services
+- Integration test API routes
+- Name tests: `should [behaviour] when [condition]`
+- Arrange-Act-Assert structure

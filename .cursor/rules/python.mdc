@@ -1,0 +1,89 @@
+---
+description: Python standards for manu-eye and manu-orch services
+globs: manu-eye/**/*.py,manu-orch/**/*.py
+alwaysApply: false
+---
+
+# Python Standards
+
+## Principles
+
+- DRY: extract repeated logic into shared modules
+- KISS: prefer simple, readable code over clever abstractions
+- YAGNI: don't build what isn't needed yet
+- Fail fast: validate inputs early, raise meaningful exceptions
+- Single responsibility: one function/module = one job
+
+## Python Style
+
+- Python 3.12+ — use modern syntax (type unions with `|`, `match` statements)
+- Type hints on all function signatures and return types
+- Use `ruff` for linting and formatting, `mypy` in strict mode
+- Use `uv` as package manager
+- Prefer `dataclasses` or Pydantic `BaseModel` for structured data
+- No mutable default arguments
+
+## Architecture (FastAPI — manu-orch)
+
+Feature-based folder structure:
+
+```
+src/
+  features/
+    orders/
+      router.py
+      service.py
+      schemas.py
+      models.py
+    events/
+      router.py
+      service.py
+      schemas.py
+      models.py
+  shared/
+    errors.py
+    dependencies.py
+  db.py
+  config.py
+  main.py
+```
+
+- Routers handle HTTP, services handle logic
+- Pydantic schemas for request/response validation (OpenAPI auto-generated)
+- SQLAlchemy models for DB, Pydantic schemas for API — never mix them
+- Use FastAPI `Depends()` for dependency injection
+
+## Architecture (manu-eye)
+
+Flat structure until complexity demands otherwise:
+
+```
+src/
+  camera.py       # OpenCV capture loop
+  decoder.py      # QR decode + dedup
+  client.py       # HTTP client to manu-orch
+  config.py       # env vars / settings
+  main.py         # entry point
+```
+
+## Error Handling
+
+- Define custom exception classes inheriting from a base `AppError`
+- Use FastAPI exception handlers for consistent API responses
+- Never use bare `except:` — always catch specific exceptions
+- Log errors with context using `structlog` or stdlib `logging`
+
+## Async
+
+- Use `async def` for I/O-bound operations in FastAPI
+- Use `httpx.AsyncClient` for outbound HTTP calls
+- Use `asyncio.gather()` for independent concurrent operations
+- Never mix sync and async without `run_in_executor`
+
+## Testing
+
+- Use `pytest` with `pytest-asyncio` for async tests
+- Name tests: `test_should_[behaviour]_when_[condition]`
+- Use `httpx.ASGITransport` for integration tests against FastAPI
+- Fixtures for DB sessions — always rollback after each test
+- Arrange-Act-Assert structure
