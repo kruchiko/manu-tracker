@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+.yarn/
+.pnp.*
+__pycache__/
+.venv/
+
+# Build output
+dist/
+build/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python
+*.pyc
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+
+# uv
+uv.lock

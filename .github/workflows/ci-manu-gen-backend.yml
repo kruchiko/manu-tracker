@@ -1,0 +1,32 @@
+name: CI — manu-gen backend
+
+on:
+  push:
+    branches: [main]
+    paths: [manu-gen/backend/**]
+  pull_request:
+    branches: [main]
+    paths: [manu-gen/backend/**]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: manu-gen/backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - run: corepack enable
+      - run: yarn install --immutable
+
+      - run: yarn typecheck
+      - run: yarn build
+      - run: yarn test
+        env:
+          DB_PATH: ":memory:"
