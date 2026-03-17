@@ -1,21 +1,20 @@
-import express from "express";
-import cors from "cors";
-import { ordersRouter } from "./features/orders/orders.controller.js";
-import { errorHandler } from "./shared/middleware/error-handler.js";
+import { app } from "./app.js";
+import { logger } from "./shared/logger.js";
+import db from "./db.js";
 
-const app = express();
 const PORT = process.env.PORT ?? 3000;
 
-app.use(cors());
-app.use(express.json());
-
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+const server = app.listen(PORT, () => {
+  logger.info("manu-gen backend started", { port: PORT });
 });
 
-app.use("/orders", ordersRouter);
-app.use(errorHandler);
+function shutdown() {
+  server.close(() => {
+    db.close();
+    process.exit(0);
+  });
+  setTimeout(() => process.exit(1), 10_000).unref();
+}
 
-app.listen(PORT, () => {
-  console.log(`manu-gen backend listening on http://localhost:${PORT}`);
-});
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);

@@ -8,8 +8,8 @@ const db: DatabaseType = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");
 db.pragma("foreign_keys = ON");
 
-db.exec(`
-  CREATE TABLE IF NOT EXISTS orders (
+const MIGRATIONS: string[] = [
+  `CREATE TABLE orders (
     id            INTEGER PRIMARY KEY AUTOINCREMENT,
     order_number  TEXT NOT NULL,
     customer_name TEXT NOT NULL,
@@ -18,7 +18,28 @@ db.exec(`
     notes         TEXT DEFAULT '',
     tray_code     TEXT NOT NULL UNIQUE,
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
-  )
-`);
+  )`,
+];
+
+db.prepare(
+  "CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY)",
+).run();
+
+const applied = new Set(
+  (db.prepare("SELECT version FROM schema_migrations").all() as { version: number }[]).map(
+    (r) => r.version,
+  ),
+);
+
+const insertVersion = db.prepare("INSERT INTO schema_migrations (version) VALUES (?)");
+
+db.transaction(() => {
+  MIGRATIONS.forEach((sql, index) => {
+    if (!applied.has(index)) {
+      db.prepare(sql).run();
+      insertVersion.run(index);
+    }
+  });
+})();
 
 export default db;
