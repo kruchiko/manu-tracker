@@ -1,0 +1,10 @@
+node_modules
+dist
+.yarn
+.env
+.env.local
+.git
+*.md
+*.test.ts
+*.test.tsx
+src/test-setup.ts
