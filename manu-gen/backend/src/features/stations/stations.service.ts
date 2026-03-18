@@ -26,10 +26,6 @@ const stmtAssignEye = db.prepare(`UPDATE stations SET eye_id = @eye_id WHERE id 
 
 const stmtDeleteStation = db.prepare(`DELETE FROM stations WHERE id = ?`);
 
-const stmtCountEventsByStation = db.prepare(
-  `SELECT COUNT(*) AS cnt FROM tracking_events WHERE station_id = ?`,
-);
-
 function generateId(): string {
   return `station-${crypto.randomUUID().slice(0, 8)}`;
 }
