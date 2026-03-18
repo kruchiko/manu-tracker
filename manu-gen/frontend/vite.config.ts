@@ -4,12 +4,14 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
+const API_TARGET = process.env.API_TARGET ?? "http://localhost:3000";
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
       "/orders": {
-        target: "http://localhost:3000",
+        target: API_TARGET,
         configure: (proxy) => {
           proxy.on("proxyReq", (_, req) => {
             console.log(`[proxy] → ${req.method} ${req.url}`);
