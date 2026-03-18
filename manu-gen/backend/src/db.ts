@@ -19,6 +19,20 @@ const MIGRATIONS: string[] = [
     tray_code     TEXT NOT NULL UNIQUE,
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
+  `CREATE TABLE stations (
+    id       TEXT PRIMARY KEY,
+    name     TEXT NOT NULL,
+    location TEXT NOT NULL DEFAULT '',
+    eye_id   TEXT UNIQUE
+  )`,
+  `CREATE TABLE tracking_events (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    tray_code   TEXT NOT NULL,
+    station_id  TEXT NOT NULL REFERENCES stations(id),
+    eye_id      TEXT NOT NULL,
+    captured_at TEXT NOT NULL,
+    received_at TEXT NOT NULL DEFAULT (datetime('now'))
+  )`,
 ];
 
 db.prepare(

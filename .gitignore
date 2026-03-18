@@ -40,3 +40,6 @@ Thumbs.db
 
 # uv
 uv.lock
+
+# Local tool installs
+.local/

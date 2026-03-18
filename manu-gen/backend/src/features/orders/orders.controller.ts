@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../../shared/errors/app-error.js";
+import { zodToAppError } from "../../shared/validation.js";
 import { createOrderSchema } from "./orders.schema.js";
 import * as ordersService from "./orders.service.js";
 
@@ -32,14 +33,7 @@ ordersRouter.post("/", (req, res, next) => {
     res.status(201).json(order);
   } catch (err) {
     if (err instanceof ZodError) {
-      next(
-        new AppError(
-          400,
-          err.issues
-            .map((e) => (e.path.length > 0 ? `${e.path.join(".")}: ${e.message}` : e.message))
-            .join(", "),
-        ),
-      );
+      next(zodToAppError(err));
       return;
     }
     next(err);
