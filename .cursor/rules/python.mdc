@@ -39,21 +39,16 @@ src/
 ## Error Handling
 
 - Define custom exception classes inheriting from a base `AppError`
-- Use FastAPI exception handlers for consistent API responses
 - Never use bare `except:` — always catch specific exceptions
 - Log errors with context using `structlog` or stdlib `logging`
 
 ## Async
 
-- Use `async def` for I/O-bound operations in FastAPI
-- Use `httpx.AsyncClient` for outbound HTTP calls
+- Use `httpx.AsyncClient` for outbound HTTP calls to manu-gen backend
 - Use `asyncio.gather()` for independent concurrent operations
-- Never mix sync and async without `run_in_executor`
 
 ## Testing
 
-- Use `pytest` with `pytest-asyncio` for async tests
+- Use `pytest` for tests
 - Name tests: `test_should_[behaviour]_when_[condition]`
-- Use `httpx.ASGITransport` for integration tests against FastAPI
-- Fixtures for DB sessions — always rollback after each test
 - Arrange-Act-Assert structure
