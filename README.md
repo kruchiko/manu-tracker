@@ -6,9 +6,10 @@ Ceramic order tracking system — QR labels on trays, cameras at stations, live 
 
 | Service | Description | Tech |
 |---------|-------------|------|
-| **manu-gen** | QR label creator — order form + thermal print | React + Node.js |
+| **manu-gen** | QR label creator — order form, QR generation, event tracking, dashboard | React + Node.js |
 | **manu-eye** | Camera station — reads QR codes, sends events | Python + OpenCV |
-| **manu-orch** | Orchestrator — collects events, serves status | Python + FastAPI |
+
+> Event ingestion and analytics will be added to manu-gen when manu-eye is ready.
 
 ## Getting Started
 
@@ -26,10 +27,8 @@ cd manu-gen/frontend && yarn install && yarn dev
  React form  ──> Node API      Camera ──> Python QR reader
                   │                           │
                   │         POST /events      │
-                  ▼              ◄─────────────┘
-              [manu-orch]
-               FastAPI ──> SQLite
+                  ◄───────────────────────────┘
                   │
                   ▼
-              Dashboard
+               SQLite ──> Dashboard
 ```
