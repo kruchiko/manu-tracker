@@ -105,7 +105,7 @@ def run() -> None:
             new_codes = dedup.filter_new(codes)
 
             for code in new_codes:
-                captured_at = datetime.now(timezone.utc).isoformat()
+                captured_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
                 try:
                     client.send_event(
                         tray_code=code,
