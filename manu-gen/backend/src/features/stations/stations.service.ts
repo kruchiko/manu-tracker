@@ -20,7 +20,15 @@ const stmtList = db.prepare(
 
 const stmtClearEye = db.prepare(`UPDATE stations SET eye_id = NULL WHERE eye_id = ?`);
 
+const stmtClearEyeById = db.prepare(`UPDATE stations SET eye_id = NULL WHERE id = ?`);
+
 const stmtAssignEye = db.prepare(`UPDATE stations SET eye_id = @eye_id WHERE id = @id`);
+
+const stmtDeleteStation = db.prepare(`DELETE FROM stations WHERE id = ?`);
+
+const stmtCountEventsByStation = db.prepare(
+  `SELECT COUNT(*) AS cnt FROM tracking_events WHERE station_id = ?`,
+);
 
 function generateId(): string {
   return `station-${crypto.randomUUID().slice(0, 8)}`;
@@ -62,4 +70,31 @@ const assignEyeTx = db.transaction((stationId: string, input: AssignEyeInput): v
 export function assignEye(stationId: string, input: AssignEyeInput): Station {
   assignEyeTx(stationId, input);
   return getStationById(stationId);
+}
+
+export function unassignEye(stationId: string): Station {
+  const station = getStationById(stationId);
+  if (station.eyeId === null) {
+    throw new AppError(400, `Station ${stationId} has no eye assigned`);
+  }
+  stmtClearEyeById.run(stationId);
+  return getStationById(stationId);
+}
+
+const stmtDeleteEventsByStation = db.prepare(
+  `DELETE FROM tracking_events WHERE station_id = ?`,
+);
+
+const deleteStationTx = db.transaction((stationId: string): void => {
+  const row = stmtGetById.get(stationId) as StationRow | undefined;
+  if (!row) {
+    throw new AppError(404, `Station with id ${stationId} not found`);
+  }
+  stmtClearEyeById.run(stationId);
+  stmtDeleteEventsByStation.run(stationId);
+  stmtDeleteStation.run(stationId);
+});
+
+export function deleteStation(stationId: string): void {
+  deleteStationTx(stationId);
 }

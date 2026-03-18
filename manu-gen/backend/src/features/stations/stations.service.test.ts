@@ -88,6 +88,66 @@ describe("assignEye", () => {
   });
 });
 
+describe("unassignEye", () => {
+  it("should clear the eye from a station", () => {
+    const station = stationsService.createStation({ name: "Casting" });
+    stationsService.assignEye(station.id, { eyeId: "eye-1" });
+
+    const updated = stationsService.unassignEye(station.id);
+
+    expect(updated.eyeId).toBeNull();
+  });
+
+  it("should throw 400 when station has no eye assigned", () => {
+    const station = stationsService.createStation({ name: "Casting" });
+
+    expect(() => stationsService.unassignEye(station.id)).toThrow("no eye assigned");
+  });
+
+  it("should throw 404 when station does not exist", () => {
+    expect(() => stationsService.unassignEye("nonexistent")).toThrow("not found");
+  });
+});
+
+describe("deleteStation", () => {
+  it("should delete a station with no events", () => {
+    const station = stationsService.createStation({ name: "Casting" });
+
+    stationsService.deleteStation(station.id);
+
+    expect(() => stationsService.getStationById(station.id)).toThrow("not found");
+  });
+
+  it("should cascade-delete tracking events and the station", () => {
+    const station = stationsService.createStation({ name: "Casting" });
+    db.prepare(
+      `INSERT INTO tracking_events (tray_code, station_id, eye_id, captured_at) VALUES (?, ?, ?, ?)`,
+    ).run("TRAY-001", station.id, "eye-1", "2025-01-01T00:00:00Z");
+
+    stationsService.deleteStation(station.id);
+
+    expect(() => stationsService.getStationById(station.id)).toThrow("not found");
+    const eventCount = db.prepare(
+      "SELECT COUNT(*) AS cnt FROM tracking_events WHERE station_id = ?",
+    ).get(station.id) as { cnt: number };
+    expect(eventCount.cnt).toBe(0);
+  });
+
+  it("should unassign the eye before deleting", () => {
+    const station = stationsService.createStation({ name: "Casting" });
+    stationsService.assignEye(station.id, { eyeId: "eye-1" });
+
+    stationsService.deleteStation(station.id);
+
+    expect(() => stationsService.getStationById(station.id)).toThrow("not found");
+    expect(stationsService.getStationByEyeId("eye-1")).toBeNull();
+  });
+
+  it("should throw 404 when station does not exist", () => {
+    expect(() => stationsService.deleteStation("nonexistent")).toThrow("not found");
+  });
+});
+
 describe("getStationByEyeId", () => {
   it("should return the station assigned to the eye", () => {
     const station = stationsService.createStation({ name: "Polishing" });
