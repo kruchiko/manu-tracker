@@ -1,0 +1,23 @@
+[project]
+name = "manu-eye"
+version = "0.1.0"
+description = "Camera station — reads QR codes from webcam and sends tracking events to manu-gen"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "httpx>=0.28.1",
+    "opencv-python>=4.13.0.92",
+    "pydantic-settings>=2.13.1",
+    "pyzbar>=0.1.9",
+]
+
+[dependency-groups]
+dev = [
+    "pillow>=12.1.1",
+    "pytest>=9.0.2",
+    "pytest-httpx>=0.36.0",
+    "qrcode>=8.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

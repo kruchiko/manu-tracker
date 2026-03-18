@@ -42,10 +42,11 @@ src/
 - Never use bare `except:` — always catch specific exceptions
 - Log errors with context using `structlog` or stdlib `logging`
 
-## Async
+## HTTP Client
 
-- Use `httpx.AsyncClient` for outbound HTTP calls to manu-gen backend
-- Use `asyncio.gather()` for independent concurrent operations
+- Use `httpx.Client` (sync) for outbound HTTP calls — the camera capture loop is blocking, so async adds complexity without benefit
+- Reuse a single `httpx.Client` instance for connection pooling
+- Consider `httpx.AsyncClient` only if the service moves to an async event loop
 
 ## Testing
 
