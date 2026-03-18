@@ -8,6 +8,7 @@ let testStationId: string;
 beforeEach(async () => {
   db.exec("DELETE FROM tracking_events");
   db.exec("DELETE FROM stations");
+  db.exec("DELETE FROM sqlite_sequence WHERE name = 'tracking_events'");
 
   const stationRes = await request(app).post("/stations").send({ name: "Test Station" });
   testStationId = stationRes.body.id;

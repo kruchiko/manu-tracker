@@ -4,6 +4,7 @@ import { ordersRouter } from "./features/orders/orders.controller.js";
 import { stationsRouter } from "./features/stations/stations.controller.js";
 import { eyesRouter } from "./features/eyes/eyes.controller.js";
 import { eventsRouter } from "./features/events/events.controller.js";
+import { analyticsRouter } from "./features/analytics/analytics.controller.js";
 import { errorHandler } from "./shared/middleware/error-handler.js";
 import { logger } from "./shared/logger.js";
 
@@ -35,4 +36,5 @@ app.use("/orders", ordersRouter);
 app.use("/stations", stationsRouter);
 app.use("/eyes", eyesRouter);
 app.use("/events", eventsRouter);
+app.use("/analytics", analyticsRouter);
 app.use(errorHandler);
