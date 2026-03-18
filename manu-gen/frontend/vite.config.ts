@@ -21,6 +21,17 @@ export default defineConfig({
           });
         },
       },
+      "/stations": {
+        target: API_TARGET,
+        configure: (proxy) => {
+          proxy.on("proxyReq", (_, req) => {
+            console.log(`[proxy] → ${req.method} ${req.url}`);
+          });
+          proxy.on("proxyRes", (res, req) => {
+            console.log(`[proxy] ← ${res.statusCode} ${req.method} ${req.url}`);
+          });
+        },
+      },
     },
   },
   test: {

@@ -74,3 +74,23 @@ stationsRouter.put("/:id/eye", (req, res, next) => {
     next(err);
   }
 });
+
+stationsRouter.delete("/:id/eye", (req, res, next) => {
+  try {
+    const id = parseStationId(req.params.id);
+    const station = stationsService.unassignEye(id);
+    res.json(station);
+  } catch (err) {
+    next(err);
+  }
+});
+
+stationsRouter.delete("/:id", (req, res, next) => {
+  try {
+    const id = parseStationId(req.params.id);
+    stationsService.deleteStation(id);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});

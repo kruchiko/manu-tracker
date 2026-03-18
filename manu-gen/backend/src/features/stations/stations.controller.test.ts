@@ -121,3 +121,66 @@ describe("PUT /stations/:id/eye", () => {
     expect(res.status).toBe(404);
   });
 });
+
+describe("DELETE /stations/:id/eye", () => {
+  it("should unassign the eye and return the station", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Casting" });
+    const id = createRes.body.id;
+    await request(app).put(`/stations/${id}/eye`).send({ eyeId: "eye-1" });
+
+    const res = await request(app).delete(`/stations/${id}/eye`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.eyeId).toBeNull();
+  });
+
+  it("should return 400 when station has no eye assigned", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Casting" });
+    const id = createRes.body.id;
+
+    const res = await request(app).delete(`/stations/${id}/eye`);
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 404 when station does not exist", async () => {
+    const res = await request(app).delete("/stations/nonexistent/eye");
+
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("DELETE /stations/:id", () => {
+  it("should delete a station and return 204", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Casting" });
+    const id = createRes.body.id;
+
+    const res = await request(app).delete(`/stations/${id}`);
+
+    expect(res.status).toBe(204);
+
+    const getRes = await request(app).get(`/stations/${id}`);
+    expect(getRes.status).toBe(404);
+  });
+
+  it("should cascade-delete station with tracking events", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Casting" });
+    const id = createRes.body.id;
+    db.prepare(
+      `INSERT INTO tracking_events (tray_code, station_id, eye_id, captured_at) VALUES (?, ?, ?, ?)`,
+    ).run("TRAY-001", id, "eye-1", "2025-01-01T00:00:00Z");
+
+    const res = await request(app).delete(`/stations/${id}`);
+
+    expect(res.status).toBe(204);
+
+    const getRes = await request(app).get(`/stations/${id}`);
+    expect(getRes.status).toBe(404);
+  });
+
+  it("should return 404 when station does not exist", async () => {
+    const res = await request(app).delete("/stations/nonexistent");
+
+    expect(res.status).toBe(404);
+  });
+});
