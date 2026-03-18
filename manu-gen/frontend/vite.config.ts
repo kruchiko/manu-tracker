@@ -6,32 +6,27 @@ import tailwindcss from "@tailwindcss/vite";
 
 const API_TARGET = process.env.API_TARGET ?? "http://localhost:3000";
 
+function apiProxy() {
+  return {
+    target: API_TARGET,
+    configure: (proxy: import("http-proxy").Server) => {
+      proxy.on("proxyReq", (_, req) => {
+        console.log(`[proxy] → ${req.method} ${req.url}`);
+      });
+      proxy.on("proxyRes", (res, req) => {
+        console.log(`[proxy] ← ${res.statusCode} ${req.method} ${req.url}`);
+      });
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/orders": {
-        target: API_TARGET,
-        configure: (proxy) => {
-          proxy.on("proxyReq", (_, req) => {
-            console.log(`[proxy] → ${req.method} ${req.url}`);
-          });
-          proxy.on("proxyRes", (res, req) => {
-            console.log(`[proxy] ← ${res.statusCode} ${req.method} ${req.url}`);
-          });
-        },
-      },
-      "/stations": {
-        target: API_TARGET,
-        configure: (proxy) => {
-          proxy.on("proxyReq", (_, req) => {
-            console.log(`[proxy] → ${req.method} ${req.url}`);
-          });
-          proxy.on("proxyRes", (res, req) => {
-            console.log(`[proxy] ← ${res.statusCode} ${req.method} ${req.url}`);
-          });
-        },
-      },
+      "/orders": apiProxy(),
+      "/stations": apiProxy(),
+      "/analytics": apiProxy(),
     },
   },
   test: {

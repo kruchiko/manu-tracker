@@ -59,11 +59,30 @@ ordersRouter.get("/", (req, res, next) => {
   }
 });
 
+ordersRouter.get("/board", (req, res, next) => {
+  try {
+    const board = ordersService.getOrderBoard();
+    res.json(board);
+  } catch (err) {
+    next(err);
+  }
+});
+
 ordersRouter.get("/:id", (req, res, next) => {
   try {
     const id = parseOrderId(req.params.id);
     const order = ordersService.getOrderById(id);
     res.json(order);
+  } catch (err) {
+    next(err);
+  }
+});
+
+ordersRouter.get("/:id/history", (req, res, next) => {
+  try {
+    const id = parseOrderId(req.params.id);
+    const history = ordersService.getOrderHistory(id);
+    res.json(history);
   } catch (err) {
     next(err);
   }
