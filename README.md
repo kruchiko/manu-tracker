@@ -41,7 +41,13 @@ To stop and remove containers:
 docker-compose down
 ```
 
-To also wipe the SQLite volume:
+To clean the database (e.g. clear all orders and events) while keeping the stack running:
+
+```bash
+./scripts/clean-docker-db.sh
+```
+
+This removes the DB files inside the backend container and restarts the backend so it starts with an empty database. To remove the volume entirely (e.g. before `docker-compose up`), use:
 
 ```bash
 docker-compose down -v
@@ -53,6 +59,8 @@ docker-compose down -v
 cd manu-gen/backend && yarn install && yarn dev
 cd manu-gen/frontend && yarn install && yarn dev
 ```
+
+To clean the local database, stop the backend then run `cd manu-gen/backend && yarn db:clean` and start the backend again.
 
 ## Architecture
 
