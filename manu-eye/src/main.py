@@ -11,8 +11,9 @@ import httpx
 from src.client import BackendClient, StationInfo
 from src.camera import capture_frames
 from src.config import get_settings
-from src.decoder import decode_qr_codes
-from src.dedup import DeduplicationFilter
+from src.decoder import decode_qr_codes, effective_presence_frames_to_arrive, using_pyzbar
+from src.presence import PresenceTracker
+from src.tray_codes import filter_tray_codes
 
 
 class _JsonFormatter(logging.Formatter):
@@ -88,33 +89,66 @@ def run() -> None:
 
     try:
         station = wait_for_registration(client, settings.eye_id)
-        dedup = DeduplicationFilter(window_seconds=settings.dedup_window_seconds)
+        arrive_frames, bumped = effective_presence_frames_to_arrive(
+            settings.presence_frames_arrive,
+            settings.opencv_arrive_frames_floor,
+        )
+        if not using_pyzbar():
+            if bumped:
+                logger.warning(
+                    "OpenCV QR fallback: presence_frames_arrive raised from %d to %d — "
+                    "install pyzbar + system zbar for reliable detection (tune OPENCV_ARRIVE_FRAMES_FLOOR if needed)",
+                    settings.presence_frames_arrive,
+                    arrive_frames,
+                )
+            else:
+                logger.warning(
+                    "OpenCV QR fallback — install pyzbar + zbar for production; "
+                    "increase PRESENCE_FRAMES_ARRIVE or OPENCV_ARRIVE_FRAMES_FLOOR if you still see ghost arrivals",
+                )
+
+        presence = PresenceTracker(
+            frames_to_arrive=arrive_frames,
+            frames_to_depart=settings.presence_frames_depart,
+            miss_grace=settings.presence_miss_grace,
+        )
 
         logger.info(
-            "Starting capture loop: camera=%d interval=%dms dedup=%ds",
+            "Starting capture loop: camera=%d interval=%dms presence_arrive=%d frames depart=%d frames (pyzbar=%s)",
             settings.camera_index,
             settings.frame_interval_ms,
-            settings.dedup_window_seconds,
+            arrive_frames,
+            settings.presence_frames_depart,
+            using_pyzbar(),
         )
 
         for frame in capture_frames(settings.camera_index, settings.frame_interval_ms):
             if _shutdown_requested:
                 break
 
-            codes = decode_qr_codes(frame)
-            new_codes = dedup.filter_new(codes)
+            raw_codes = decode_qr_codes(frame)
+            codes = filter_tray_codes(raw_codes)
 
-            for code in new_codes:
+            if logger.isEnabledFor(logging.DEBUG):
+                logger.debug("decode: raw=%s filtered=%s present=%s", raw_codes, codes, presence.stable_present_codes)
+
+            for transition in presence.process_frame(codes):
                 captured_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
                 try:
                     client.send_event(
-                        tray_code=code,
+                        tray_code=transition.tray_code,
                         station_id=station.station_id,
                         eye_id=settings.eye_id,
                         captured_at=captured_at,
+                        phase=transition.phase,
                     )
                 except httpx.HTTPError as exc:
-                    logger.error("Failed to send event for %s: %s", code, exc)
+                    logger.error(
+                        "Failed to send event for %s (%s): %s",
+                        transition.tray_code,
+                        transition.phase,
+                        exc,
+                    )
     finally:
         client.close()
 

@@ -8,5 +8,7 @@ export function useOrderHistory(orderId: number | null) {
     queryFn: () => apiClient.get<OrderHistoryEntry[]>(`/orders/${orderId}/history`),
     enabled: orderId !== null,
     placeholderData: keepPreviousData,
+    staleTime: 0,
+    refetchInterval: (query) => (query.state.error ? 30_000 : 1_000),
   });
 }

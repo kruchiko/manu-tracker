@@ -32,6 +32,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Generated QR code images
+scripts/qr-*.png
+
 # Python
 *.pyc
 .mypy_cache/

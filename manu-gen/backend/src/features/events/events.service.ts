@@ -3,11 +3,11 @@ import { AppError } from "../../shared/errors/app-error.js";
 import type { CreateEventInput, TrackingEvent, TrackingEventRow } from "./events.schema.js";
 import { toTrackingEvent } from "./events.schema.js";
 
-const EVENT_COLUMNS = "id, tray_code, station_id, eye_id, captured_at, received_at";
+const EVENT_COLUMNS = "id, tray_code, station_id, eye_id, captured_at, received_at, phase";
 
 const stmtInsert = db.prepare(
-  `INSERT INTO tracking_events (tray_code, station_id, eye_id, captured_at)
-   VALUES (@tray_code, @station_id, @eye_id, @captured_at)`,
+  `INSERT INTO tracking_events (tray_code, station_id, eye_id, captured_at, phase)
+   VALUES (@tray_code, @station_id, @eye_id, @captured_at, @phase)`,
 );
 
 const stmtGetById = db.prepare(`SELECT ${EVENT_COLUMNS} FROM tracking_events WHERE id = ?`);
@@ -22,6 +22,7 @@ export function createEvent(input: CreateEventInput): TrackingEvent {
     station_id: input.stationId,
     eye_id: input.eyeId,
     captured_at: input.capturedAt,
+    phase: input.phase ?? "scan",
   });
   return getEventById(Number(result.lastInsertRowid));
 }

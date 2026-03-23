@@ -96,4 +96,45 @@ describe("getStationDurations", () => {
     expect(moulding!.avgSeconds).toBe(7200);
     expect(moulding!.maxSeconds).toBe(7200);
   });
+
+  it("should count each arrived-departed visit separately at the same station", () => {
+    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const station = stationsService.createStation({ name: "Polishing" });
+
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:00:00",
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:10:00",
+      phase: "departed",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T11:00:00",
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T11:30:00",
+      phase: "departed",
+    });
+
+    const durations = analyticsService.getStationDurations();
+    const polishing = durations.find((d) => d.stationName === "Polishing");
+    expect(polishing).toBeDefined();
+    expect(polishing!.orderCount).toBe(1);
+    expect(polishing!.avgSeconds).toBe(1200);
+    expect(polishing!.maxSeconds).toBe(1800);
+  });
 });

@@ -7,11 +7,16 @@ export interface BoardOrder {
   createdAt: string;
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
+  stationArrivedAt: string | null;
 }
 
+export type OrderHistoryPhase = "arrived" | "departed" | "scan";
+
 export interface OrderHistoryEntry {
+  id: number;
+  phase: OrderHistoryPhase;
   station: string;
-  arrivedAt: string;
+  at: string;
   durationSeconds: number | null;
 }
 

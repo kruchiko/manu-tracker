@@ -1,16 +1,17 @@
 import QRCode from "qrcode";
 import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
+import { parseUtcMs, toIso } from "../../shared/datetime.js";
 import type {
   CreateOrderInput,
   Order,
   OrderRow,
   BoardOrderRow,
   BoardOrder,
-  OrderHistoryRow,
   OrderHistoryEntry,
+  OrderHistoryPhase,
 } from "./orders.schema.js";
-import { toOrder, toBoardOrder, toOrderHistoryEntry } from "./orders.schema.js";
+import { toOrder, toBoardOrder } from "./orders.schema.js";
 
 const QR_OPTIONS = {
   width: 300,
@@ -93,19 +94,28 @@ const stmtOrderBoard = db.prepare(`
     o.product_type,
     o.tray_code,
     o.created_at,
-    s.id   AS station_id,
-    s.name AS station_name,
-    ranked.captured_at AS last_seen_at
+    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE ranked.station_id END AS station_id,
+    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE s.name END AS station_name,
+    ranked.captured_at AS last_seen_at,
+    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE (
+      SELECT te2.captured_at FROM tracking_events te2
+      WHERE te2.tray_code = o.tray_code
+        AND te2.station_id = ranked.station_id
+        AND te2.phase = 'arrived'
+      ORDER BY te2.captured_at DESC, te2.id DESC
+      LIMIT 1
+    ) END AS station_arrived_at
   FROM orders o
   LEFT JOIN (
     SELECT
       tray_code,
       station_id,
       captured_at,
-      ROW_NUMBER() OVER (PARTITION BY tray_code ORDER BY captured_at DESC) AS rn
+      phase,
+      ROW_NUMBER() OVER (PARTITION BY tray_code ORDER BY captured_at DESC, id DESC) AS rn
     FROM tracking_events
   ) ranked ON ranked.tray_code = o.tray_code AND ranked.rn = 1
-  LEFT JOIN stations s ON s.id = ranked.station_id
+  LEFT JOIN stations s ON s.id = ranked.station_id AND ranked.phase != 'departed'
   ORDER BY
     CASE WHEN ranked.captured_at IS NULL THEN 1 ELSE 0 END,
     ranked.captured_at ASC
@@ -116,24 +126,86 @@ export function getOrderBoard(): BoardOrder[] {
   return rows.map(toBoardOrder);
 }
 
-const stmtOrderHistory = db.prepare(`
-  SELECT
-    s.name AS station_name,
-    te.captured_at AS arrived_at,
-    LEAD(te.captured_at) OVER (ORDER BY te.captured_at) AS next_arrived_at
+interface RawOrderHistoryRow {
+  id: number;
+  station_id: string;
+  station_name: string;
+  captured_at: string;
+  phase: string;
+}
+
+const stmtOrderHistoryRaw = db.prepare(`
+  SELECT te.id, te.station_id, s.name AS station_name, te.captured_at, te.phase
   FROM tracking_events te
   JOIN stations s ON s.id = te.station_id
   WHERE te.tray_code = (SELECT tray_code FROM orders WHERE id = ?)
-  ORDER BY te.captured_at
+  ORDER BY te.captured_at ASC, te.id ASC
 `);
+
+function normalizePhase(raw: string): OrderHistoryPhase {
+  if (raw === "arrived" || raw === "departed") return raw;
+  return "scan";
+}
+
+export function buildOrderHistoryEntries(rows: RawOrderHistoryRow[]): OrderHistoryEntry[] {
+  const result: OrderHistoryEntry[] = [];
+  const pendingArrivedMs = new Map<string, number>();
+
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const atIso = toIso(row.captured_at);
+    const atMs = parseUtcMs(row.captured_at);
+    const phase = normalizePhase(row.phase);
+
+    if (phase === "departed") {
+      const startMs = pendingArrivedMs.get(row.station_id);
+      const durationSeconds =
+        startMs !== undefined ? Math.floor((atMs - startMs) / 1000) : null;
+      pendingArrivedMs.delete(row.station_id);
+      result.push({
+        id: row.id,
+        phase: "departed",
+        station: row.station_name,
+        at: atIso,
+        durationSeconds,
+      });
+      continue;
+    }
+
+    if (phase === "arrived") {
+      pendingArrivedMs.set(row.station_id, atMs);
+      result.push({
+        id: row.id,
+        phase: "arrived",
+        station: row.station_name,
+        at: atIso,
+        durationSeconds: null,
+      });
+      continue;
+    }
+
+    const next = rows[i + 1];
+    const durationSeconds =
+      next !== undefined ? Math.floor((parseUtcMs(next.captured_at) - atMs) / 1000) : null;
+    result.push({
+      id: row.id,
+      phase: "scan",
+      station: row.station_name,
+      at: atIso,
+      durationSeconds,
+    });
+  }
+
+  return result;
+}
 
 export function getOrderHistory(orderId: number): OrderHistoryEntry[] {
   const exists = stmtGetById.get(orderId) as OrderRow | undefined;
   if (!exists) {
     throw new AppError(404, `Order with id ${orderId} not found`);
   }
-  const rows = stmtOrderHistory.all(orderId) as OrderHistoryRow[];
-  return rows.map(toOrderHistoryEntry);
+  const rows = stmtOrderHistoryRaw.all(orderId) as RawOrderHistoryRow[];
+  return buildOrderHistoryEntries(rows);
 }
 
 export async function generateQrCode(id: number): Promise<Buffer> {
