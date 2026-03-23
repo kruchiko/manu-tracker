@@ -32,6 +32,21 @@ describe("createEvent", () => {
     expect(event.eyeId).toBe("eye-1");
     expect(event.capturedAt).toBe("2026-03-18T14:30:00.000Z");
     expect(event.receivedAt).toBeTruthy();
+    expect(event.phase).toBe("scan");
+  });
+
+  it("should persist arrived phase", () => {
+    const stationId = createTestStation();
+
+    const event = eventsService.createEvent({
+      trayCode: "TRAY-0001",
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T14:30:00.000Z",
+      phase: "arrived",
+    });
+
+    expect(event.phase).toBe("arrived");
   });
 });
 

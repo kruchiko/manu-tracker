@@ -6,6 +6,7 @@ export function useDurations() {
   return useQuery({
     queryKey: ["analytics", "durations"],
     queryFn: () => apiClient.get<StationDuration[]>("/analytics/durations"),
-    refetchInterval: 30_000,
+    staleTime: 0,
+    refetchInterval: 15_000,
   });
 }

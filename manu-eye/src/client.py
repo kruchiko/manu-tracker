@@ -39,6 +39,7 @@ class BackendClient:
         station_id: str,
         eye_id: str,
         captured_at: str,
+        phase: str,
     ) -> None:
         """POST a tracking event to the backend."""
         response = self._client.post(
@@ -48,10 +49,11 @@ class BackendClient:
                 "stationId": station_id,
                 "eyeId": eye_id,
                 "capturedAt": captured_at,
+                "phase": phase,
             },
         )
         response.raise_for_status()
-        logger.info("Event sent: tray=%s station=%s", tray_code, station_id)
+        logger.info("Event sent: tray=%s station=%s phase=%s", tray_code, station_id, phase)
 
     def close(self) -> None:
         self._client.close()

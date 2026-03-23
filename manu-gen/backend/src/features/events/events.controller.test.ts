@@ -31,6 +31,32 @@ describe("POST /events", () => {
     expect(res.body.eyeId).toBe("eye-1");
     expect(res.body.capturedAt).toBe("2026-03-18T14:30:00.000Z");
     expect(res.body.receivedAt).toBeTruthy();
+    expect(res.body.phase).toBe("scan");
+  });
+
+  it("should accept phase arrived", async () => {
+    const res = await request(app).post("/events").send({
+      trayCode: "TRAY-0001",
+      stationId: testStationId,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T14:30:00.000Z",
+      phase: "arrived",
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.phase).toBe("arrived");
+  });
+
+  it("should return 400 when phase is invalid", async () => {
+    const res = await request(app).post("/events").send({
+      trayCode: "TRAY-0001",
+      stationId: testStationId,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T14:30:00.000Z",
+      phase: "nope",
+    });
+
+    expect(res.status).toBe(400);
   });
 
   it("should return 400 when trayCode is missing", async () => {

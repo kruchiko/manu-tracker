@@ -43,3 +43,20 @@ def _decode_opencv(frame: np.ndarray) -> list[str]:
     if not retval:
         return []
     return [text for text in decoded_info if text]
+
+
+def using_pyzbar() -> bool:
+    """True when decoding uses zbar (recommended); False when using OpenCV fallback."""
+    return _HAS_PYZBAR
+
+
+def effective_presence_frames_to_arrive(user_setting: int, opencv_floor: int) -> tuple[int, bool]:
+    """Return (frames_to_use, whether OpenCV floor raised the configured value).
+
+    OpenCV's ``detectAndDecodeMulti`` can repeat bogus strings across frames;
+    requiring a few more consecutive hits than pyzbar reduces ghost arrivals.
+    """
+    if _HAS_PYZBAR:
+        return max(1, user_setting), False
+    v = max(user_setting, max(1, opencv_floor))
+    return v, v > user_setting

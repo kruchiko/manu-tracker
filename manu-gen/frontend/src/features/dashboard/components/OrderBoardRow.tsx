@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { BoardOrder } from "../dashboard.types";
 import { formatDuration, parseUtc } from "../dashboard.utils";
 
@@ -22,13 +23,21 @@ function durationColorClass(seconds: number | null): string {
   return "text-red-700 bg-red-50";
 }
 
-function computeDurationSeconds(lastSeenAt: string | null): number | null {
-  if (!lastSeenAt) return null;
-  return Math.floor((Date.now() - parseUtc(lastSeenAt).getTime()) / 1000);
+function useLiveDuration(arrivedAt: string | null, active: boolean): number | null {
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    if (!active || !arrivedAt) return;
+    const id = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(id);
+  }, [active, arrivedAt]);
+
+  if (!active || !arrivedAt) return null;
+  return Math.max(0, Math.floor((now - parseUtc(arrivedAt).getTime()) / 1000));
 }
 
 export function OrderBoardRow({ order, isSelected, onSelect }: OrderBoardRowProps) {
-  const durationSeconds = computeDurationSeconds(order.lastSeenAt);
+  const durationSeconds = useLiveDuration(order.stationArrivedAt, order.currentStation !== null);
   const colorClass = durationColorClass(durationSeconds);
 
   return (

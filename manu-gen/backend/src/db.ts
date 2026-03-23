@@ -33,6 +33,7 @@ const MIGRATIONS: string[] = [
     captured_at TEXT NOT NULL,
     received_at TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
+  `ALTER TABLE tracking_events ADD COLUMN phase TEXT NOT NULL DEFAULT 'scan'`,
 ];
 
 db.prepare(

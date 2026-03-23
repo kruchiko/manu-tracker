@@ -65,11 +65,12 @@ def test_send_event_success(httpx_mock) -> None:
         station_id="station-abc",
         eye_id="eye-1",
         captured_at="2026-03-18T14:30:00.000Z",
+        phase="arrived",
     )
     client.close()
 
 
-def test_send_event_sends_correct_payload(httpx_mock) -> None:
+def test_send_event_sends_arrived_phase(httpx_mock) -> None:
     httpx_mock.add_response(
         url="http://localhost:3000/events",
         method="POST",
@@ -83,6 +84,7 @@ def test_send_event_sends_correct_payload(httpx_mock) -> None:
         station_id="station-abc",
         eye_id="eye-1",
         captured_at="2026-03-18T14:30:00.000Z",
+        phase="arrived",
     )
     client.close()
 
@@ -94,7 +96,32 @@ def test_send_event_sends_correct_payload(httpx_mock) -> None:
         "stationId": "station-abc",
         "eyeId": "eye-1",
         "capturedAt": "2026-03-18T14:30:00.000Z",
+        "phase": "arrived",
     }
+
+
+def test_send_event_sends_departed_phase(httpx_mock) -> None:
+    httpx_mock.add_response(
+        url="http://localhost:3000/events",
+        method="POST",
+        status_code=201,
+        json={"id": 1},
+    )
+
+    client = BackendClient("http://localhost:3000")
+    client.send_event(
+        tray_code="TRAY-0001",
+        station_id="station-abc",
+        eye_id="eye-1",
+        captured_at="2026-03-18T14:30:00.000Z",
+        phase="departed",
+    )
+    client.close()
+
+    request = httpx_mock.get_request()
+    assert request is not None
+    body = json.loads(request.content)
+    assert body["phase"] == "departed"
 
 
 def test_send_event_server_error_raises(httpx_mock) -> None:
@@ -112,5 +139,6 @@ def test_send_event_server_error_raises(httpx_mock) -> None:
             station_id="station-abc",
             eye_id="eye-1",
             captured_at="2026-03-18T14:30:00.000Z",
+            phase="arrived",
         )
     client.close()

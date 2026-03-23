@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { toIso } from "../../shared/datetime.js";
 
 export const createOrderSchema = z.object({
   customerName: z.string().min(1, "customerName is required"),
@@ -54,6 +55,7 @@ export interface BoardOrderRow {
   station_id: string | null;
   station_name: string | null;
   last_seen_at: string | null;
+  station_arrived_at: string | null;
 }
 
 export interface BoardOrder {
@@ -65,14 +67,7 @@ export interface BoardOrder {
   createdAt: string;
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
-}
-
-function toIso(raw: string): string {
-  return raw.replace(" ", "T").replace(/Z$/, "");
-}
-
-function parseUtcMs(raw: string): number {
-  return new Date(toIso(raw) + "Z").getTime();
+  stationArrivedAt: string | null;
 }
 
 export function toBoardOrder(row: BoardOrderRow): BoardOrder {
@@ -88,31 +83,16 @@ export function toBoardOrder(row: BoardOrderRow): BoardOrder {
         ? { id: row.station_id, name: row.station_name }
         : null,
     lastSeenAt: row.last_seen_at ? toIso(row.last_seen_at) : null,
+    stationArrivedAt: row.station_arrived_at ? toIso(row.station_arrived_at) : null,
   };
 }
 
-export interface OrderHistoryRow {
-  station_name: string;
-  arrived_at: string;
-  next_arrived_at: string | null;
-}
+export type OrderHistoryPhase = "arrived" | "departed" | "scan";
 
 export interface OrderHistoryEntry {
+  id: number;
+  phase: OrderHistoryPhase;
   station: string;
-  arrivedAt: string;
+  at: string;
   durationSeconds: number | null;
-}
-
-export function toOrderHistoryEntry(row: OrderHistoryRow): OrderHistoryEntry {
-  let durationSeconds: number | null = null;
-  if (row.next_arrived_at) {
-    const arrived = parseUtcMs(row.arrived_at);
-    const next = parseUtcMs(row.next_arrived_at);
-    durationSeconds = Math.floor((next - arrived) / 1000);
-  }
-  return {
-    station: row.station_name,
-    arrivedAt: toIso(row.arrived_at),
-    durationSeconds,
-  };
 }

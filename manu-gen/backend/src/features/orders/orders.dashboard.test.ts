@@ -105,6 +105,86 @@ describe("getOrderBoard", () => {
     expect(board[0].lastSeenAt).toBe("2026-03-18T14:30:00");
     expect(board[0].lastSeenAt).not.toContain("Z");
   });
+
+  it("should clear current station when latest event is departed", () => {
+    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const station = stationsService.createStation({ name: "Polishing" });
+
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:00:00",
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T11:00:00",
+      phase: "departed",
+    });
+
+    const board = ordersService.getOrderBoard();
+    expect(board[0].currentStation).toBeNull();
+    expect(board[0].lastSeenAt).toBe("2026-03-18T11:00:00");
+    expect(board[0].stationArrivedAt).toBeNull();
+  });
+
+  it("should return stationArrivedAt when tray is currently at a station", () => {
+    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const station = stationsService.createStation({ name: "Moulding" });
+
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:00:00",
+      phase: "arrived",
+    });
+
+    const board = ordersService.getOrderBoard();
+    expect(board[0].currentStation).toEqual({ id: station.id, name: "Moulding" });
+    expect(board[0].stationArrivedAt).toBe("2026-03-18T10:00:00");
+  });
+
+  it("should return null stationArrivedAt when no events exist", () => {
+    ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+
+    const board = ordersService.getOrderBoard();
+    expect(board[0].stationArrivedAt).toBeNull();
+  });
+
+  it("should return latest arrived time after re-arrival at same station", () => {
+    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const station = stationsService.createStation({ name: "Polishing" });
+
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:00:00",
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:30:00",
+      phase: "departed",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T11:00:00",
+      phase: "arrived",
+    });
+
+    const board = ordersService.getOrderBoard();
+    expect(board[0].currentStation).toEqual({ id: station.id, name: "Polishing" });
+    expect(board[0].stationArrivedAt).toBe("2026-03-18T11:00:00");
+  });
 });
 
 describe("getOrderHistory", () => {
@@ -147,12 +227,16 @@ describe("getOrderHistory", () => {
     const history = ordersService.getOrderHistory(order.id);
     expect(history).toHaveLength(3);
 
+    expect(history[0].phase).toBe("scan");
     expect(history[0].station).toBe("Moulding");
+    expect(history[0].at).toBe("2026-03-18T10:00:00");
     expect(history[0].durationSeconds).toBe(3600);
 
+    expect(history[1].phase).toBe("scan");
     expect(history[1].station).toBe("Drying Room");
     expect(history[1].durationSeconds).toBe(9000);
 
+    expect(history[2].phase).toBe("scan");
     expect(history[2].station).toBe("Kiln");
     expect(history[2].durationSeconds).toBeNull();
   });
@@ -170,9 +254,10 @@ describe("getOrderHistory", () => {
 
     const history = ordersService.getOrderHistory(order.id);
     expect(history).toHaveLength(2);
-    expect(history[0].arrivedAt).toBe("2026-03-18T10:00:00");
+    expect(history[0].at).toBe("2026-03-18T10:00:00");
+    expect(history[0].phase).toBe("scan");
     expect(history[0].durationSeconds).toBe(5400);
-    expect(history[1].arrivedAt).toBe("2026-03-18T11:30:00");
+    expect(history[1].at).toBe("2026-03-18T11:30:00");
   });
 
   it("should handle Z-suffixed timestamps without double-Z in arrivedAt", () => {
@@ -188,8 +273,43 @@ describe("getOrderHistory", () => {
 
     const history = ordersService.getOrderHistory(order.id);
     expect(history).toHaveLength(2);
-    expect(history[0].arrivedAt).toBe("2026-03-18T10:00:00");
-    expect(history[0].arrivedAt).not.toContain("Z");
+    expect(history[0].at).toBe("2026-03-18T10:00:00");
+    expect(history[0].at).not.toContain("Z");
     expect(history[0].durationSeconds).toBe(5400);
+  });
+
+  it("should pair arrived and departed for duration and support repeat visits at same station", () => {
+    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const station = stationsService.createStation({ name: "Polishing" });
+
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:00:00",
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T10:30:00",
+      phase: "departed",
+    });
+    eventsService.createEvent({
+      trayCode: order.trayCode,
+      stationId: station.id,
+      eyeId: "eye-1",
+      capturedAt: "2026-03-18T11:00:00",
+      phase: "arrived",
+    });
+
+    const history = ordersService.getOrderHistory(order.id);
+    expect(history).toHaveLength(3);
+    expect(history[0].phase).toBe("arrived");
+    expect(history[1].phase).toBe("departed");
+    expect(history[1].durationSeconds).toBe(1800);
+    expect(history[2].phase).toBe("arrived");
+    expect(history[2].durationSeconds).toBeNull();
   });
 });

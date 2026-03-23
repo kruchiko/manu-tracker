@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react";
 import { useOrderHistory } from "../hooks/useOrderHistory";
-import type { BoardOrder } from "../dashboard.types";
+import type { BoardOrder, OrderHistoryEntry, OrderHistoryPhase } from "../dashboard.types";
 import { formatDuration, parseUtc } from "../dashboard.utils";
 
 interface OrderHistoryProps {
@@ -17,8 +18,31 @@ function formatTime(iso: string): string {
   });
 }
 
+function entryTitle(entry: OrderHistoryEntry): string {
+  switch (entry.phase) {
+    case "arrived":
+      return `Arrived — ${entry.station}`;
+    case "departed":
+      return `Left — ${entry.station}`;
+    default:
+      return entry.station;
+  }
+}
+
+function showCurrentlyHere(entry: OrderHistoryEntry, isLast: boolean): boolean {
+  if (!isLast || entry.durationSeconds !== null) return false;
+  return entry.phase === "arrived" || entry.phase === "scan";
+}
+
 export function OrderHistory({ order, onClose }: OrderHistoryProps) {
   const { data, isLoading, error } = useOrderHistory(order.id);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [data]);
 
   return (
     <div className="rounded-lg border bg-white p-5 shadow-sm">
@@ -50,25 +74,38 @@ export function OrderHistory({ order, onClose }: OrderHistoryProps) {
       )}
 
       {data && data.length > 0 && (
-        <div className="relative overflow-y-auto pl-6" style={{ height: "200px" }}>
+        <div ref={scrollRef} className="relative overflow-y-auto pl-6" style={{ height: "200px" }}>
           {data.map((entry, index) => {
             const isLast = index === data.length - 1;
+            const phaseLabel: Record<OrderHistoryPhase, string> = {
+              arrived: "Arrived",
+              departed: "Left",
+              scan: "Scan",
+            };
             return (
-              <div key={`${entry.station}-${entry.arrivedAt}`} className="relative pb-5 last:pb-0">
+              <div key={entry.id} className="relative pb-5 last:pb-0">
                 {!isLast && (
                   <div className="absolute left-[-16px] top-3 h-full w-px bg-gray-200" />
                 )}
                 <div className="absolute left-[-20px] top-1.5 h-2 w-2 rounded-full border-2 border-blue-500 bg-white" />
                 <div>
-                  <p className="font-medium text-gray-900">{entry.station}</p>
-                  <p className="text-xs text-gray-500">{formatTime(entry.arrivedAt)}</p>
-                  {entry.durationSeconds !== null && (
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    {phaseLabel[entry.phase]}
+                  </p>
+                  <p className="font-medium text-gray-900">{entryTitle(entry)}</p>
+                  <p className="text-xs text-gray-500">{formatTime(entry.at)}</p>
+                  {entry.phase === "departed" && entry.durationSeconds !== null && (
                     <p className="mt-0.5 text-xs text-gray-400">
-                      Spent {formatDuration(entry.durationSeconds)}
+                      Time at station {formatDuration(entry.durationSeconds)}
                     </p>
                   )}
-                  {isLast && entry.durationSeconds === null && (
-                    <p className="mt-0.5 text-xs font-medium text-blue-600">Currently here</p>
+                  {entry.phase === "scan" && entry.durationSeconds !== null && (
+                    <p className="mt-0.5 text-xs text-gray-400">
+                      Until next event {formatDuration(entry.durationSeconds)}
+                    </p>
+                  )}
+                  {showCurrentlyHere(entry, isLast) && (
+                    <p className="mt-0.5 text-xs font-medium text-blue-600">Currently at station</p>
                   )}
                 </div>
               </div>
