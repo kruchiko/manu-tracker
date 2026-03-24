@@ -11,3 +11,21 @@ analyticsRouter.get("/durations", (req, res, next) => {
     next(err);
   }
 });
+
+analyticsRouter.get("/summary", (req, res, next) => {
+  try {
+    const summary = analyticsService.getDashboardSummary();
+    res.json(summary);
+  } catch (err) {
+    next(err);
+  }
+});
+
+analyticsRouter.get("/activity", (req, res, next) => {
+  try {
+    const activity = analyticsService.getHourlyActivity();
+    res.json(activity);
+  } catch (err) {
+    next(err);
+  }
+});

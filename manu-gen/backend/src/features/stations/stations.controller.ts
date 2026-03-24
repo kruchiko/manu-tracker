@@ -2,7 +2,7 @@ import { Router } from "express";
 import { ZodError } from "zod";
 import { AppError } from "../../shared/errors/app-error.js";
 import { zodToAppError } from "../../shared/validation.js";
-import { createStationSchema, assignEyeSchema } from "./stations.schema.js";
+import { createStationSchema, assignEyeSchema, updateStationSchema } from "./stations.schema.js";
 import * as stationsService from "./stations.service.js";
 
 const MAX_PAGE_SIZE = 100;
@@ -56,6 +56,21 @@ stationsRouter.get("/:id", (req, res, next) => {
     const station = stationsService.getStationById(id);
     res.json(station);
   } catch (err) {
+    next(err);
+  }
+});
+
+stationsRouter.patch("/:id", (req, res, next) => {
+  try {
+    const id = parseStationId(req.params.id);
+    const input = updateStationSchema.parse(req.body);
+    const station = stationsService.updateStation(id, input);
+    res.json(station);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      next(zodToAppError(err));
+      return;
+    }
     next(err);
   }
 });

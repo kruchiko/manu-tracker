@@ -104,7 +104,8 @@ const stmtOrderBoard = db.prepare(`
         AND te2.phase = 'arrived'
       ORDER BY te2.captured_at DESC, te2.id DESC
       LIMIT 1
-    ) END AS station_arrived_at
+    ) END AS station_arrived_at,
+    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE s.max_duration_seconds END AS max_duration_seconds
   FROM orders o
   LEFT JOIN (
     SELECT

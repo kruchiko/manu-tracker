@@ -16,8 +16,13 @@ function formatLastSeen(iso: string): string {
   return isToday ? `${time} today` : date.toLocaleDateString([], { month: "short", day: "numeric" }) + ` ${time}`;
 }
 
-function durationColorClass(seconds: number | null): string {
+function durationColorClass(seconds: number | null, threshold: number | null): string {
   if (seconds === null) return "text-gray-400";
+  if (threshold !== null) {
+    if (seconds >= threshold) return "text-red-700 bg-red-50";
+    if (seconds >= threshold * 0.75) return "text-yellow-700 bg-yellow-50";
+    return "text-green-700 bg-green-50";
+  }
   if (seconds < 3600) return "text-green-700 bg-green-50";
   if (seconds < 14400) return "text-yellow-700 bg-yellow-50";
   return "text-red-700 bg-red-50";
@@ -38,7 +43,7 @@ function useLiveDuration(arrivedAt: string | null, active: boolean): number | nu
 
 export function OrderBoardRow({ order, isSelected, onSelect }: OrderBoardRowProps) {
   const durationSeconds = useLiveDuration(order.stationArrivedAt, order.currentStation !== null);
-  const colorClass = durationColorClass(durationSeconds);
+  const colorClass = durationColorClass(durationSeconds, order.maxDurationSeconds);
 
   return (
     <tr

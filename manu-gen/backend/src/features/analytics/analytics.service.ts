@@ -1,5 +1,11 @@
 import db from "../../db.js";
-import type { StationDurationRow, StationDuration } from "./analytics.schema.js";
+import type {
+  StationDurationRow,
+  StationDuration,
+  DashboardSummary,
+  HourlyActivityRow,
+  StationActivity,
+} from "./analytics.schema.js";
 import { toStationDuration } from "./analytics.schema.js";
 import { parseUtcMs } from "../../shared/datetime.js";
 
@@ -95,26 +101,159 @@ function collectStationDurationsFromEvents(): Map<string, StationDurationAccum> 
   return result;
 }
 
-const stmtStationMeta = db.prepare(`SELECT id, name FROM stations`);
+function percentile(sorted: number[], p: number): number {
+  if (sorted.length === 0) return 0;
+  const index = (p / 100) * (sorted.length - 1);
+  const lower = Math.floor(index);
+  const upper = Math.ceil(index);
+  if (lower === upper) return sorted[lower];
+  return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
+}
 
-export function getStationDurations(): StationDuration[] {
-  const accumByStation = collectStationDurationsFromEvents();
-  const stations = stmtStationMeta.all() as { id: string; name: string }[];
-  const nameById = new Map(stations.map((s) => [s.id, s.name]));
+const stmtStationMeta = db.prepare(`SELECT id, name, max_duration_seconds FROM stations`);
 
+interface StationMeta {
+  id: string;
+  name: string;
+  max_duration_seconds: number | null;
+}
+
+function buildDurationRows(
+  accumByStation: Map<string, StationDurationAccum>,
+  metaById: Map<string, StationMeta>,
+): StationDurationRow[] {
   const rows: StationDurationRow[] = [];
   for (const [stationId, { seconds, trays }] of accumByStation) {
     if (seconds.length === 0) continue;
-    const sum = seconds.reduce((a, b) => a + b, 0);
+    const sorted = [...seconds].sort((a, b) => a - b);
+    const sum = sorted.reduce((a, b) => a + b, 0);
+    const meta = metaById.get(stationId);
     rows.push({
       station_id: stationId,
-      station_name: nameById.get(stationId) ?? stationId,
-      avg_seconds: sum / seconds.length,
-      max_seconds: Math.max(...seconds),
+      station_name: meta?.name ?? stationId,
+      avg_seconds: sum / sorted.length,
+      max_seconds: sorted[sorted.length - 1],
+      min_seconds: sorted[0],
+      median_seconds: percentile(sorted, 50),
+      p95_seconds: percentile(sorted, 95),
       order_count: trays.size,
+      max_duration_seconds: meta?.max_duration_seconds ?? null,
+    });
+  }
+  rows.sort((a, b) => a.station_name.localeCompare(b.station_name));
+  return rows;
+}
+
+export function getStationDurations(): StationDuration[] {
+  const accumByStation = collectStationDurationsFromEvents();
+  const stations = stmtStationMeta.all() as StationMeta[];
+  const metaById = new Map(stations.map((s) => [s.id, s]));
+  return buildDurationRows(accumByStation, metaById).map(toStationDuration);
+}
+
+const ACTIVE_MINUTES = 30;
+
+const stmtActiveOrders = db.prepare(`
+  SELECT COUNT(DISTINCT tray_code) AS cnt
+  FROM tracking_events
+  WHERE captured_at >= datetime('now', ?)
+`);
+
+const stmtTrackedOrders = db.prepare(`
+  SELECT COUNT(DISTINCT tray_code) AS cnt
+  FROM tracking_events
+`);
+
+export function getDashboardSummary(): DashboardSummary {
+  const accumByStation = collectStationDurationsFromEvents();
+  const stations = stmtStationMeta.all() as StationMeta[];
+  const metaById = new Map(stations.map((s) => [s.id, s]));
+  const durationRows = buildDurationRows(accumByStation, metaById);
+  const durations = durationRows.map(toStationDuration);
+
+  const { cnt: activeOrders } = stmtActiveOrders.get(`-${ACTIVE_MINUTES} minutes`) as { cnt: number };
+  const { cnt: totalTrackedOrders } = stmtTrackedOrders.get() as { cnt: number };
+
+  let totalAvg = 0;
+  let count = 0;
+  let bottleneckStation: string | null = null;
+  let bottleneckAvg = 0;
+
+  for (const d of durations) {
+    totalAvg += d.avgSeconds;
+    count++;
+    if (d.avgSeconds > bottleneckAvg) {
+      bottleneckAvg = d.avgSeconds;
+      bottleneckStation = d.stationName;
+    }
+  }
+
+  let thresholdViolations = 0;
+  for (const [stationId, { seconds }] of accumByStation) {
+    const threshold = metaById.get(stationId)?.max_duration_seconds;
+    if (threshold == null) continue;
+    for (const sec of seconds) {
+      if (sec >= threshold) thresholdViolations++;
+    }
+  }
+
+  return {
+    activeOrders,
+    totalTrackedOrders,
+    avgDwellSeconds: count > 0 ? Math.round(totalAvg / count) : 0,
+    bottleneckStation,
+    thresholdViolations,
+  };
+}
+
+function utcIsoHour(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}-${String(date.getUTCDate()).padStart(2, "0")}T${String(date.getUTCHours()).padStart(2, "0")}:00:00`;
+}
+
+const stmtHourlyActivity = db.prepare(`
+  SELECT
+    te.station_id,
+    s.name AS station_name,
+    strftime('%Y-%m-%dT%H:00:00', te.captured_at) AS hour,
+    COUNT(*) AS visit_count
+  FROM tracking_events te
+  JOIN stations s ON s.id = te.station_id
+  WHERE te.phase = 'departed'
+    AND te.captured_at >= @since
+  GROUP BY te.station_id, hour
+  ORDER BY te.station_id, hour
+`);
+
+export function getHourlyActivity(): StationActivity[] {
+  const now = new Date();
+  const sinceDate = new Date(now.getTime() - 24 * 3600_000);
+  const sinceIso = sinceDate.toISOString().replace("Z", "");
+
+  const rows = stmtHourlyActivity.all({ since: sinceIso }) as HourlyActivityRow[];
+
+  const byStation = new Map<string, { name: string; buckets: Map<string, number> }>();
+  for (const r of rows) {
+    let entry = byStation.get(r.station_id);
+    if (!entry) {
+      entry = { name: r.station_name, buckets: new Map() };
+      byStation.set(r.station_id, entry);
+    }
+    entry.buckets.set(r.hour, r.visit_count);
+  }
+
+  const hours: string[] = [];
+  for (let i = 23; i >= 0; i--) {
+    hours.push(utcIsoHour(new Date(now.getTime() - i * 3600_000)));
+  }
+
+  const result: StationActivity[] = [];
+  for (const [stationId, { name, buckets }] of byStation) {
+    result.push({
+      stationId,
+      stationName: name,
+      buckets: hours.map((h) => ({ hour: h, count: buckets.get(h) ?? 0 })),
     });
   }
 
-  rows.sort((a, b) => a.station_name.localeCompare(b.station_name));
-  return rows.map(toStationDuration);
+  return result;
 }
