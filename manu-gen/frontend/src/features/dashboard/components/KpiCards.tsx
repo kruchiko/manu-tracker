@@ -1,6 +1,6 @@
 import { useSummary } from "../hooks/useSummary";
 import { formatDuration } from "../dashboard.utils";
-import { useOverviewVisible } from "./DashboardPage";
+import { useOverviewVisible } from "../OverviewVisibleContext";
 
 interface KpiCardProps {
   label: string;

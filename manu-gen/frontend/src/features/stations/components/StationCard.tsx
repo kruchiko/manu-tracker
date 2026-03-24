@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import type { Station } from "../stations.types";
 import { useAssignEye } from "../hooks/useAssignEye";
 import { useUnassignEye } from "../hooks/useUnassignEye";
 import { useDeleteStation } from "../hooks/useDeleteStation";
 import { useUpdateStation } from "../hooks/useUpdateStation";
+
+function deriveThreshold(seconds: number | null): string {
+  return seconds !== null ? String(seconds / 60) : "";
+}
 
 interface StationCardProps {
   station: Station;
@@ -12,15 +16,9 @@ interface StationCardProps {
 export function StationCard({ station }: StationCardProps) {
   const [eyeInput, setEyeInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [thresholdInput, setThresholdInput] = useState(
-    station.maxDurationSeconds !== null ? String(station.maxDurationSeconds / 60) : "",
-  );
+  const [dirtyThreshold, setDirtyThreshold] = useState<string | null>(null);
 
-  useEffect(() => {
-    setThresholdInput(
-      station.maxDurationSeconds !== null ? String(station.maxDurationSeconds / 60) : "",
-    );
-  }, [station.maxDurationSeconds]);
+  const thresholdInput = dirtyThreshold ?? deriveThreshold(station.maxDurationSeconds);
 
   const assignEye = useAssignEye();
   const unassignEye = useUnassignEye();
@@ -56,6 +54,7 @@ export function StationCard({ station }: StationCardProps) {
     const trimmed = thresholdInput.trim();
     const minutes = trimmed === "" ? null : Number(trimmed);
     if (minutes !== null && (isNaN(minutes) || minutes <= 0)) return;
+    setDirtyThreshold(null);
     updateStation.mutate({
       stationId: station.id,
       maxDurationSeconds: minutes !== null ? Math.round(minutes * 60) : null,
@@ -155,7 +154,7 @@ export function StationCard({ station }: StationCardProps) {
             min="0.02"
             step="any"
             value={thresholdInput}
-            onChange={(e) => setThresholdInput(e.target.value)}
+            onChange={(e) => setDirtyThreshold(e.target.value)}
             placeholder="No limit"
             className="w-24 rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
@@ -170,7 +169,7 @@ export function StationCard({ station }: StationCardProps) {
             <button
               type="button"
               onClick={() => {
-                setThresholdInput("");
+                setDirtyThreshold(null);
                 updateStation.mutate({ stationId: station.id, maxDurationSeconds: null });
               }}
               className="rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"

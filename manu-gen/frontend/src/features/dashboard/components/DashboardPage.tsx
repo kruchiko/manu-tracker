@@ -1,10 +1,8 @@
-import { useState, useRef, useEffect, createContext, useContext } from "react";
+import { useState, useRef, useEffect } from "react";
 import { GlobalOverview } from "./GlobalOverview";
 import { OrderDetailView } from "./OrderDetailView";
 import { useOrderBoard } from "../hooks/useOrderBoard";
-
-const OverviewVisibleContext = createContext(true);
-export const useOverviewVisible = () => useContext(OverviewVisibleContext);
+import { OverviewVisibleContext } from "../OverviewVisibleContext";
 
 export function DashboardPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);

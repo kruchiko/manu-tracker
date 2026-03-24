@@ -1,7 +1,7 @@
 import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { useActivity } from "../hooks/useActivity";
 import { buildStationColorMap } from "../dashboard.colors";
-import { useOverviewVisible } from "./DashboardPage";
+import { useOverviewVisible } from "../OverviewVisibleContext";
 
 function formatHour(iso: string): string {
   const d = new Date(iso + "Z");

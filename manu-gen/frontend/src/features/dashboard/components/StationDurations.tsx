@@ -1,7 +1,7 @@
 import { useDurations } from "../hooks/useDurations";
 import { formatDuration } from "../dashboard.utils";
 import { StationBarChart } from "./StationBarChart";
-import { useOverviewVisible } from "./DashboardPage";
+import { useOverviewVisible } from "../OverviewVisibleContext";
 
 export function StationDurations() {
   const visible = useOverviewVisible();
