@@ -17,6 +17,12 @@ curl -sf -X PUT "$BASE_URL/stations/$STATION_ID/eye" \
   -d '{"eyeId":"eye-1"}' > /dev/null
 echo "    Eye assigned."
 
+echo "==> Setting max duration threshold to 1 minute..."
+curl -sf -X PATCH "$BASE_URL/stations/$STATION_ID" \
+  -H 'Content-Type: application/json' \
+  -d '{"maxDurationSeconds":60}' > /dev/null
+echo "    Threshold set."
+
 echo "==> Creating order for Acme Corp..."
 ORDER=$(curl -sf -X POST "$BASE_URL/orders" \
   -H 'Content-Type: application/json' \

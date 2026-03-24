@@ -56,6 +56,7 @@ export interface BoardOrderRow {
   station_name: string | null;
   last_seen_at: string | null;
   station_arrived_at: string | null;
+  max_duration_seconds: number | null;
 }
 
 export interface BoardOrder {
@@ -68,6 +69,7 @@ export interface BoardOrder {
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
+  maxDurationSeconds: number | null;
 }
 
 export function toBoardOrder(row: BoardOrderRow): BoardOrder {
@@ -84,6 +86,7 @@ export function toBoardOrder(row: BoardOrderRow): BoardOrder {
         : null,
     lastSeenAt: row.last_seen_at ? toIso(row.last_seen_at) : null,
     stationArrivedAt: row.station_arrived_at ? toIso(row.station_arrived_at) : null,
+    maxDurationSeconds: row.max_duration_seconds ?? null,
   };
 }
 

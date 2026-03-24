@@ -1,11 +1,14 @@
-import { useEffect, useRef } from "react";
+import { useMemo, useEffect, useRef } from "react";
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import type { BoardOrder, OrderHistoryEntry, OrderHistoryPhase } from "../dashboard.types";
 import { formatDuration, parseUtc } from "../dashboard.utils";
+import { buildStationColorMap } from "../dashboard.colors";
 
 interface OrderHistoryProps {
   order: BoardOrder;
-  onClose: () => void;
+  onClose?: () => void;
+  /** When true, renders without the card wrapper and header (used inside OrderDetailView). */
+  embedded?: boolean;
 }
 
 function formatTime(iso: string): string {
@@ -34,15 +37,112 @@ function showCurrentlyHere(entry: OrderHistoryEntry, isLast: boolean): boolean {
   return entry.phase === "arrived" || entry.phase === "scan";
 }
 
-export function OrderHistory({ order, onClose }: OrderHistoryProps) {
+export function OrderHistory({ order, onClose, embedded }: OrderHistoryProps) {
   const { data, isLoading, error } = useOrderHistory(order.id);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  const colorMap = useMemo(
+    () => buildStationColorMap((data ?? []).map((e) => e.station)),
+    [data],
+  );
+
+  const maxDuration = useMemo(
+    () => Math.max(1, ...(data ?? []).map((e) => e.durationSeconds ?? 0)),
+    [data],
+  );
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [data]);
+
+  const timeline = (
+    <>
+      {isLoading && <p className="text-sm text-gray-500">Loading history...</p>}
+
+      {error && <p className="text-sm text-red-600">Failed to load history: {error.message}</p>}
+
+      {data && data.length === 0 && (
+        <p className="text-sm text-gray-500">No tracking events recorded for this order yet.</p>
+      )}
+
+      {data && data.length > 0 && (
+        <div ref={scrollRef} className="relative overflow-y-auto pl-6" style={embedded ? undefined : { height: "200px" }}>
+          {data.map((entry, index) => {
+            const isLast = index === data.length - 1;
+            const phaseLabel: Record<OrderHistoryPhase, string> = {
+              arrived: "Arrived",
+              departed: "Left",
+              scan: "Scan",
+            };
+            const stationColor = colorMap.get(entry.station) ?? "#3b82f6";
+            const hasDuration = entry.durationSeconds !== null && entry.durationSeconds > 0;
+            const barWidthPercent = hasDuration
+              ? Math.max(4, (entry.durationSeconds! / maxDuration) * 100)
+              : 0;
+
+            return (
+              <div key={entry.id} className="relative pb-5 last:pb-0">
+                {!isLast && (
+                  <div className="absolute left-[-16px] top-3 h-full w-px bg-gray-200" />
+                )}
+                <div
+                  className="absolute left-[-20px] top-1.5 h-2 w-2 rounded-full border-2 bg-white"
+                  style={{ borderColor: stationColor }}
+                />
+                <div>
+                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
+                    {phaseLabel[entry.phase]}
+                  </p>
+                  <p className="font-medium text-gray-900">{entryTitle(entry)}</p>
+                  <p className="text-xs text-gray-500">{formatTime(entry.at)}</p>
+
+                  {entry.phase === "departed" && entry.durationSeconds !== null && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${barWidthPercent}%`,
+                          backgroundColor: stationColor,
+                          opacity: 0.7,
+                        }}
+                      />
+                      <span className="shrink-0 text-xs text-gray-400">
+                        {formatDuration(entry.durationSeconds)}
+                      </span>
+                    </div>
+                  )}
+                  {entry.phase === "scan" && entry.durationSeconds !== null && (
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <div
+                        className="h-2 rounded-full"
+                        style={{
+                          width: `${barWidthPercent}%`,
+                          backgroundColor: stationColor,
+                          opacity: 0.4,
+                        }}
+                      />
+                      <span className="shrink-0 text-xs text-gray-400">
+                        {formatDuration(entry.durationSeconds)}
+                      </span>
+                    </div>
+                  )}
+                  {showCurrentlyHere(entry, isLast) && (
+                    <p className="mt-0.5 text-xs font-medium text-blue-600">Currently at station</p>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+
+  if (embedded) {
+    return timeline;
+  }
 
   return (
     <div className="rounded-lg border bg-white p-5 shadow-sm">
@@ -64,55 +164,7 @@ export function OrderHistory({ order, onClose }: OrderHistoryProps) {
           </svg>
         </button>
       </div>
-
-      {isLoading && <p className="text-sm text-gray-500">Loading history...</p>}
-
-      {error && <p className="text-sm text-red-600">Failed to load history: {error.message}</p>}
-
-      {data && data.length === 0 && (
-        <p className="text-sm text-gray-500">No tracking events recorded for this order yet.</p>
-      )}
-
-      {data && data.length > 0 && (
-        <div ref={scrollRef} className="relative overflow-y-auto pl-6" style={{ height: "200px" }}>
-          {data.map((entry, index) => {
-            const isLast = index === data.length - 1;
-            const phaseLabel: Record<OrderHistoryPhase, string> = {
-              arrived: "Arrived",
-              departed: "Left",
-              scan: "Scan",
-            };
-            return (
-              <div key={entry.id} className="relative pb-5 last:pb-0">
-                {!isLast && (
-                  <div className="absolute left-[-16px] top-3 h-full w-px bg-gray-200" />
-                )}
-                <div className="absolute left-[-20px] top-1.5 h-2 w-2 rounded-full border-2 border-blue-500 bg-white" />
-                <div>
-                  <p className="text-xs font-medium uppercase tracking-wide text-gray-400">
-                    {phaseLabel[entry.phase]}
-                  </p>
-                  <p className="font-medium text-gray-900">{entryTitle(entry)}</p>
-                  <p className="text-xs text-gray-500">{formatTime(entry.at)}</p>
-                  {entry.phase === "departed" && entry.durationSeconds !== null && (
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      Time at station {formatDuration(entry.durationSeconds)}
-                    </p>
-                  )}
-                  {entry.phase === "scan" && entry.durationSeconds !== null && (
-                    <p className="mt-0.5 text-xs text-gray-400">
-                      Until next event {formatDuration(entry.durationSeconds)}
-                    </p>
-                  )}
-                  {showCurrentlyHere(entry, isLast) && (
-                    <p className="mt-0.5 text-xs font-medium text-blue-600">Currently at station</p>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+      {timeline}
     </div>
   );
 }

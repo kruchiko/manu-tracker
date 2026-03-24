@@ -46,3 +46,4 @@ uv.lock
 
 # Local tool installs
 .local/
+package-lock.json

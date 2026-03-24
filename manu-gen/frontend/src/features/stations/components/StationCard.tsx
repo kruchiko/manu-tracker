@@ -3,6 +3,11 @@ import type { Station } from "../stations.types";
 import { useAssignEye } from "../hooks/useAssignEye";
 import { useUnassignEye } from "../hooks/useUnassignEye";
 import { useDeleteStation } from "../hooks/useDeleteStation";
+import { useUpdateStation } from "../hooks/useUpdateStation";
+
+function deriveThreshold(seconds: number | null): string {
+  return seconds !== null ? String(seconds / 60) : "";
+}
 
 interface StationCardProps {
   station: Station;
@@ -11,10 +16,14 @@ interface StationCardProps {
 export function StationCard({ station }: StationCardProps) {
   const [eyeInput, setEyeInput] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [dirtyThreshold, setDirtyThreshold] = useState<string | null>(null);
+
+  const thresholdInput = dirtyThreshold ?? deriveThreshold(station.maxDurationSeconds);
 
   const assignEye = useAssignEye();
   const unassignEye = useUnassignEye();
   const deleteStation = useDeleteStation();
+  const updateStation = useUpdateStation();
 
   function handleAssign(e: React.FormEvent) {
     e.preventDefault();
@@ -40,8 +49,20 @@ export function StationCard({ station }: StationCardProps) {
     });
   }
 
+  function handleThreshold(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmed = thresholdInput.trim();
+    const minutes = trimmed === "" ? null : Number(trimmed);
+    if (minutes !== null && (isNaN(minutes) || minutes <= 0)) return;
+    setDirtyThreshold(null);
+    updateStation.mutate({
+      stationId: station.id,
+      maxDurationSeconds: minutes !== null ? Math.round(minutes * 60) : null,
+    });
+  }
+
   const mutationError =
-    assignEye.error ?? unassignEye.error ?? deleteStation.error;
+    assignEye.error ?? unassignEye.error ?? deleteStation.error ?? updateStation.error;
 
   return (
     <div className="rounded-lg border bg-white p-5 shadow-sm">
@@ -123,6 +144,40 @@ export function StationCard({ station }: StationCardProps) {
             </button>
           </form>
         )}
+      </div>
+
+      <div className="border-t pt-3">
+        <p className="mb-1 text-xs font-medium text-gray-500">Max time at station (minutes)</p>
+        <form onSubmit={handleThreshold} className="flex items-center gap-2">
+          <input
+            type="number"
+            min="0.02"
+            step="any"
+            value={thresholdInput}
+            onChange={(e) => setDirtyThreshold(e.target.value)}
+            placeholder="No limit"
+            className="w-24 rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={updateStation.isPending}
+            className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          >
+            {updateStation.isPending ? "Saving..." : "Set"}
+          </button>
+          {station.maxDurationSeconds !== null && (
+            <button
+              type="button"
+              onClick={() => {
+                setDirtyThreshold(null);
+                updateStation.mutate({ stationId: station.id, maxDurationSeconds: null });
+              }}
+              className="rounded px-2 py-1 text-sm text-gray-500 hover:bg-gray-100"
+            >
+              Clear
+            </button>
+          )}
+        </form>
       </div>
 
       {mutationError && (

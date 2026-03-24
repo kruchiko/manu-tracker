@@ -1,38 +1,50 @@
-import { useState } from "react";
-import { OrderBoard } from "./OrderBoard";
-import { OrderHistory } from "./OrderHistory";
-import { StationDurations } from "./StationDurations";
+import { useState, useRef, useEffect } from "react";
+import { GlobalOverview } from "./GlobalOverview";
+import { OrderDetailView } from "./OrderDetailView";
 import { useOrderBoard } from "../hooks/useOrderBoard";
+import { OverviewVisibleContext } from "../OverviewVisibleContext";
 
 export function DashboardPage() {
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const { data: orders } = useOrderBoard();
   const selectedOrder = orders?.find((o) => o.id === selectedOrderId) ?? null;
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    containerRef.current?.scrollTo({ top: 0 });
+  }, [selectedOrderId]);
+
+  const drilled = selectedOrder !== null;
 
   return (
-    <div className="mx-auto max-w-6xl">
+    <div ref={containerRef} className="overflow-hidden">
       <h2 className="mb-6 text-xl font-semibold text-gray-900">Dashboard</h2>
 
-      <div className={`mb-8 grid gap-6 ${selectedOrder ? "lg:grid-cols-[1fr_20rem]" : ""}`}>
-        <div className="flex flex-col rounded-lg border bg-white p-6 shadow-sm">
-          <h3 className="mb-4 text-lg font-semibold">Live Order Board</h3>
-          <OrderBoard
-            selectedOrderId={selectedOrderId}
-            onSelectOrder={(order) => setSelectedOrderId(order.id)}
-          />
+      <div className="relative">
+        <div
+          className="flex transition-transform duration-300 ease-in-out"
+          style={{ transform: drilled ? "translateX(-100%)" : "translateX(0)" }}
+        >
+          {/* Panel 1: Global Overview */}
+          <div className="w-full shrink-0">
+            <OverviewVisibleContext.Provider value={!drilled}>
+              <GlobalOverview
+                selectedOrderId={selectedOrderId}
+                onSelectOrder={(order) => setSelectedOrderId(order.id)}
+              />
+            </OverviewVisibleContext.Provider>
+          </div>
+
+          {/* Panel 2: Order Detail */}
+          <div className="w-full shrink-0">
+            {selectedOrder && (
+              <OrderDetailView
+                order={selectedOrder}
+                onBack={() => setSelectedOrderId(null)}
+              />
+            )}
+          </div>
         </div>
-
-        {selectedOrder && (
-          <OrderHistory
-            order={selectedOrder}
-            onClose={() => setSelectedOrderId(null)}
-          />
-        )}
-      </div>
-
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold">Stage Duration Analytics</h3>
-        <StationDurations />
       </div>
     </div>
   );

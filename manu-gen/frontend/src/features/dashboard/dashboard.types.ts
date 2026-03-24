@@ -8,6 +8,7 @@ export interface BoardOrder {
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
+  maxDurationSeconds: number | null;
 }
 
 export type OrderHistoryPhase = "arrived" | "departed" | "scan";
@@ -20,10 +21,33 @@ export interface OrderHistoryEntry {
   durationSeconds: number | null;
 }
 
+export interface HourlyBucket {
+  hour: string;
+  count: number;
+}
+
+export interface StationActivity {
+  stationId: string;
+  stationName: string;
+  buckets: HourlyBucket[];
+}
+
+export interface DashboardSummary {
+  activeOrders: number;
+  totalTrackedOrders: number;
+  avgDwellSeconds: number;
+  bottleneckStation: string | null;
+  thresholdViolations: number;
+}
+
 export interface StationDuration {
   stationId: string;
   stationName: string;
   avgSeconds: number;
   maxSeconds: number;
+  minSeconds: number;
+  medianSeconds: number;
+  p95Seconds: number;
   orderCount: number;
+  maxDurationSeconds: number | null;
 }
