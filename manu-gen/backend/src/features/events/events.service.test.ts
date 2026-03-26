@@ -5,6 +5,9 @@ import * as eventsService from "./events.service.js";
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
+  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'tracking_events'");
 });

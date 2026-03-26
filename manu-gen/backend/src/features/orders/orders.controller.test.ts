@@ -2,10 +2,25 @@ import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 import { app } from "../../app.js";
 import db from "../../db.js";
+import * as stationsService from "../stations/stations.service.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
+
+let testPipelineId: string;
 
 beforeEach(() => {
+  db.exec("DELETE FROM tracking_events");
   db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
+  db.exec("DELETE FROM stations");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'orders'");
+
+  const station = stationsService.createStation({ name: "Test Station" });
+  const pipeline = pipelinesService.createPipeline({
+    name: "Test Pipeline",
+    steps: [{ stationId: station.id, maxDurationSeconds: 120 }],
+  });
+  testPipelineId = pipeline.id;
 });
 
 describe("POST /orders", () => {
@@ -14,6 +29,7 @@ describe("POST /orders", () => {
       customerName: "AlphaTech",
       productType: "Dental Crown",
       quantity: 5,
+      pipelineId: testPipelineId,
     });
 
     expect(res.status).toBe(201);
@@ -23,12 +39,14 @@ describe("POST /orders", () => {
     expect(res.body.productType).toBe("Dental Crown");
     expect(res.body.quantity).toBe(5);
     expect(res.body.notes).toBe("");
+    expect(res.body.pipelineId).toBe(testPipelineId);
   });
 
   it("should return 400 when customerName is missing", async () => {
     const res = await request(app).post("/orders").send({
       productType: "Dental Crown",
       quantity: 5,
+      pipelineId: testPipelineId,
     });
 
     expect(res.status).toBe(400);
@@ -40,10 +58,22 @@ describe("POST /orders", () => {
       customerName: "AlphaTech",
       productType: "Dental Crown",
       quantity: 0,
+      pipelineId: testPipelineId,
     });
 
     expect(res.status).toBe(400);
     expect(res.body.error).toContain("quantity");
+  });
+
+  it("should return 400 when pipelineId is missing", async () => {
+    const res = await request(app).post("/orders").send({
+      customerName: "AlphaTech",
+      productType: "Dental Crown",
+      quantity: 5,
+    });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toContain("pipelineId");
   });
 
   it("should return 400 when body is empty", async () => {
@@ -110,6 +140,7 @@ describe("GET /orders/:id", () => {
       customerName: "AlphaTech",
       productType: "Implant",
       quantity: 3,
+      pipelineId: testPipelineId,
     });
     const id = createRes.body.id;
 
@@ -125,6 +156,7 @@ describe("GET /orders/tray/:trayCode", () => {
       customerName: "AlphaTech",
       productType: "Implant",
       quantity: 3,
+      pipelineId: testPipelineId,
     });
 
     const res = await request(app).get("/orders/tray/TRAY-0001");
@@ -150,6 +182,7 @@ describe("GET /orders/:id/qr", () => {
       customerName: "AlphaTech",
       productType: "Dental Crown",
       quantity: 1,
+      pipelineId: testPipelineId,
     });
 
     const res = await request(app).get("/orders/1/qr");
@@ -162,6 +195,7 @@ describe("GET /orders/:id/qr", () => {
       customerName: "AlphaTech",
       productType: "Dental Crown",
       quantity: 1,
+      pipelineId: testPipelineId,
     });
 
     const res = await request(app).get("/orders/1/qr?format=dataurl");

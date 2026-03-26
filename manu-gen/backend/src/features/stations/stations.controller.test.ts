@@ -2,9 +2,13 @@ import { describe, it, expect, beforeEach } from "vitest";
 import request from "supertest";
 import { app } from "../../app.js";
 import db from "../../db.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
+  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
 });
 
@@ -182,5 +186,20 @@ describe("DELETE /stations/:id", () => {
     const res = await request(app).delete("/stations/nonexistent");
 
     expect(res.status).toBe(404);
+  });
+
+  it("should return 409 when station is used in a pipeline", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Busy" });
+    const id = createRes.body.id;
+
+    pipelinesService.createPipeline({
+      name: "Flow",
+      steps: [{ stationId: id, maxDurationSeconds: null }],
+    });
+
+    const res = await request(app).delete(`/stations/${id}`);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error).toContain("pipeline");
   });
 });

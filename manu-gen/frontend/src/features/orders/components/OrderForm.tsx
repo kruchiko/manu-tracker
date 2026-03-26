@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createOrderSchema, type CreateOrderFormValues } from "../orders.schema";
 import { useCreateOrder } from "../hooks/useCreateOrder";
+import { usePipelines } from "../../pipelines/hooks/usePipelines";
 import type { Order } from "../orders.types";
 
 interface OrderFormProps {
@@ -13,12 +14,18 @@ export function OrderForm({ onOrderCreated }: OrderFormProps) {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<CreateOrderFormValues>({
     resolver: zodResolver(createOrderSchema),
+    defaultValues: { pipelineId: "" },
   });
 
   const { mutate, isPending, error } = useCreateOrder();
+  const { data: pipelines } = usePipelines();
+
+  const selectedPipelineId = watch("pipelineId");
+  const selectedPipeline = pipelines?.find((p) => p.id === selectedPipelineId);
 
   function onSubmit(values: CreateOrderFormValues) {
     mutate(values, {
@@ -77,6 +84,35 @@ export function OrderForm({ onOrderCreated }: OrderFormProps) {
         />
         {errors.quantity && (
           <p className="text-xs text-red-600">{errors.quantity.message}</p>
+        )}
+      </div>
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="pipelineId" className="text-sm font-medium">
+          Pipeline
+        </label>
+        <select
+          id="pipelineId"
+          {...register("pipelineId")}
+          className={`rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            errors.pipelineId ? "border-red-400 ring-1 ring-red-400" : ""
+          }`}
+        >
+          <option value="">Select a pipeline...</option>
+          {pipelines?.map((p) => (
+            <option key={p.id} value={p.id}>{p.name}</option>
+          ))}
+        </select>
+        {errors.pipelineId && (
+          <p className="text-xs text-red-600">{errors.pipelineId.message}</p>
+        )}
+        {selectedPipeline && (
+          <p className="text-xs text-gray-400">
+            {selectedPipeline.steps.length} step{selectedPipeline.steps.length !== 1 ? "s" : ""}
+            {selectedPipeline.totalExpectedSeconds !== null && (
+              <span> &middot; ~{Math.round(selectedPipeline.totalExpectedSeconds / 60)}m expected</span>
+            )}
+          </p>
         )}
       </div>
 

@@ -8,6 +8,7 @@ export const createOrderSchema = z.object({
     .int("Quantity must be a whole number")
     .min(1, "Quantity must be at least 1"),
   notes: z.string().optional(),
+  pipelineId: z.string().min(1, "Pipeline is required"),
 });
 
 export type CreateOrderFormValues = z.infer<typeof createOrderSchema>;

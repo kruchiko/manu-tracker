@@ -18,6 +18,8 @@ const sampleOrders: Order[] = [
     quantity: 10,
     notes: "",
     trayCode: "TRAY-0001",
+    pipelineId: "pipeline-abc",
+    pipelineName: "Standard Flow",
     createdAt: "2024-01-15T10:00:00Z",
   },
   {
@@ -28,6 +30,8 @@ const sampleOrders: Order[] = [
     quantity: 5,
     notes: "",
     trayCode: "TRAY-0002",
+    pipelineId: "pipeline-abc",
+    pipelineName: "Standard Flow",
     createdAt: "2024-01-16T11:00:00Z",
   },
 ];

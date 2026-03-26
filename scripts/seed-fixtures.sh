@@ -17,16 +17,18 @@ curl -sf -X PUT "$BASE_URL/stations/$STATION_ID/eye" \
   -d '{"eyeId":"eye-1"}' > /dev/null
 echo "    Eye assigned."
 
-echo "==> Setting max duration threshold to 1 minute..."
-curl -sf -X PATCH "$BASE_URL/stations/$STATION_ID" \
+echo "==> Creating pipeline 'Standard Flow'..."
+PIPELINE=$(curl -sf -X POST "$BASE_URL/pipelines" \
   -H 'Content-Type: application/json' \
-  -d '{"maxDurationSeconds":60}' > /dev/null
-echo "    Threshold set."
+  -d "{\"name\":\"Standard Flow\",\"description\":\"Default processing pipeline\",\"steps\":[{\"stationId\":\"$STATION_ID\",\"maxDurationSeconds\":60}]}")
+
+PIPELINE_ID=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+echo "    Pipeline created: $PIPELINE_ID"
 
 echo "==> Creating order for Acme Corp..."
 ORDER=$(curl -sf -X POST "$BASE_URL/orders" \
   -H 'Content-Type: application/json' \
-  -d '{"customerName":"Acme Corp","productType":"Widget A","quantity":1}')
+  -d "{\"customerName\":\"Acme Corp\",\"productType\":\"Widget A\",\"quantity\":1,\"pipelineId\":\"$PIPELINE_ID\"}")
 
 ORDER_ID=$(echo "$ORDER" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
 TRAY_CODE=$(echo "$ORDER" | python3 -c "import sys,json; print(json.load(sys.stdin)['trayCode'])")

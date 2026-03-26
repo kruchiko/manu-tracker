@@ -1,3 +1,12 @@
+export interface BoardOrderPipeline {
+  id: string;
+  name: string;
+  stepPosition: number;
+  totalSteps: number;
+  expectedSeconds: number | null;
+  elapsedSeconds: number | null;
+}
+
 export interface BoardOrder {
   id: number;
   orderNumber: string;
@@ -9,6 +18,7 @@ export interface BoardOrder {
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
   maxDurationSeconds: number | null;
+  pipeline: BoardOrderPipeline;
 }
 
 export type OrderHistoryPhase = "arrived" | "departed" | "scan";
@@ -49,5 +59,4 @@ export interface StationDuration {
   medianSeconds: number;
   p95Seconds: number;
   orderCount: number;
-  maxDurationSeconds: number | null;
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export type PageId = "dashboard" | "orders" | "stations";
+export type PageId = "dashboard" | "orders" | "stations" | "pipelines";
 
 interface SidebarProps {
   currentPage: PageId;
@@ -9,6 +9,7 @@ interface SidebarProps {
 
 const NAV_ITEMS: { id: PageId; label: string }[] = [
   { id: "stations", label: "Stations" },
+  { id: "pipelines", label: "Pipelines" },
   { id: "orders", label: "Orders" },
   { id: "dashboard", label: "Dashboard" },
 ];

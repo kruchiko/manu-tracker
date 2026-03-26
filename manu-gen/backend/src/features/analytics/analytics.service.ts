@@ -110,12 +110,11 @@ function percentile(sorted: number[], p: number): number {
   return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower);
 }
 
-const stmtStationMeta = db.prepare(`SELECT id, name, max_duration_seconds FROM stations`);
+const stmtStationMeta = db.prepare(`SELECT id, name FROM stations`);
 
 interface StationMeta {
   id: string;
   name: string;
-  max_duration_seconds: number | null;
 }
 
 function buildDurationRows(
@@ -137,11 +136,36 @@ function buildDurationRows(
       median_seconds: percentile(sorted, 50),
       p95_seconds: percentile(sorted, 95),
       order_count: trays.size,
-      max_duration_seconds: meta?.max_duration_seconds ?? null,
     });
   }
   rows.sort((a, b) => a.station_name.localeCompare(b.station_name));
   return rows;
+}
+
+interface PipelineStepThreshold {
+  station_id: string;
+  max_duration_seconds: number;
+}
+
+const stmtPipelineStepThresholds = db.prepare(`
+  SELECT station_id, MIN(max_duration_seconds) AS max_duration_seconds
+  FROM pipeline_steps
+  WHERE max_duration_seconds IS NOT NULL
+  GROUP BY station_id
+`);
+
+function countThresholdViolations(accumByStation: Map<string, StationDurationAccum>): number {
+  const rows = stmtPipelineStepThresholds.all() as PipelineStepThreshold[];
+  const thresholdByStation = new Map(rows.map((r) => [r.station_id, r.max_duration_seconds]));
+  let count = 0;
+  for (const [stationId, { seconds }] of accumByStation) {
+    const threshold = thresholdByStation.get(stationId);
+    if (threshold == null) continue;
+    for (const sec of seconds) {
+      if (sec >= threshold) count++;
+    }
+  }
+  return count;
 }
 
 export function getStationDurations(): StationDuration[] {
@@ -188,14 +212,7 @@ export function getDashboardSummary(): DashboardSummary {
     }
   }
 
-  let thresholdViolations = 0;
-  for (const [stationId, { seconds }] of accumByStation) {
-    const threshold = metaById.get(stationId)?.max_duration_seconds;
-    if (threshold == null) continue;
-    for (const sec of seconds) {
-      if (sec >= threshold) thresholdViolations++;
-    }
-  }
+  const thresholdViolations = countThresholdViolations(accumByStation);
 
   return {
     activeOrders,

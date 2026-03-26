@@ -21,6 +21,8 @@ const sampleOrder: Order = {
   quantity: 5,
   notes: "",
   trayCode: "TRAY-0001",
+  pipelineId: "pipeline-abc",
+  pipelineName: "Standard Flow",
   createdAt: "2024-01-01T00:00:00Z",
 };
 
@@ -40,6 +42,7 @@ describe("useCreateOrder", () => {
       customerName: "Acme Corp",
       productType: "Widget A",
       quantity: 5,
+      pipelineId: "pipeline-abc",
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -48,6 +51,7 @@ describe("useCreateOrder", () => {
       customerName: "Acme Corp",
       productType: "Widget A",
       quantity: 5,
+      pipelineId: "pipeline-abc",
     });
   });
 
@@ -67,6 +71,7 @@ describe("useCreateOrder", () => {
       customerName: "Acme Corp",
       productType: "Widget A",
       quantity: 5,
+      pipelineId: "pipeline-abc",
     });
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
@@ -89,6 +94,7 @@ describe("useCreateOrder", () => {
       customerName: "Acme Corp",
       productType: "Widget A",
       quantity: 5,
+      pipelineId: "pipeline-abc",
     });
 
     await waitFor(() => expect(result.current.isError).toBe(true));

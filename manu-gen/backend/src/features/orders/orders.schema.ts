@@ -6,9 +6,10 @@ export const createOrderSchema = z.object({
   productType: z.string().min(1, "productType is required"),
   quantity: z.number().int().min(1, "quantity must be at least 1"),
   notes: z.string().optional().default(""),
+  pipelineId: z.string().min(1, "pipelineId is required"),
 });
 
-export type CreateOrderInput = z.input<typeof createOrderSchema>;
+export type CreateOrderInput = z.infer<typeof createOrderSchema>;
 
 export interface OrderRow {
   id: number;
@@ -19,6 +20,8 @@ export interface OrderRow {
   notes: string;
   tray_code: string;
   created_at: string;
+  pipeline_id: string;
+  pipeline_name: string;
 }
 
 export interface Order {
@@ -30,6 +33,8 @@ export interface Order {
   notes: string;
   trayCode: string;
   createdAt: string;
+  pipelineId: string;
+  pipelineName: string;
 }
 
 export function toOrder(row: OrderRow): Order {
@@ -42,6 +47,8 @@ export function toOrder(row: OrderRow): Order {
     notes: row.notes,
     trayCode: row.tray_code,
     createdAt: row.created_at,
+    pipelineId: row.pipeline_id,
+    pipelineName: row.pipeline_name,
   };
 }
 
@@ -57,6 +64,12 @@ export interface BoardOrderRow {
   last_seen_at: string | null;
   station_arrived_at: string | null;
   max_duration_seconds: number | null;
+  pipeline_id: string;
+  pipeline_name: string;
+  pipeline_step_position: number | null;
+  pipeline_total_steps: number;
+  pipeline_expected_seconds: number | null;
+  first_event_at: string | null;
 }
 
 export interface BoardOrder {
@@ -70,9 +83,21 @@ export interface BoardOrder {
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
   maxDurationSeconds: number | null;
+  pipeline: {
+    id: string;
+    name: string;
+    stepPosition: number;
+    totalSteps: number;
+    expectedSeconds: number | null;
+    elapsedSeconds: number | null;
+  };
 }
 
 export function toBoardOrder(row: BoardOrderRow): BoardOrder {
+  const firstEventMs = row.first_event_at ? new Date(row.first_event_at + "Z").getTime() : null;
+  const elapsedSeconds =
+    firstEventMs !== null ? Math.floor((Date.now() - firstEventMs) / 1000) : null;
+
   return {
     id: row.id,
     orderNumber: row.order_number,
@@ -87,6 +112,14 @@ export function toBoardOrder(row: BoardOrderRow): BoardOrder {
     lastSeenAt: row.last_seen_at ? toIso(row.last_seen_at) : null,
     stationArrivedAt: row.station_arrived_at ? toIso(row.station_arrived_at) : null,
     maxDurationSeconds: row.max_duration_seconds ?? null,
+    pipeline: {
+      id: row.pipeline_id,
+      name: row.pipeline_name,
+      stepPosition: row.pipeline_step_position ?? 0,
+      totalSteps: row.pipeline_total_steps,
+      expectedSeconds: row.pipeline_expected_seconds,
+      elapsedSeconds,
+    },
   };
 }
 

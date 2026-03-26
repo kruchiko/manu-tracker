@@ -17,6 +17,8 @@ const sampleOrder: Order = {
   productType: "Widget",
   quantity: 2,
   notes: "",
+  pipelineId: "pipeline-abc",
+  pipelineName: "Standard Flow",
   createdAt: "2024-01-01T00:00:00Z",
 };
 

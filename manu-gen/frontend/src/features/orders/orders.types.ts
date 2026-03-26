@@ -7,6 +7,8 @@ export interface Order {
   notes: string;
   trayCode: string;
   createdAt: string;
+  pipelineId: string;
+  pipelineName: string;
 }
 
 export type OrdersResponse = Order[];

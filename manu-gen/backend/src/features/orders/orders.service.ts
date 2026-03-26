@@ -19,7 +19,7 @@ const QR_OPTIONS = {
   errorCorrectionLevel: "H",
 } as const;
 
-const ORDER_COLUMNS = "id, order_number, customer_name, product_type, quantity, notes, tray_code, created_at";
+const ORDER_COLUMNS = `o.id, o.order_number, o.customer_name, o.product_type, o.quantity, o.notes, o.tray_code, o.created_at, o.pipeline_id, p.name AS pipeline_name`;
 
 function formatOrderNumber(id: number): string {
   return `ORD-${String(id).padStart(4, "0")}`;
@@ -32,16 +32,20 @@ function formatTrayCode(id: number): string {
 const stmtNextId = db.prepare("SELECT COALESCE(MAX(id), 0) + 1 AS next_id FROM orders");
 
 const stmtInsert = db.prepare(`
-  INSERT INTO orders (id, order_number, customer_name, product_type, quantity, notes, tray_code)
-  VALUES (@id, @order_number, @customer_name, @product_type, @quantity, @notes, @tray_code)
+  INSERT INTO orders (id, order_number, customer_name, product_type, quantity, notes, tray_code, pipeline_id)
+  VALUES (@id, @order_number, @customer_name, @product_type, @quantity, @notes, @tray_code, @pipeline_id)
 `);
 
-const stmtGetById = db.prepare(`SELECT ${ORDER_COLUMNS} FROM orders WHERE id = ?`);
+const stmtGetById = db.prepare(
+  `SELECT ${ORDER_COLUMNS} FROM orders o JOIN pipelines p ON p.id = o.pipeline_id WHERE o.id = ?`,
+);
 
-const stmtGetByTrayCode = db.prepare(`SELECT ${ORDER_COLUMNS} FROM orders WHERE tray_code = ?`);
+const stmtGetByTrayCode = db.prepare(
+  `SELECT ${ORDER_COLUMNS} FROM orders o JOIN pipelines p ON p.id = o.pipeline_id WHERE o.tray_code = ?`,
+);
 
 const stmtListOrders = db.prepare(
-  `SELECT ${ORDER_COLUMNS} FROM orders ORDER BY id DESC LIMIT ? OFFSET ?`,
+  `SELECT ${ORDER_COLUMNS} FROM orders o JOIN pipelines p ON p.id = o.pipeline_id ORDER BY o.id DESC LIMIT ? OFFSET ?`,
 );
 
 const createOrderTx = db.transaction((input: CreateOrderInput): number => {
@@ -55,6 +59,7 @@ const createOrderTx = db.transaction((input: CreateOrderInput): number => {
     quantity: input.quantity,
     notes: input.notes ?? "",
     tray_code: formatTrayCode(nextId),
+    pipeline_id: input.pipelineId,
   });
 
   return nextId;
@@ -105,7 +110,15 @@ const stmtOrderBoard = db.prepare(`
       ORDER BY te2.captured_at DESC, te2.id DESC
       LIMIT 1
     ) END AS station_arrived_at,
-    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE s.max_duration_seconds END AS max_duration_seconds
+    CASE WHEN ranked.phase = 'departed' THEN NULL ELSE
+      ps.max_duration_seconds
+    END AS max_duration_seconds,
+    o.pipeline_id,
+    pl.name AS pipeline_name,
+    ps.position AS pipeline_step_position,
+    (SELECT COUNT(*) FROM pipeline_steps ps2 WHERE ps2.pipeline_id = o.pipeline_id) AS pipeline_total_steps,
+    (SELECT SUM(ps3.max_duration_seconds) FROM pipeline_steps ps3 WHERE ps3.pipeline_id = o.pipeline_id AND ps3.max_duration_seconds IS NOT NULL) AS pipeline_expected_seconds,
+    (SELECT MIN(te3.captured_at) FROM tracking_events te3 WHERE te3.tray_code = o.tray_code) AS first_event_at
   FROM orders o
   LEFT JOIN (
     SELECT
@@ -117,6 +130,8 @@ const stmtOrderBoard = db.prepare(`
     FROM tracking_events
   ) ranked ON ranked.tray_code = o.tray_code AND ranked.rn = 1
   LEFT JOIN stations s ON s.id = ranked.station_id AND ranked.phase != 'departed'
+  JOIN pipelines pl ON pl.id = o.pipeline_id
+  LEFT JOIN pipeline_steps ps ON ps.pipeline_id = o.pipeline_id AND ps.station_id = ranked.station_id AND ranked.phase != 'departed'
   ORDER BY
     CASE WHEN ranked.captured_at IS NULL THEN 1 ELSE 0 END,
     ranked.captured_at ASC

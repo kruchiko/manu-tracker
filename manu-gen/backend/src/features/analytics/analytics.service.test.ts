@@ -3,15 +3,36 @@ import db from "../../db.js";
 import * as analyticsService from "./analytics.service.js";
 import * as ordersService from "../orders/orders.service.js";
 import * as stationsService from "../stations/stations.service.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
 import * as eventsService from "../events/events.service.js";
+
+let testPipelineId: string;
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
   db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'orders'");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'tracking_events'");
+
+  const station = stationsService.createStation({ name: "Seed Station" });
+  const pipeline = pipelinesService.createPipeline({
+    name: "Seed Pipeline",
+    steps: [{ stationId: station.id, maxDurationSeconds: null }],
+  });
+  testPipelineId = pipeline.id;
 });
+
+function createTestOrder(overrides?: Partial<{ customerName: string; productType: string; quantity: number }>) {
+  return ordersService.createOrder({
+    customerName: overrides?.customerName ?? "A",
+    productType: overrides?.productType ?? "X",
+    quantity: overrides?.quantity ?? 1,
+    pipelineId: testPipelineId,
+  });
+}
 
 describe("getStationDurations", () => {
   it("should return empty array when no events exist", () => {
@@ -19,7 +40,7 @@ describe("getStationDurations", () => {
   });
 
   it("should exclude stations where the order is still present (no next event)", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Moulding" });
 
     eventsService.createEvent({
@@ -33,8 +54,8 @@ describe("getStationDurations", () => {
   });
 
   it("should compute avg and max durations across orders", () => {
-    const order1 = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
-    const order2 = ordersService.createOrder({ customerName: "B", productType: "Y", quantity: 1 });
+    const order1 = createTestOrder({ customerName: "A" });
+    const order2 = createTestOrder({ customerName: "B", productType: "Y" });
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 
@@ -73,7 +94,7 @@ describe("getStationDurations", () => {
   });
 
   it("should compute correct durations with Z-suffixed timestamps", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 
@@ -98,7 +119,7 @@ describe("getStationDurations", () => {
   });
 
   it("should count each arrived-departed visit separately at the same station", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Polishing" });
 
     eventsService.createEvent({

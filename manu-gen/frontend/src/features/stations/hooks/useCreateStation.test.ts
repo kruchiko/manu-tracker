@@ -18,7 +18,6 @@ const sampleStation: Station = {
   name: "Polishing",
   location: "Floor 2",
   eyeId: null,
-  maxDurationSeconds: null,
 };
 
 describe("useCreateStation", () => {
