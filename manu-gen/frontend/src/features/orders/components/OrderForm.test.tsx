@@ -9,7 +9,16 @@ vi.mock("../hooks/useCreateOrder", () => ({
   useCreateOrder: vi.fn(),
 }));
 
+vi.mock("../../pipelines/hooks/usePipelines", () => ({
+  usePipelines: vi.fn(),
+}));
+
 import { useCreateOrder } from "../hooks/useCreateOrder";
+import { usePipelines } from "../../pipelines/hooks/usePipelines";
+
+const samplePipelines = [
+  { id: "pipeline-abc", name: "Standard Flow", description: "", createdAt: "", steps: [], totalExpectedSeconds: null },
+];
 
 const sampleOrder: Order = {
   id: 42,
@@ -19,12 +28,23 @@ const sampleOrder: Order = {
   quantity: 5,
   notes: "",
   trayCode: "TRAY-0042",
+  pipelineId: "pipeline-abc",
+  pipelineName: "Standard Flow",
   createdAt: "2024-01-01T00:00:00Z",
 };
+
+function mockPipelines() {
+  vi.mocked(usePipelines).mockReturnValue({
+    data: samplePipelines,
+    isLoading: false,
+    error: null,
+  } as unknown as ReturnType<typeof usePipelines>);
+}
 
 describe("OrderForm", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockPipelines();
   });
 
   it("should render all form fields", () => {
@@ -41,6 +61,7 @@ describe("OrderForm", () => {
     expect(screen.getByLabelText("Customer Name")).toBeInTheDocument();
     expect(screen.getByLabelText("Product Type")).toBeInTheDocument();
     expect(screen.getByLabelText("Quantity")).toBeInTheDocument();
+    expect(screen.getByLabelText("Pipeline")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Create Order" }),
     ).toBeInTheDocument();
@@ -63,7 +84,7 @@ describe("OrderForm", () => {
     await waitFor(() => {
       expect(screen.getByText("Customer name is required")).toBeInTheDocument();
       expect(screen.getByText("Product type is required")).toBeInTheDocument();
-      expect(screen.getByText("Quantity must be a number")).toBeInTheDocument();
+      expect(screen.getByText("Pipeline is required")).toBeInTheDocument();
     });
   });
 
@@ -84,6 +105,7 @@ describe("OrderForm", () => {
     await user.type(screen.getByLabelText("Product Type"), "Widget A");
     await user.clear(screen.getByLabelText("Quantity"));
     await user.type(screen.getByLabelText("Quantity"), "5");
+    await user.selectOptions(screen.getByLabelText("Pipeline"), "pipeline-abc");
     await user.click(screen.getByRole("button", { name: "Create Order" }));
 
     await waitFor(() => {
@@ -93,6 +115,7 @@ describe("OrderForm", () => {
           productType: "Widget A",
           quantity: 5,
           notes: "",
+          pipelineId: "pipeline-abc",
         },
         expect.any(Object),
       );
@@ -119,6 +142,7 @@ describe("OrderForm", () => {
     await user.type(screen.getByLabelText("Product Type"), "Widget A");
     await user.clear(screen.getByLabelText("Quantity"));
     await user.type(screen.getByLabelText("Quantity"), "5");
+    await user.selectOptions(screen.getByLabelText("Pipeline"), "pipeline-abc");
     await user.click(screen.getByRole("button", { name: "Create Order" }));
 
     await waitFor(() => {

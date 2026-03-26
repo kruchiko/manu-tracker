@@ -40,6 +40,8 @@ export function OrderBoard({ selectedOrderId, onSelectOrder }: OrderBoardProps) 
             <th className="py-2 pr-4 font-medium">Order</th>
             <th className="py-2 pr-4 font-medium">Customer</th>
             <th className="py-2 pr-4 font-medium">Product</th>
+            <th className="py-2 pr-4 font-medium">Pipeline</th>
+            <th className="py-2 pr-4 font-medium">Progress</th>
             <th className="py-2 pr-4 font-medium">Current Station</th>
             <th className="py-2 pr-4 font-medium">Time at Station</th>
             <th className="py-2 font-medium">Last Seen</th>

@@ -1,9 +1,13 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import db from "../../db.js";
 import * as stationsService from "./stations.service.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
+  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
 });
 
@@ -145,6 +149,21 @@ describe("deleteStation", () => {
 
   it("should throw 404 when station does not exist", () => {
     expect(() => stationsService.deleteStation("nonexistent")).toThrow("not found");
+  });
+
+  it("should throw 409 when station is referenced by pipeline steps", () => {
+    const station = stationsService.createStation({ name: "In Pipeline" });
+    pipelinesService.createPipeline({
+      name: "Flow",
+      steps: [{ stationId: station.id, maxDurationSeconds: null }],
+    });
+
+    expect(() => stationsService.deleteStation(station.id)).toThrow(
+      expect.objectContaining({ statusCode: 409 }),
+    );
+
+    const found = stationsService.getStationById(station.id);
+    expect(found.id).toBe(station.id);
   });
 });
 

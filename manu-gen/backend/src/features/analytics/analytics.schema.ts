@@ -7,7 +7,6 @@ export interface StationDurationRow {
   median_seconds: number;
   p95_seconds: number;
   order_count: number;
-  max_duration_seconds: number | null;
 }
 
 export interface StationDuration {
@@ -19,7 +18,6 @@ export interface StationDuration {
   medianSeconds: number;
   p95Seconds: number;
   orderCount: number;
-  maxDurationSeconds: number | null;
 }
 
 export function toStationDuration(row: StationDurationRow): StationDuration {
@@ -32,7 +30,6 @@ export function toStationDuration(row: StationDurationRow): StationDuration {
     medianSeconds: Math.round(row.median_seconds),
     p95Seconds: Math.round(row.p95_seconds),
     orderCount: row.order_count,
-    maxDurationSeconds: row.max_duration_seconds,
   };
 }
 

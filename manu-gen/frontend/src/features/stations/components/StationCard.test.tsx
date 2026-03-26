@@ -18,7 +18,6 @@ const unassignedStation: Station = {
   name: "Polishing",
   location: "Floor 2",
   eyeId: null,
-  maxDurationSeconds: null,
 };
 
 const assignedStation: Station = {
@@ -26,7 +25,6 @@ const assignedStation: Station = {
   name: "Casting",
   location: "Floor 1",
   eyeId: "eye-1",
-  maxDurationSeconds: null,
 };
 
 function mockHooks(overrides?: {

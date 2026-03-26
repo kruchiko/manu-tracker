@@ -2,23 +2,40 @@ import { describe, it, expect, beforeEach } from "vitest";
 import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import * as ordersService from "./orders.service.js";
+import * as stationsService from "../stations/stations.service.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
+
+let testPipelineId: string;
 
 beforeEach(() => {
+  db.exec("DELETE FROM tracking_events");
   db.exec("DELETE FROM orders");
-  // Reset the AUTOINCREMENT counter so each test starts from id=1.
-  // This couples teardown to SQLite internals; accepted pragmatism until
-  // the service supports dependency injection for the DB.
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
+  db.exec("DELETE FROM stations");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'orders'");
+
+  const station = stationsService.createStation({ name: "Seed Station" });
+  const pipeline = pipelinesService.createPipeline({
+    name: "Seed Pipeline",
+    steps: [{ stationId: station.id, maxDurationSeconds: null }],
+  });
+  testPipelineId = pipeline.id;
 });
+
+function createTestOrder(overrides?: Partial<{ customerName: string; productType: string; quantity: number; notes: string }>) {
+  return ordersService.createOrder({
+    customerName: overrides?.customerName ?? "AlphaTech",
+    productType: overrides?.productType ?? "Dental Crown",
+    quantity: overrides?.quantity ?? 10,
+    notes: overrides?.notes ?? "Test batch",
+    pipelineId: testPipelineId,
+  });
+}
 
 describe("createOrder", () => {
   it("should create an order with auto-generated orderNumber and trayCode", () => {
-    const order = ordersService.createOrder({
-      customerName: "AlphaTech",
-      productType: "Dental Crown",
-      quantity: 10,
-      notes: "Test batch",
-    });
+    const order = createTestOrder();
 
     expect(order.id).toBe(1);
     expect(order.orderNumber).toMatch(/^ORD-\d{4,}$/);
@@ -28,19 +45,12 @@ describe("createOrder", () => {
     expect(order.quantity).toBe(10);
     expect(order.notes).toBe("Test batch");
     expect(order.createdAt).toBeDefined();
+    expect(order.pipelineId).toBe(testPipelineId);
   });
 
   it("should increment orderNumber and trayCode sequentially", () => {
-    const first = ordersService.createOrder({
-      customerName: "A",
-      productType: "X",
-      quantity: 1,
-    });
-    const second = ordersService.createOrder({
-      customerName: "B",
-      productType: "Y",
-      quantity: 2,
-    });
+    const first = createTestOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const second = createTestOrder({ customerName: "B", productType: "Y", quantity: 2 });
 
     expect(first.orderNumber).toBe("ORD-0001");
     expect(first.trayCode).toBe("TRAY-0001");
@@ -53,6 +63,7 @@ describe("createOrder", () => {
       customerName: "C",
       productType: "Z",
       quantity: 1,
+      pipelineId: testPipelineId,
     });
     expect(order.notes).toBe("");
   });
@@ -60,11 +71,7 @@ describe("createOrder", () => {
 
 describe("getOrderById", () => {
   it("should return the order when it exists", () => {
-    const created = ordersService.createOrder({
-      customerName: "AlphaTech",
-      productType: "Dental Crown",
-      quantity: 5,
-    });
+    const created = createTestOrder();
     const found = ordersService.getOrderById(created.id);
     expect(found).toEqual(created);
   });
@@ -78,11 +85,7 @@ describe("getOrderById", () => {
 
 describe("getOrderByTrayCode", () => {
   it("should return the order when tray code exists", () => {
-    const created = ordersService.createOrder({
-      customerName: "AlphaTech",
-      productType: "Implant",
-      quantity: 3,
-    });
+    const created = createTestOrder({ customerName: "AlphaTech", productType: "Implant", quantity: 3 });
     const found = ordersService.getOrderByTrayCode(created.trayCode);
     expect(found).toEqual(created);
   });
@@ -98,8 +101,8 @@ describe("listOrders", () => {
   });
 
   it("should return all orders in descending creation order", () => {
-    ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
-    ordersService.createOrder({ customerName: "B", productType: "Y", quantity: 2 });
+    createTestOrder({ customerName: "A", productType: "X", quantity: 1 });
+    createTestOrder({ customerName: "B", productType: "Y", quantity: 2 });
 
     const orders = ordersService.listOrders();
     expect(orders).toHaveLength(2);
@@ -109,16 +112,16 @@ describe("listOrders", () => {
 
   it("should respect limit", () => {
     for (let i = 1; i <= 5; i++) {
-      ordersService.createOrder({ customerName: `C${i}`, productType: "X", quantity: i });
+      createTestOrder({ customerName: `C${i}`, productType: "X", quantity: i });
     }
     const orders = ordersService.listOrders({ limit: 3 });
     expect(orders).toHaveLength(3);
   });
 
   it("should respect offset", () => {
-    ordersService.createOrder({ customerName: "First", productType: "X", quantity: 1 });
-    ordersService.createOrder({ customerName: "Second", productType: "X", quantity: 1 });
-    ordersService.createOrder({ customerName: "Third", productType: "X", quantity: 1 });
+    createTestOrder({ customerName: "First", productType: "X", quantity: 1 });
+    createTestOrder({ customerName: "Second", productType: "X", quantity: 1 });
+    createTestOrder({ customerName: "Third", productType: "X", quantity: 1 });
 
     const orders = ordersService.listOrders({ limit: 10, offset: 1 });
     expect(orders).toHaveLength(2);
@@ -126,18 +129,14 @@ describe("listOrders", () => {
   });
 
   it("should return empty array when offset exceeds total count", () => {
-    ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    createTestOrder({ customerName: "A", productType: "X", quantity: 1 });
     expect(ordersService.listOrders({ offset: 100 })).toEqual([]);
   });
 });
 
 describe("generateQrCode", () => {
   it("should return a PNG buffer for a valid order", async () => {
-    const order = ordersService.createOrder({
-      customerName: "AlphaTech",
-      productType: "Dental Crown",
-      quantity: 5,
-    });
+    const order = createTestOrder();
     const buffer = await ordersService.generateQrCode(order.id);
     expect(buffer).toBeInstanceOf(Buffer);
     expect(buffer.length).toBeGreaterThan(0);
@@ -152,11 +151,7 @@ describe("generateQrCode", () => {
 
 describe("generateQrDataUrl", () => {
   it("should return a data URL string for a valid order", async () => {
-    const order = ordersService.createOrder({
-      customerName: "AlphaTech",
-      productType: "Implant",
-      quantity: 3,
-    });
+    const order = createTestOrder();
     const dataUrl = await ordersService.generateQrDataUrl(order.id);
     expect(dataUrl).toMatch(/^data:image\/png;base64,/);
   });

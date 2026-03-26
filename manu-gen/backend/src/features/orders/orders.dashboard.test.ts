@@ -2,15 +2,36 @@ import { describe, it, expect, beforeEach } from "vitest";
 import db from "../../db.js";
 import * as ordersService from "./orders.service.js";
 import * as stationsService from "../stations/stations.service.js";
+import * as pipelinesService from "../pipelines/pipelines.service.js";
 import * as eventsService from "../events/events.service.js";
+
+let testPipelineId: string;
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
   db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM pipeline_steps");
+  db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'orders'");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'tracking_events'");
+
+  const station = stationsService.createStation({ name: "Seed Station" });
+  const pipeline = pipelinesService.createPipeline({
+    name: "Seed Pipeline",
+    steps: [{ stationId: station.id, maxDurationSeconds: null }],
+  });
+  testPipelineId = pipeline.id;
 });
+
+function createTestOrder(overrides?: Partial<{ customerName: string; productType: string; quantity: number }>) {
+  return ordersService.createOrder({
+    customerName: overrides?.customerName ?? "AlphaTech",
+    productType: overrides?.productType ?? "Crown",
+    quantity: overrides?.quantity ?? 1,
+    pipelineId: testPipelineId,
+  });
+}
 
 describe("getOrderBoard", () => {
   it("should return empty array when no orders exist", () => {
@@ -18,7 +39,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should return orders with null station when no events exist", () => {
-    ordersService.createOrder({ customerName: "AlphaTech", productType: "Crown", quantity: 1 });
+    createTestOrder();
 
     const board = ordersService.getOrderBoard();
     expect(board).toHaveLength(1);
@@ -28,7 +49,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should return the latest station for an order with events", () => {
-    const order = ordersService.createOrder({ customerName: "AlphaTech", productType: "Crown", quantity: 1 });
+    const order = createTestOrder();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 
@@ -52,9 +73,9 @@ describe("getOrderBoard", () => {
   });
 
   it("should sort orders with longest wait first, unseen last", () => {
-    const order1 = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
-    ordersService.createOrder({ customerName: "B", productType: "Y", quantity: 1 });
-    const order3 = ordersService.createOrder({ customerName: "C", productType: "Z", quantity: 1 });
+    const order1 = createTestOrder({ customerName: "A", productType: "X" });
+    createTestOrder({ customerName: "B", productType: "Y" });
+    const order3 = createTestOrder({ customerName: "C", productType: "Z" });
 
     const station = stationsService.createStation({ name: "Moulding" });
 
@@ -79,7 +100,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should normalize space-separated SQLite datetimes to ISO format", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Moulding" });
 
     db.prepare(
@@ -93,7 +114,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should handle Z-suffixed timestamps from eye scanners without double-Z", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Moulding" });
 
     db.prepare(
@@ -107,7 +128,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should clear current station when latest event is departed", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Polishing" });
 
     eventsService.createEvent({
@@ -132,7 +153,7 @@ describe("getOrderBoard", () => {
   });
 
   it("should return stationArrivedAt when tray is currently at a station", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Moulding" });
 
     eventsService.createEvent({
@@ -149,14 +170,14 @@ describe("getOrderBoard", () => {
   });
 
   it("should return null stationArrivedAt when no events exist", () => {
-    ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    createTestOrder();
 
     const board = ordersService.getOrderBoard();
     expect(board[0].stationArrivedAt).toBeNull();
   });
 
   it("should return latest arrived time after re-arrival at same station", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Polishing" });
 
     eventsService.createEvent({
@@ -189,7 +210,7 @@ describe("getOrderBoard", () => {
 
 describe("getOrderHistory", () => {
   it("should return empty array when order has no events", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     expect(ordersService.getOrderHistory(order.id)).toEqual([]);
   });
 
@@ -200,7 +221,7 @@ describe("getOrderHistory", () => {
   });
 
   it("should return timeline with computed durations", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
     const station3 = stationsService.createStation({ name: "Kiln" });
@@ -242,7 +263,7 @@ describe("getOrderHistory", () => {
   });
 
   it("should normalize space-separated datetimes and compute correct durations", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying" });
 
@@ -261,7 +282,7 @@ describe("getOrderHistory", () => {
   });
 
   it("should handle Z-suffixed timestamps without double-Z in arrivedAt", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying" });
 
@@ -279,7 +300,7 @@ describe("getOrderHistory", () => {
   });
 
   it("should pair arrived and departed for duration and support repeat visits at same station", () => {
-    const order = ordersService.createOrder({ customerName: "A", productType: "X", quantity: 1 });
+    const order = createTestOrder();
     const station = stationsService.createStation({ name: "Polishing" });
 
     eventsService.createEvent({

@@ -9,8 +9,8 @@ vi.mock("../hooks/useStations", () => ({ useStations: vi.fn() }));
 import { useStations } from "../hooks/useStations";
 
 const sampleStations: Station[] = [
-  { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1", maxDurationSeconds: null },
-  { id: "station-bbb", name: "Casting", location: "", eyeId: null, maxDurationSeconds: null },
+  { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1" },
+  { id: "station-bbb", name: "Casting", location: "", eyeId: null },
 ];
 
 describe("StationList", () => {

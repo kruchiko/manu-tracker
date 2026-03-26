@@ -28,6 +28,9 @@ export default defineConfig({
       "/orders": apiProxy(),
       "/stations": apiProxy(),
       "/analytics": apiProxy(),
+      "/pipelines": apiProxy(),
+      "/events": apiProxy(),
+      "/eyes": apiProxy(),
     },
   },
   test: {

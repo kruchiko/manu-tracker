@@ -1,6 +1,8 @@
 import { useOrderHistory } from "../hooks/useOrderHistory";
 import { OrderJourneyChart } from "./OrderJourneyChart";
 import { OrderHistory } from "./OrderHistory";
+import { PipelineProgress } from "./PipelineProgress";
+import { usePipeline } from "../../pipelines/hooks/usePipeline";
 import type { BoardOrder, OrderHistoryEntry } from "../dashboard.types";
 import { formatDuration } from "../dashboard.utils";
 
@@ -50,6 +52,7 @@ function StatCard({ label, value, sub }: { label: string; value: string; sub?: s
 
 export function OrderDetailView({ order, onBack }: OrderDetailViewProps) {
   const { data, isLoading, error } = useOrderHistory(order.id);
+  const { data: pipelineData } = usePipeline(order.pipeline.id);
   const entries = data ?? [];
   const stats = computeStats(entries);
 
@@ -78,7 +81,17 @@ export function OrderDetailView({ order, onBack }: OrderDetailViewProps) {
 
       {!isLoading && !error && (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+          {pipelineData && (
+            <div className="mb-6">
+              <PipelineProgress
+                pipeline={order.pipeline}
+                steps={pipelineData.steps}
+                historyEntries={entries}
+              />
+            </div>
+          )}
+
+          <div className={`mb-6 grid grid-cols-1 gap-4 ${order.pipeline.expectedSeconds != null ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
             <StatCard
               label="Total tracked time"
               value={stats.totalTrackedSeconds > 0 ? formatDuration(stats.totalTrackedSeconds) : "--"}
@@ -92,6 +105,17 @@ export function OrderDetailView({ order, onBack }: OrderDetailViewProps) {
               value={stats.longestDwellSeconds > 0 ? formatDuration(stats.longestDwellSeconds) : "--"}
               sub={stats.longestDwellStation || undefined}
             />
+            {order.pipeline.expectedSeconds != null && order.pipeline.elapsedSeconds != null && (
+              <StatCard
+                label="Pipeline ETA"
+                value={
+                  order.pipeline.elapsedSeconds <= order.pipeline.expectedSeconds
+                    ? formatDuration(order.pipeline.expectedSeconds - order.pipeline.elapsedSeconds)
+                    : `Overdue ${formatDuration(order.pipeline.elapsedSeconds - order.pipeline.expectedSeconds)}`
+                }
+                sub={`${formatDuration(order.pipeline.elapsedSeconds)} of ${formatDuration(order.pipeline.expectedSeconds)}`}
+              />
+            )}
           </div>
 
           {entries.length > 0 && (
