@@ -18,7 +18,7 @@ export function StationDurations() {
   const durations = data ?? [];
 
   if (durations.length === 0) {
-    return <p className="text-sm text-gray-500">No stage duration data yet. Durations appear once orders move between stations.</p>;
+    return <p className="text-sm text-gray-500">No stage duration data yet. Durations appear once jobs move between stations.</p>;
   }
 
   return (
@@ -35,7 +35,7 @@ export function StationDurations() {
               <th className="py-2 pr-4 font-medium">Min</th>
               <th className="py-2 pr-4 font-medium">Max</th>
               <th className="py-2 pr-4 font-medium">P95</th>
-              <th className="py-2 font-medium">Orders</th>
+              <th className="py-2 font-medium">Jobs</th>
             </tr>
           </thead>
           <tbody>
@@ -47,7 +47,7 @@ export function StationDurations() {
                 <td className="py-3 pr-4">{formatDuration(d.minSeconds)}</td>
                 <td className="py-3 pr-4">{formatDuration(d.maxSeconds)}</td>
                 <td className="py-3 pr-4">{formatDuration(d.p95Seconds)}</td>
-                <td className="py-3">{d.orderCount}</td>
+                <td className="py-3">{d.jobCount}</td>
               </tr>
             ))}
           </tbody>

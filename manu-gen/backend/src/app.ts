@@ -1,6 +1,7 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
-import { ordersRouter } from "./features/orders/orders.controller.js";
+import { jobsRouter } from "./features/jobs/jobs.controller.js";
+import { customerOrdersRouter } from "./features/customer-orders/customer-orders.controller.js";
 import { stationsRouter } from "./features/stations/stations.controller.js";
 import { eyesRouter } from "./features/eyes/eyes.controller.js";
 import { eventsRouter } from "./features/events/events.controller.js";
@@ -33,7 +34,8 @@ app.get("/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.use("/orders", ordersRouter);
+app.use("/jobs", jobsRouter);
+app.use("/customer-orders", customerOrdersRouter);
 app.use("/stations", stationsRouter);
 app.use("/eyes", eyesRouter);
 app.use("/events", eventsRouter);

@@ -1,24 +1,24 @@
-import { OrderBoard } from "./OrderBoard";
+import { JobBoard } from "./JobBoard";
 import { StationDurations } from "./StationDurations";
 import { KpiCards } from "./KpiCards";
 import { ActivitySparklines } from "./ActivitySparklines";
-import type { BoardOrder } from "../dashboard.types";
+import type { BoardJob } from "../dashboard.types";
 
 interface GlobalOverviewProps {
-  selectedOrderId: number | null;
-  onSelectOrder: (order: BoardOrder) => void;
+  selectedJobId: number | null;
+  onSelectJob: (job: BoardJob) => void;
 }
 
-export function GlobalOverview({ selectedOrderId, onSelectOrder }: GlobalOverviewProps) {
+export function GlobalOverview({ selectedJobId, onSelectJob }: GlobalOverviewProps) {
   return (
     <>
       <KpiCards />
 
       <div className="flex flex-col rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold">Live Order Board</h3>
-        <OrderBoard
-          selectedOrderId={selectedOrderId}
-          onSelectOrder={onSelectOrder}
+        <h3 className="mb-4 text-lg font-semibold">Live Job Board</h3>
+        <JobBoard
+          selectedJobId={selectedJobId}
+          onSelectJob={onSelectJob}
         />
       </div>
 

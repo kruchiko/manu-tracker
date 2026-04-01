@@ -3,13 +3,16 @@ import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import * as pipelinesService from "./pipelines.service.js";
 import * as stationsService from "../stations/stations.service.js";
-import * as ordersService from "../orders/orders.service.js";
+import * as jobsService from "../jobs/jobs.service.js";
 
 let stationId: string;
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
-  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM job_allocations");
+  db.exec("DELETE FROM order_lines");
+  db.exec("DELETE FROM customer_orders");
+  db.exec("DELETE FROM jobs");
   db.exec("DELETE FROM pipeline_steps");
   db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
@@ -111,7 +114,7 @@ describe("listPipelines", () => {
 });
 
 describe("deletePipeline", () => {
-  it("should delete a pipeline with no orders", () => {
+  it("should delete a pipeline with no jobs", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "Disposable",
       steps: [{ stationId, maxDurationSeconds: null }],
@@ -124,17 +127,15 @@ describe("deletePipeline", () => {
     );
   });
 
-  it("should reject deletion when orders reference the pipeline", () => {
+  it("should reject deletion when jobs reference the pipeline", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "In Use",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
 
-    ordersService.createOrder({
-      customerName: "Acme",
+    jobsService.createJob({
       productType: "Widget",
       quantity: 1,
-      notes: "",
       pipelineId: pipeline.id,
     });
 

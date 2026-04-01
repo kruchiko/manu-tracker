@@ -25,18 +25,18 @@ PIPELINE=$(curl -sf -X POST "$BASE_URL/pipelines" \
 PIPELINE_ID=$(echo "$PIPELINE" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
 echo "    Pipeline created: $PIPELINE_ID"
 
-echo "==> Creating order for Acme Corp..."
-ORDER=$(curl -sf -X POST "$BASE_URL/orders" \
+echo "==> Creating job for Widget A..."
+JOB=$(curl -sf -X POST "$BASE_URL/jobs" \
   -H 'Content-Type: application/json' \
-  -d "{\"customerName\":\"Acme Corp\",\"productType\":\"Widget A\",\"quantity\":1,\"pipelineId\":\"$PIPELINE_ID\"}")
+  -d "{\"productType\":\"Widget A\",\"quantity\":1,\"pipelineId\":\"$PIPELINE_ID\"}")
 
-ORDER_ID=$(echo "$ORDER" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
-TRAY_CODE=$(echo "$ORDER" | python3 -c "import sys,json; print(json.load(sys.stdin)['trayCode'])")
-echo "    Order created: id=$ORDER_ID trayCode=$TRAY_CODE"
+JOB_ID=$(echo "$JOB" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])")
+TRAY_CODE=$(echo "$JOB" | python3 -c "import sys,json; print(json.load(sys.stdin)['trayCode'])")
+echo "    Job created: id=$JOB_ID trayCode=$TRAY_CODE"
 
 echo "==> Downloading QR code..."
 QR_PATH="scripts/qr-${TRAY_CODE}.png"
-curl -sf "$BASE_URL/orders/$ORDER_ID/qr" -o "$QR_PATH"
+curl -sf "$BASE_URL/jobs/$JOB_ID/qr" -o "$QR_PATH"
 echo "    QR saved to $QR_PATH"
 
 echo ""

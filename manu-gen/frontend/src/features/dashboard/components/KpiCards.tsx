@@ -42,8 +42,8 @@ export function KpiCards() {
   return (
     <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
       <KpiCard
-        label="Active orders (30m)"
-        value={`${data.activeOrders} / ${data.totalTrackedOrders}`}
+        label="Active jobs (30m)"
+        value={`${data.activeJobs} / ${data.totalTrackedJobs}`}
       />
       <KpiCard
         label="Avg dwell time"

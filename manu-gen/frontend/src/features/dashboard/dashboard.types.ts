@@ -1,4 +1,4 @@
-export interface BoardOrderPipeline {
+export interface BoardJobPipeline {
   id: string;
   name: string;
   stepPosition: number;
@@ -7,10 +7,9 @@ export interface BoardOrderPipeline {
   elapsedSeconds: number | null;
 }
 
-export interface BoardOrder {
+export interface BoardJob {
   id: number;
-  orderNumber: string;
-  customerName: string;
+  jobNumber: string;
   productType: string;
   trayCode: string;
   createdAt: string;
@@ -18,14 +17,14 @@ export interface BoardOrder {
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
   maxDurationSeconds: number | null;
-  pipeline: BoardOrderPipeline;
+  pipeline: BoardJobPipeline;
 }
 
-export type OrderHistoryPhase = "arrived" | "departed" | "scan";
+export type JobHistoryPhase = "arrived" | "departed" | "scan";
 
-export interface OrderHistoryEntry {
+export interface JobHistoryEntry {
   id: number;
-  phase: OrderHistoryPhase;
+  phase: JobHistoryPhase;
   station: string;
   at: string;
   durationSeconds: number | null;
@@ -43,8 +42,8 @@ export interface StationActivity {
 }
 
 export interface DashboardSummary {
-  activeOrders: number;
-  totalTrackedOrders: number;
+  activeJobs: number;
+  totalTrackedJobs: number;
   avgDwellSeconds: number;
   bottleneckStation: string | null;
   thresholdViolations: number;
@@ -58,5 +57,5 @@ export interface StationDuration {
   minSeconds: number;
   medianSeconds: number;
   p95Seconds: number;
-  orderCount: number;
+  jobCount: number;
 }

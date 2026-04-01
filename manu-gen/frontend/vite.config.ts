@@ -25,7 +25,8 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
     proxy: {
-      "/orders": apiProxy(),
+      "/jobs": apiProxy(),
+      "/customer-orders": apiProxy(),
       "/stations": apiProxy(),
       "/analytics": apiProxy(),
       "/pipelines": apiProxy(),

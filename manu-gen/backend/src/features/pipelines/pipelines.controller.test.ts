@@ -8,7 +8,10 @@ let stationId: string;
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
-  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM job_allocations");
+  db.exec("DELETE FROM order_lines");
+  db.exec("DELETE FROM customer_orders");
+  db.exec("DELETE FROM jobs");
   db.exec("DELETE FROM pipeline_steps");
   db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
@@ -79,7 +82,7 @@ describe("GET /pipelines/:id", () => {
 });
 
 describe("DELETE /pipelines/:id", () => {
-  it("should delete a pipeline with no orders and return 204", async () => {
+  it("should delete a pipeline with no jobs and return 204", async () => {
     const createRes = await request(app).post("/pipelines").send({
       name: "Temp",
       steps: [{ stationId, maxDurationSeconds: null }],
@@ -91,15 +94,14 @@ describe("DELETE /pipelines/:id", () => {
     expect(res.status).toBe(204);
   });
 
-  it("should return 409 when pipeline has orders", async () => {
+  it("should return 409 when pipeline has jobs", async () => {
     const createRes = await request(app).post("/pipelines").send({
       name: "Busy",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
     const pipelineId = createRes.body.id;
 
-    await request(app).post("/orders").send({
-      customerName: "Acme",
+    await request(app).post("/jobs").send({
       productType: "Widget",
       quantity: 1,
       pipelineId,
@@ -108,7 +110,7 @@ describe("DELETE /pipelines/:id", () => {
     const res = await request(app).delete(`/pipelines/${pipelineId}`);
 
     expect(res.status).toBe(409);
-    expect(res.body.error).toContain("order");
+    expect(res.body.error).toContain("job");
   });
 
   it("should return 404 when pipeline does not exist", async () => {
@@ -118,10 +120,9 @@ describe("DELETE /pipelines/:id", () => {
   });
 });
 
-describe("POST /orders with nonexistent pipelineId", () => {
+describe("POST /jobs with nonexistent pipelineId", () => {
   it("should return 400 for FK violation", async () => {
-    const res = await request(app).post("/orders").send({
-      customerName: "Acme",
+    const res = await request(app).post("/jobs").send({
       productType: "Widget",
       quantity: 1,
       pipelineId: "pipeline-does-not-exist",
