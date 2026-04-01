@@ -89,7 +89,7 @@ export function CustomerOrderForm({ onCreated }: CustomerOrderFormProps) {
               <input
                 type="number"
                 min={1}
-                {...register(`lines.${index}.quantity`)}
+                {...register(`lines.${index}.quantity`, { valueAsNumber: true })}
                 className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Qty"
               />

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const orderLineSchema = z.object({
   productType: z.string().min(1, "Product type is required"),
-  quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
+  quantity: z.number().int().min(1, "Quantity must be at least 1"),
 });
 
 export const createCustomerOrderSchema = z.object({
