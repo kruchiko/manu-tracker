@@ -18,6 +18,7 @@ const sampleJob: Job = {
   jobNumber: "JOB-0001",
   productType: "Widget",
   quantity: 10,
+  allocatedQuantity: 0,
   notes: "",
   trayCode: "TRAY-0001",
   createdAt: "2026-01-01T00:00:00.000Z",
