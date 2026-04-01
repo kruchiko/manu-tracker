@@ -1,0 +1,13 @@
+import { z } from "zod";
+
+export const createJobSchema = z.object({
+  productType: z.string().min(1, "Product type is required"),
+  quantity: z
+    .number({ error: "Quantity must be a number" })
+    .int("Quantity must be a whole number")
+    .min(1, "Quantity must be at least 1"),
+  notes: z.string().optional(),
+  pipelineId: z.string().min(1, "Pipeline is required"),
+});
+
+export type CreateJobFormValues = z.infer<typeof createJobSchema>;

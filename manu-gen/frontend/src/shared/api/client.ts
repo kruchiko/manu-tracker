@@ -1,9 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-interface ApiError {
-  message: string;
-}
-
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const { headers: initHeaders, ...restInit } = init ?? {};
   const response = await fetch(`${BASE_URL}${path}`, {
@@ -12,10 +8,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({
-      message: response.statusText,
-    }))) as ApiError;
-    throw new Error(body.message ?? response.statusText);
+    const body = await response.json().catch(() => null);
+    const msg =
+      (body as Record<string, unknown>)?.error ??
+      (body as Record<string, unknown>)?.message ??
+      response.statusText;
+    throw new Error(String(msg));
   }
 
   if (response.status === 204) {
@@ -33,10 +31,12 @@ async function requestNoContent(path: string, init?: RequestInit): Promise<void>
   });
 
   if (!response.ok) {
-    const body = (await response.json().catch(() => ({
-      message: response.statusText,
-    }))) as ApiError;
-    throw new Error(body.message ?? response.statusText);
+    const body = await response.json().catch(() => null);
+    const msg =
+      (body as Record<string, unknown>)?.error ??
+      (body as Record<string, unknown>)?.message ??
+      response.statusText;
+    throw new Error(String(msg));
   }
 }
 

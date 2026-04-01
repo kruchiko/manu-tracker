@@ -135,7 +135,7 @@ function buildDurationRows(
       min_seconds: sorted[0],
       median_seconds: percentile(sorted, 50),
       p95_seconds: percentile(sorted, 95),
-      order_count: trays.size,
+      job_count: trays.size,
     });
   }
   rows.sort((a, b) => a.station_name.localeCompare(b.station_name));
@@ -177,13 +177,13 @@ export function getStationDurations(): StationDuration[] {
 
 const ACTIVE_MINUTES = 30;
 
-const stmtActiveOrders = db.prepare(`
+const stmtActiveJobs = db.prepare(`
   SELECT COUNT(DISTINCT tray_code) AS cnt
   FROM tracking_events
   WHERE captured_at >= datetime('now', ?)
 `);
 
-const stmtTrackedOrders = db.prepare(`
+const stmtTrackedJobs = db.prepare(`
   SELECT COUNT(DISTINCT tray_code) AS cnt
   FROM tracking_events
 `);
@@ -195,8 +195,8 @@ export function getDashboardSummary(): DashboardSummary {
   const durationRows = buildDurationRows(accumByStation, metaById);
   const durations = durationRows.map(toStationDuration);
 
-  const { cnt: activeOrders } = stmtActiveOrders.get(`-${ACTIVE_MINUTES} minutes`) as { cnt: number };
-  const { cnt: totalTrackedOrders } = stmtTrackedOrders.get() as { cnt: number };
+  const { cnt: activeJobs } = stmtActiveJobs.get(`-${ACTIVE_MINUTES} minutes`) as { cnt: number };
+  const { cnt: totalTrackedJobs } = stmtTrackedJobs.get() as { cnt: number };
 
   let totalAvg = 0;
   let count = 0;
@@ -215,8 +215,8 @@ export function getDashboardSummary(): DashboardSummary {
   const thresholdViolations = countThresholdViolations(accumByStation);
 
   return {
-    activeOrders,
-    totalTrackedOrders,
+    activeJobs,
+    totalTrackedJobs,
     avgDwellSeconds: count > 0 ? Math.round(totalAvg / count) : 0,
     bottleneckStation,
     thresholdViolations,

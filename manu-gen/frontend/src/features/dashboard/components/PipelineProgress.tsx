@@ -1,11 +1,11 @@
 import type { PipelineStep } from "../../pipelines/pipelines.types";
-import type { BoardOrderPipeline, OrderHistoryEntry } from "../dashboard.types";
+import type { BoardJobPipeline, JobHistoryEntry } from "../dashboard.types";
 import { formatDuration } from "../dashboard.utils";
 
 interface PipelineProgressProps {
-  pipeline: BoardOrderPipeline;
+  pipeline: BoardJobPipeline;
   steps: PipelineStep[];
-  historyEntries: OrderHistoryEntry[];
+  historyEntries: JobHistoryEntry[];
 }
 
 type StepStatus = "completed" | "current" | "upcoming";
@@ -19,7 +19,7 @@ interface ResolvedStep {
 function resolveStepStatuses(
   steps: PipelineStep[],
   currentStepPosition: number,
-  historyEntries: OrderHistoryEntry[],
+  historyEntries: JobHistoryEntry[],
 ): ResolvedStep[] {
   const durationByStation = new Map<string, number>();
   for (const entry of historyEntries) {

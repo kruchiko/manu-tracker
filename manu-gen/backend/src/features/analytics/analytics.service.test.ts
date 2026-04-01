@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import db from "../../db.js";
 import * as analyticsService from "./analytics.service.js";
-import * as ordersService from "../orders/orders.service.js";
+import * as jobsService from "../jobs/jobs.service.js";
 import * as stationsService from "../stations/stations.service.js";
 import * as pipelinesService from "../pipelines/pipelines.service.js";
 import * as eventsService from "../events/events.service.js";
@@ -10,11 +10,14 @@ let testPipelineId: string;
 
 beforeEach(() => {
   db.exec("DELETE FROM tracking_events");
-  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM job_allocations");
+  db.exec("DELETE FROM order_lines");
+  db.exec("DELETE FROM customer_orders");
+  db.exec("DELETE FROM jobs");
   db.exec("DELETE FROM pipeline_steps");
   db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");
-  db.exec("DELETE FROM sqlite_sequence WHERE name = 'orders'");
+  db.exec("DELETE FROM sqlite_sequence WHERE name = 'jobs'");
   db.exec("DELETE FROM sqlite_sequence WHERE name = 'tracking_events'");
 
   const station = stationsService.createStation({ name: "Seed Station" });
@@ -25,9 +28,8 @@ beforeEach(() => {
   testPipelineId = pipeline.id;
 });
 
-function createTestOrder(overrides?: Partial<{ customerName: string; productType: string; quantity: number }>) {
-  return ordersService.createOrder({
-    customerName: overrides?.customerName ?? "A",
+function createTestJob(overrides?: Partial<{ productType: string; quantity: number }>) {
+  return jobsService.createJob({
     productType: overrides?.productType ?? "X",
     quantity: overrides?.quantity ?? 1,
     pipelineId: testPipelineId,
@@ -40,7 +42,7 @@ describe("getStationDurations", () => {
   });
 
   it("should exclude stations where the order is still present (no next event)", () => {
-    const order = createTestOrder();
+    const order = createTestJob();
     const station = stationsService.createStation({ name: "Moulding" });
 
     eventsService.createEvent({
@@ -54,8 +56,8 @@ describe("getStationDurations", () => {
   });
 
   it("should compute avg and max durations across orders", () => {
-    const order1 = createTestOrder({ customerName: "A" });
-    const order2 = createTestOrder({ customerName: "B", productType: "Y" });
+    const order1 = createTestJob();
+    const order2 = createTestJob({ productType: "Y" });
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 
@@ -88,13 +90,13 @@ describe("getStationDurations", () => {
     const durations = analyticsService.getStationDurations();
     const moulding = durations.find((d) => d.stationName === "Moulding");
     expect(moulding).toBeDefined();
-    expect(moulding!.orderCount).toBe(2);
+    expect(moulding!.jobCount).toBe(2);
     expect(moulding!.avgSeconds).toBe(5400);
     expect(moulding!.maxSeconds).toBe(7200);
   });
 
   it("should compute correct durations with Z-suffixed timestamps", () => {
-    const order = createTestOrder();
+    const order = createTestJob();
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 
@@ -119,7 +121,7 @@ describe("getStationDurations", () => {
   });
 
   it("should count each arrived-departed visit separately at the same station", () => {
-    const order = createTestOrder();
+    const order = createTestJob();
     const station = stationsService.createStation({ name: "Polishing" });
 
     eventsService.createEvent({
@@ -154,7 +156,7 @@ describe("getStationDurations", () => {
     const durations = analyticsService.getStationDurations();
     const polishing = durations.find((d) => d.stationName === "Polishing");
     expect(polishing).toBeDefined();
-    expect(polishing!.orderCount).toBe(1);
+    expect(polishing!.jobCount).toBe(1);
     expect(polishing!.avgSeconds).toBe(1200);
     expect(polishing!.maxSeconds).toBe(1800);
   });

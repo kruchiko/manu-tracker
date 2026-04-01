@@ -46,8 +46,8 @@ const stmtDeleteStepsByPipeline = db.prepare(
   `DELETE FROM pipeline_steps WHERE pipeline_id = ?`,
 );
 
-const stmtOrdersUsingPipeline = db.prepare(
-  `SELECT COUNT(*) AS cnt FROM orders WHERE pipeline_id = ?`,
+const stmtJobsUsingPipeline = db.prepare(
+  `SELECT COUNT(*) AS cnt FROM jobs WHERE pipeline_id = ?`,
 );
 
 function generateId(): string {
@@ -134,11 +134,11 @@ const deletePipelineTx = db.transaction((id: string): void => {
   if (!row) {
     throw new AppError(404, `Pipeline with id ${id} not found`);
   }
-  const orderCount = countOrdersUsingPipeline(id);
-  if (orderCount > 0) {
+  const jobCount = countJobsUsingPipeline(id);
+  if (jobCount > 0) {
     throw new AppError(
       409,
-      `Cannot delete pipeline "${row.name}": ${orderCount} order(s) still reference it`,
+      `Cannot delete pipeline "${row.name}": ${jobCount} job(s) still reference it`,
     );
   }
   stmtDeleteStepsByPipeline.run(id);
@@ -149,7 +149,7 @@ export function deletePipeline(id: string): void {
   deletePipelineTx(id);
 }
 
-export function countOrdersUsingPipeline(id: string): number {
-  const row = stmtOrdersUsingPipeline.get(id) as { cnt: number };
+export function countJobsUsingPipeline(id: string): number {
+  const row = stmtJobsUsingPipeline.get(id) as { cnt: number };
   return row.cnt;
 }

@@ -7,7 +7,10 @@ let testStationId: string;
 
 beforeEach(async () => {
   db.exec("DELETE FROM tracking_events");
-  db.exec("DELETE FROM orders");
+  db.exec("DELETE FROM job_allocations");
+  db.exec("DELETE FROM order_lines");
+  db.exec("DELETE FROM customer_orders");
+  db.exec("DELETE FROM jobs");
   db.exec("DELETE FROM pipeline_steps");
   db.exec("DELETE FROM pipelines");
   db.exec("DELETE FROM stations");

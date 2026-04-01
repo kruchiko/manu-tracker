@@ -6,7 +6,7 @@ export interface StationDurationRow {
   min_seconds: number;
   median_seconds: number;
   p95_seconds: number;
-  order_count: number;
+  job_count: number;
 }
 
 export interface StationDuration {
@@ -17,7 +17,7 @@ export interface StationDuration {
   minSeconds: number;
   medianSeconds: number;
   p95Seconds: number;
-  orderCount: number;
+  jobCount: number;
 }
 
 export function toStationDuration(row: StationDurationRow): StationDuration {
@@ -29,13 +29,13 @@ export function toStationDuration(row: StationDurationRow): StationDuration {
     minSeconds: Math.round(row.min_seconds),
     medianSeconds: Math.round(row.median_seconds),
     p95Seconds: Math.round(row.p95_seconds),
-    orderCount: row.order_count,
+    jobCount: row.job_count,
   };
 }
 
 export interface DashboardSummary {
-  activeOrders: number;
-  totalTrackedOrders: number;
+  activeJobs: number;
+  totalTrackedJobs: number;
   avgDwellSeconds: number;
   bottleneckStation: string | null;
   thresholdViolations: number;
