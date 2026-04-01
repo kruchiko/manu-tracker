@@ -7,9 +7,9 @@ const orderLineSchema = z.object({
 
 export const createCustomerOrderSchema = z.object({
   customerName: z.string().min(1, "Customer name is required"),
-  notes: z.string().default(""),
-  dueDate: z.string().default(""),
+  notes: z.string(),
+  dueDate: z.string(),
   lines: z.array(orderLineSchema).min(1, "At least one line item is required"),
 });
 
-export type CreateCustomerOrderFormValues = z.output<typeof createCustomerOrderSchema>;
+export type CreateCustomerOrderFormValues = z.infer<typeof createCustomerOrderSchema>;
