@@ -24,6 +24,7 @@ describe("createPipeline", () => {
   it("should create a pipeline with steps", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "Flow A",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: 120 }],
     });
 
@@ -37,6 +38,7 @@ describe("createPipeline", () => {
   it("should default description to empty string", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "Flow B",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
 
@@ -47,6 +49,7 @@ describe("createPipeline", () => {
     const s2 = stationsService.createStation({ name: "Station 2" });
     const pipeline = pipelinesService.createPipeline({
       name: "Timed",
+      productType: "Widget",
       steps: [
         { stationId, maxDurationSeconds: 60 },
         { stationId: s2.id, maxDurationSeconds: 90 },
@@ -60,6 +63,7 @@ describe("createPipeline", () => {
     const s2 = stationsService.createStation({ name: "Station 2" });
     const pipeline = pipelinesService.createPipeline({
       name: "Partial",
+      productType: "Widget",
       steps: [
         { stationId, maxDurationSeconds: 60 },
         { stationId: s2.id, maxDurationSeconds: null },
@@ -74,6 +78,7 @@ describe("getPipelineById", () => {
   it("should return the pipeline when it exists", () => {
     const created = pipelinesService.createPipeline({
       name: "Flow",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
     const found = pipelinesService.getPipelineById(created.id);
@@ -91,8 +96,8 @@ describe("getPipelineById", () => {
 
 describe("listPipelines", () => {
   it("should return pipelines ordered by name", () => {
-    pipelinesService.createPipeline({ name: "Zeta", steps: [{ stationId, maxDurationSeconds: null }] });
-    pipelinesService.createPipeline({ name: "Alpha", steps: [{ stationId, maxDurationSeconds: null }] });
+    pipelinesService.createPipeline({ name: "Zeta", productType: "TypeA", steps: [{ stationId, maxDurationSeconds: null }] });
+    pipelinesService.createPipeline({ name: "Alpha", productType: "TypeB", steps: [{ stationId, maxDurationSeconds: null }] });
 
     const list = pipelinesService.listPipelines();
 
@@ -102,9 +107,9 @@ describe("listPipelines", () => {
   });
 
   it("should respect limit and offset", () => {
-    pipelinesService.createPipeline({ name: "A", steps: [{ stationId, maxDurationSeconds: null }] });
-    pipelinesService.createPipeline({ name: "B", steps: [{ stationId, maxDurationSeconds: null }] });
-    pipelinesService.createPipeline({ name: "C", steps: [{ stationId, maxDurationSeconds: null }] });
+    pipelinesService.createPipeline({ name: "A", productType: "TypeX", steps: [{ stationId, maxDurationSeconds: null }] });
+    pipelinesService.createPipeline({ name: "B", productType: "TypeY", steps: [{ stationId, maxDurationSeconds: null }] });
+    pipelinesService.createPipeline({ name: "C", productType: "TypeZ", steps: [{ stationId, maxDurationSeconds: null }] });
 
     const page = pipelinesService.listPipelines({ limit: 1, offset: 1 });
 
@@ -117,6 +122,7 @@ describe("deletePipeline", () => {
   it("should delete a pipeline with no jobs", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "Disposable",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
 
@@ -130,6 +136,7 @@ describe("deletePipeline", () => {
   it("should reject deletion when jobs reference the pipeline", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "In Use",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
 
@@ -159,6 +166,7 @@ describe("replaceSteps", () => {
     const s2 = stationsService.createStation({ name: "Station 2" });
     const pipeline = pipelinesService.createPipeline({
       name: "Flow",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: 60 }],
     });
 

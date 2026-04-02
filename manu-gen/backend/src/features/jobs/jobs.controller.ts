@@ -141,6 +141,24 @@ jobsRouter.post("/:id/allocations", (req, res, next) => {
   }
 });
 
+jobsRouter.delete("/:id", (req, res, next) => {
+  try {
+    const id = parseJobId(req.params.id);
+    const force = req.query.force === "true";
+    const job = jobsService.getJobById(id);
+    if (job.status === "in_progress" && !force) {
+      throw new AppError(
+        409,
+        `Cannot delete ${job.jobNumber}: job is in progress. Use ?force=true to override.`,
+      );
+    }
+    jobsService.deleteJob(id);
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
 jobsRouter.delete("/:id/allocations/:allocationId", (req, res, next) => {
   try {
     const id = parseJobId(req.params.id);

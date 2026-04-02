@@ -31,8 +31,18 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
     onChange(next);
   }
 
+  function handleCapacityChange(index: number, raw: string) {
+    const next = [...steps];
+    const val = raw.trim() === "" ? null : Number(raw);
+    next[index] = {
+      ...next[index],
+      maxCapacity: val !== null && !isNaN(val) && val > 0 ? val : null,
+    };
+    onChange(next);
+  }
+
   function handleAdd() {
-    onChange([...steps, { stationId: "", maxDurationSeconds: null }]);
+    onChange([...steps, { stationId: "", maxDurationSeconds: null, maxCapacity: null }]);
   }
 
   function handleRemove(index: number) {
@@ -92,6 +102,17 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
               placeholder="min"
               className="w-20 shrink-0 rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               title="Expected duration in minutes"
+            />
+
+            <input
+              type="number"
+              min="1"
+              step="1"
+              value={step.maxCapacity ?? ""}
+              onChange={(e) => handleCapacityChange(index, e.target.value)}
+              placeholder="cap"
+              className="w-16 shrink-0 rounded border px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Max items per tray"
             />
 
             <div className="flex gap-0.5">

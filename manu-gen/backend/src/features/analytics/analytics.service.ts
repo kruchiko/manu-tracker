@@ -5,6 +5,8 @@ import type {
   DashboardSummary,
   HourlyActivityRow,
   StationActivity,
+  OrderMetrics,
+  ProductTypeMetric,
 } from "./analytics.schema.js";
 import { toStationDuration } from "./analytics.schema.js";
 import { parseUtcMs } from "../../shared/datetime.js";
@@ -273,4 +275,69 @@ export function getHourlyActivity(): StationActivity[] {
   }
 
   return result;
+}
+
+const stmtOrderCounts = db.prepare(`
+  SELECT
+    COUNT(*) AS total,
+    SUM(CASE WHEN status = 'fulfilled' THEN 1 ELSE 0 END) AS fulfilled
+  FROM customer_orders
+`);
+
+const stmtAvgJobsPerOrder = db.prepare(`
+  SELECT AVG(job_cnt) AS avg_jobs FROM (
+    SELECT co.id, COUNT(DISTINCT ja.job_id) AS job_cnt
+    FROM customer_orders co
+    JOIN order_lines ol ON ol.customer_order_id = co.id
+    JOIN job_allocations ja ON ja.order_line_id = ol.id
+    GROUP BY co.id
+  )
+`);
+
+const stmtProductTypeMetrics = db.prepare(`
+  SELECT
+    ol.product_type,
+    SUM(ol.quantity) AS total_quantity,
+    SUM(COALESCE((
+      SELECT SUM(ja2.quantity) FROM job_allocations ja2
+      JOIN jobs j2 ON j2.id = ja2.job_id
+      WHERE ja2.order_line_id = ol.id AND j2.status = 'completed'
+    ), 0)) AS fulfilled_quantity,
+    COUNT(DISTINCT ja.job_id) AS job_count
+  FROM order_lines ol
+  LEFT JOIN job_allocations ja ON ja.order_line_id = ol.id
+  GROUP BY ol.product_type
+  ORDER BY total_quantity DESC
+`);
+
+interface OrderCountRow {
+  total: number;
+  fulfilled: number;
+}
+
+interface ProductTypeMetricRow {
+  product_type: string;
+  total_quantity: number;
+  fulfilled_quantity: number;
+  job_count: number;
+}
+
+export function getOrderMetrics(): OrderMetrics {
+  const counts = stmtOrderCounts.get() as OrderCountRow;
+  const avgJobs = stmtAvgJobsPerOrder.get() as { avg_jobs: number | null };
+  const productRows = stmtProductTypeMetrics.all() as ProductTypeMetricRow[];
+
+  const byProductType: ProductTypeMetric[] = productRows.map((r) => ({
+    productType: r.product_type,
+    totalQuantity: r.total_quantity,
+    fulfilledQuantity: r.fulfilled_quantity,
+    jobCount: r.job_count,
+  }));
+
+  return {
+    totalOrders: counts.total,
+    fulfilledOrders: counts.fulfilled,
+    avgJobsPerOrder: avgJobs.avg_jobs !== null ? Math.round(avgJobs.avg_jobs * 10) / 10 : 0,
+    byProductType,
+  };
 }

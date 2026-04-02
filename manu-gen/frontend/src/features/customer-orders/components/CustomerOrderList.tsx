@@ -1,4 +1,5 @@
 import { useCustomerOrders } from "../hooks/useCustomerOrders";
+import { useDeleteCustomerOrder } from "../hooks/useDeleteCustomerOrder";
 import type { CustomerOrderSummary } from "../customer-orders.types";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -22,6 +23,7 @@ interface CustomerOrderListProps {
 
 export function CustomerOrderList({ selectedId, onSelect }: CustomerOrderListProps) {
   const { data: orders, isLoading, error } = useCustomerOrders();
+  const deleteMutation = useDeleteCustomerOrder();
 
   if (isLoading) return <p className="text-sm text-gray-500">Loading...</p>;
   if (error) return <p className="text-sm text-red-600">Error: {error.message}</p>;
@@ -39,6 +41,7 @@ export function CustomerOrderList({ selectedId, onSelect }: CustomerOrderListPro
             <th className="px-3 py-2">Allocated</th>
             <th className="px-3 py-2">Fulfilled</th>
             <th className="px-3 py-2">Due</th>
+            <th className="px-3 py-2"></th>
           </tr>
         </thead>
         <tbody>
@@ -50,7 +53,10 @@ export function CustomerOrderList({ selectedId, onSelect }: CustomerOrderListPro
               aria-selected={selectedId === order.id}
               onClick={() => onSelect(order)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") onSelect(order);
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onSelect(order);
+                }
               }}
               className={`cursor-pointer border-b transition-colors hover:bg-gray-50 ${
                 selectedId === order.id ? "bg-blue-50" : ""
@@ -92,6 +98,20 @@ export function CustomerOrderList({ selectedId, onSelect }: CustomerOrderListPro
               </td>
               <td className="px-3 py-2 text-xs text-gray-500">
                 {order.dueDate ?? "---"}
+              </td>
+              <td className="px-3 py-2">
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (confirm(`Delete ${order.orderNumber}? Allocations will also be removed.`)) {
+                      deleteMutation.mutate(order.id);
+                    }
+                  }}
+                  className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
+                >
+                  Delete
+                </button>
               </td>
             </tr>
           ))}

@@ -19,6 +19,7 @@ beforeEach(async () => {
   const stationRes = await request(app).post("/stations").send({ name: "Test Station" });
   const pipelineRes = await request(app).post("/pipelines").send({
     name: "Test Pipeline",
+    productType: "Widget",
     steps: [{ stationId: stationRes.body.id, maxDurationSeconds: 120 }],
   });
   pipelineId = pipelineRes.body.id;
@@ -164,7 +165,7 @@ describe("allocation endpoints", () => {
   async function createOrderWithLine(): Promise<{ orderId: number; lineId: number }> {
     const res = await request(app).post("/customer-orders").send({
       customerName: "Acme",
-      lines: [{ productType: "Sprocket", quantity: 10 }],
+      lines: [{ productType: "Widget", quantity: 10 }],
     });
     return { orderId: res.body.id, lineId: res.body.lines[0].id };
   }
@@ -172,7 +173,7 @@ describe("allocation endpoints", () => {
   describe("POST /jobs/:id/allocations", () => {
     it("should create an allocation and return 201", async () => {
       const { lineId } = await createOrderWithLine();
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 20, pipelineId });
 
       const res = await request(app)
         .post(`/jobs/${job.body.id}/allocations`)
@@ -185,7 +186,7 @@ describe("allocation endpoints", () => {
     });
 
     it("should return 400 when orderLineId is missing", async () => {
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 20, pipelineId });
       const res = await request(app)
         .post(`/jobs/${job.body.id}/allocations`)
         .send({ quantity: 5 });
@@ -195,7 +196,7 @@ describe("allocation endpoints", () => {
 
     it("should return 422 when allocation exceeds job capacity", async () => {
       const { lineId } = await createOrderWithLine();
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 3, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 3, pipelineId });
 
       const res = await request(app)
         .post(`/jobs/${job.body.id}/allocations`)
@@ -224,7 +225,7 @@ describe("allocation endpoints", () => {
   describe("GET /jobs/:id/allocations", () => {
     it("should list allocations for a job", async () => {
       const { lineId } = await createOrderWithLine();
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 20, pipelineId });
 
       await request(app)
         .post(`/jobs/${job.body.id}/allocations`)
@@ -240,7 +241,7 @@ describe("allocation endpoints", () => {
   describe("DELETE /jobs/:id/allocations/:allocationId", () => {
     it("should delete an allocation and return 204", async () => {
       const { lineId } = await createOrderWithLine();
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 20, pipelineId });
 
       const allocRes = await request(app)
         .post(`/jobs/${job.body.id}/allocations`)
@@ -251,9 +252,42 @@ describe("allocation endpoints", () => {
     });
 
     it("should return 404 for non-existent allocation", async () => {
-      const job = await request(app).post("/jobs").send({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 20, pipelineId });
       const res = await request(app).delete(`/jobs/${job.body.id}/allocations/999`);
       expect(res.status).toBe(404);
     });
+  });
+});
+
+describe("DELETE /jobs/:id", () => {
+  it("should delete a pending job and return 204", async () => {
+    const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 5, pipelineId });
+    const res = await request(app).delete(`/jobs/${job.body.id}`);
+    expect(res.status).toBe(204);
+
+    const get = await request(app).get(`/jobs/${job.body.id}`);
+    expect(get.status).toBe(404);
+  });
+
+  it("should return 409 for in-progress job without force", async () => {
+    const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 5, pipelineId });
+    db.prepare("UPDATE jobs SET status = 'in_progress' WHERE id = ?").run(job.body.id);
+
+    const res = await request(app).delete(`/jobs/${job.body.id}`);
+    expect(res.status).toBe(409);
+    expect(res.body.error).toContain("in progress");
+  });
+
+  it("should delete in-progress job with force=true", async () => {
+    const job = await request(app).post("/jobs").send({ productType: "Widget", quantity: 5, pipelineId });
+    db.prepare("UPDATE jobs SET status = 'in_progress' WHERE id = ?").run(job.body.id);
+
+    const res = await request(app).delete(`/jobs/${job.body.id}?force=true`);
+    expect(res.status).toBe(204);
+  });
+
+  it("should return 404 for non-existent job", async () => {
+    const res = await request(app).delete("/jobs/999");
+    expect(res.status).toBe(404);
   });
 });

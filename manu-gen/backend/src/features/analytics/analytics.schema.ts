@@ -58,3 +58,17 @@ export interface StationActivity {
   stationName: string;
   buckets: HourlyBucket[];
 }
+
+export interface OrderMetrics {
+  totalOrders: number;
+  fulfilledOrders: number;
+  avgJobsPerOrder: number;
+  byProductType: ProductTypeMetric[];
+}
+
+export interface ProductTypeMetric {
+  productType: string;
+  totalQuantity: number;
+  fulfilledQuantity: number;
+  jobCount: number;
+}

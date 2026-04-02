@@ -23,6 +23,7 @@ describe("POST /pipelines", () => {
   it("should create a pipeline and return 201", async () => {
     const res = await request(app).post("/pipelines").send({
       name: "Flow A",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: 120 }],
     });
 
@@ -34,6 +35,7 @@ describe("POST /pipelines", () => {
 
   it("should return 400 when name is missing", async () => {
     const res = await request(app).post("/pipelines").send({
+      productType: "Widget",
       steps: [{ stationId }],
     });
 
@@ -44,6 +46,7 @@ describe("POST /pipelines", () => {
   it("should return 400 when steps is empty", async () => {
     const res = await request(app).post("/pipelines").send({
       name: "Empty",
+      productType: "Widget",
       steps: [],
     });
 
@@ -64,6 +67,7 @@ describe("GET /pipelines/:id", () => {
   it("should return the pipeline when it exists", async () => {
     const createRes = await request(app).post("/pipelines").send({
       name: "Flow",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
     const id = createRes.body.id;
@@ -85,6 +89,7 @@ describe("DELETE /pipelines/:id", () => {
   it("should delete a pipeline with no jobs and return 204", async () => {
     const createRes = await request(app).post("/pipelines").send({
       name: "Temp",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
     const id = createRes.body.id;
@@ -97,6 +102,7 @@ describe("DELETE /pipelines/:id", () => {
   it("should return 409 when pipeline has jobs", async () => {
     const createRes = await request(app).post("/pipelines").send({
       name: "Busy",
+      productType: "Widget",
       steps: [{ stationId, maxDurationSeconds: null }],
     });
     const pipelineId = createRes.body.id;
@@ -121,14 +127,14 @@ describe("DELETE /pipelines/:id", () => {
 });
 
 describe("POST /jobs with nonexistent pipelineId", () => {
-  it("should return 400 for FK violation", async () => {
+  it("should return 404 for unknown pipeline", async () => {
     const res = await request(app).post("/jobs").send({
       productType: "Widget",
       quantity: 1,
       pipelineId: "pipeline-does-not-exist",
     });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error).toContain("does not exist");
+    expect(res.status).toBe(404);
+    expect(res.body.error).toContain("not found");
   });
 });

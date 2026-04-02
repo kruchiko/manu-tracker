@@ -39,6 +39,7 @@ export function JobBoard({ selectedJobId, onSelectJob }: JobBoardProps) {
           <tr className="border-b text-left text-gray-500">
             <th className="py-2 pr-4 font-medium">Job</th>
             <th className="py-2 pr-4 font-medium">Product</th>
+            <th className="py-2 pr-4 font-medium">Status</th>
             <th className="py-2 pr-4 font-medium">Pipeline</th>
             <th className="py-2 pr-4 font-medium">Progress</th>
             <th className="py-2 pr-4 font-medium">Current Station</th>

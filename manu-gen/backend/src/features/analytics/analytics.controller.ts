@@ -29,3 +29,12 @@ analyticsRouter.get("/activity", (req, res, next) => {
     next(err);
   }
 });
+
+analyticsRouter.get("/order-metrics", (req, res, next) => {
+  try {
+    const metrics = analyticsService.getOrderMetrics();
+    res.json(metrics);
+  } catch (err) {
+    next(err);
+  }
+});

@@ -8,7 +8,9 @@ export const createJobSchema = z.object({
   pipelineId: z.string().min(1, "pipelineId is required"),
 });
 
-export type CreateJobInput = z.infer<typeof createJobSchema>;
+export type CreateJobInput = z.input<typeof createJobSchema>;
+
+export type JobStatus = "pending" | "in_progress" | "completed";
 
 export interface JobRow {
   id: number;
@@ -21,6 +23,7 @@ export interface JobRow {
   created_at: string;
   pipeline_id: string;
   pipeline_name: string;
+  status: string;
 }
 
 export interface Job {
@@ -34,6 +37,7 @@ export interface Job {
   createdAt: string;
   pipelineId: string;
   pipelineName: string;
+  status: JobStatus;
 }
 
 export function toJob(row: JobRow): Job {
@@ -48,6 +52,7 @@ export function toJob(row: JobRow): Job {
     createdAt: row.created_at,
     pipelineId: row.pipeline_id,
     pipelineName: row.pipeline_name,
+    status: row.status as JobStatus,
   };
 }
 
@@ -57,6 +62,7 @@ export interface BoardJobRow {
   product_type: string;
   tray_code: string;
   created_at: string;
+  status: string;
   station_id: string | null;
   station_name: string | null;
   last_seen_at: string | null;
@@ -76,6 +82,7 @@ export interface BoardJob {
   productType: string;
   trayCode: string;
   createdAt: string;
+  status: JobStatus;
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
@@ -101,6 +108,7 @@ export function toBoardJob(row: BoardJobRow): BoardJob {
     productType: row.product_type,
     trayCode: row.tray_code,
     createdAt: toIso(row.created_at),
+    status: row.status as JobStatus,
     currentStation:
       row.station_id && row.station_name
         ? { id: row.station_id, name: row.station_name }

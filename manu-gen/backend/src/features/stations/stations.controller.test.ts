@@ -197,6 +197,7 @@ describe("DELETE /stations/:id", () => {
 
     pipelinesService.createPipeline({
       name: "Flow",
+      productType: "Widget",
       steps: [{ stationId: id, maxDurationSeconds: null }],
     });
 

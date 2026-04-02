@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createJobSchema, type CreateJobFormValues } from "../jobs.schema";
@@ -15,10 +16,11 @@ export function JobForm({ onJobCreated }: JobFormProps) {
     handleSubmit,
     reset,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<CreateJobFormValues>({
     resolver: zodResolver(createJobSchema),
-    defaultValues: { pipelineId: "" },
+    defaultValues: { pipelineId: "", productType: "" },
   });
 
   const { mutate, isPending, error } = useCreateJob();
@@ -26,6 +28,14 @@ export function JobForm({ onJobCreated }: JobFormProps) {
 
   const selectedPipelineId = watch("pipelineId");
   const selectedPipeline = pipelines?.find((p) => p.id === selectedPipelineId);
+
+  useEffect(() => {
+    if (selectedPipeline?.productType) {
+      setValue("productType", selectedPipeline.productType);
+    } else {
+      setValue("productType", "");
+    }
+  }, [selectedPipelineId, selectedPipeline, setValue]);
 
   function onSubmit(values: CreateJobFormValues) {
     mutate(values, {
@@ -41,38 +51,6 @@ export function JobForm({ onJobCreated }: JobFormProps) {
       <h2 className="text-lg font-semibold">New Job</h2>
 
       <div className="flex flex-col gap-1">
-        <label htmlFor="productType" className="text-sm font-medium">
-          Product Type
-        </label>
-        <input
-          id="productType"
-          {...register("productType")}
-          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="Widget A"
-        />
-        {errors.productType && (
-          <p className="text-xs text-red-600">{errors.productType.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <label htmlFor="quantity" className="text-sm font-medium">
-          Quantity
-        </label>
-        <input
-          id="quantity"
-          type="number"
-          min={1}
-          {...register("quantity", { valueAsNumber: true })}
-          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="1"
-        />
-        {errors.quantity && (
-          <p className="text-xs text-red-600">{errors.quantity.message}</p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-1">
         <label htmlFor="pipelineId" className="text-sm font-medium">
           Pipeline
         </label>
@@ -85,7 +63,9 @@ export function JobForm({ onJobCreated }: JobFormProps) {
         >
           <option value="">Select a pipeline...</option>
           {pipelines?.map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}{p.productType ? ` (${p.productType})` : ""}
+            </option>
           ))}
         </select>
         {errors.pipelineId && (
@@ -93,11 +73,43 @@ export function JobForm({ onJobCreated }: JobFormProps) {
         )}
         {selectedPipeline && (
           <p className="text-xs text-gray-400">
+            {selectedPipeline.productType && (
+              <span>Product: {selectedPipeline.productType} &middot; </span>
+            )}
             {selectedPipeline.steps.length} step{selectedPipeline.steps.length !== 1 ? "s" : ""}
             {selectedPipeline.totalExpectedSeconds !== null && (
               <span> &middot; ~{Math.round(selectedPipeline.totalExpectedSeconds / 60)}m expected</span>
             )}
+            {selectedPipeline.effectiveCapacity !== null && (
+              <span> &middot; max {selectedPipeline.effectiveCapacity} items/tray</span>
+            )}
           </p>
+        )}
+      </div>
+
+      <input type="hidden" {...register("productType")} />
+      {errors.productType && (
+        <p className="text-xs text-red-600">Select a pipeline to set the product type</p>
+      )}
+
+      <div className="flex flex-col gap-1">
+        <label htmlFor="quantity" className="text-sm font-medium">
+          Quantity
+          {selectedPipeline?.effectiveCapacity !== null && selectedPipeline?.effectiveCapacity !== undefined && (
+            <span className="ml-1 font-normal text-gray-400">(max {selectedPipeline.effectiveCapacity})</span>
+          )}
+        </label>
+        <input
+          id="quantity"
+          type="number"
+          min={1}
+          max={selectedPipeline?.effectiveCapacity ?? undefined}
+          {...register("quantity", { valueAsNumber: true })}
+          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="1"
+        />
+        {errors.quantity && (
+          <p className="text-xs text-red-600">{errors.quantity.message}</p>
         )}
       </div>
 
@@ -120,7 +132,7 @@ export function JobForm({ onJobCreated }: JobFormProps) {
 
       <button
         type="submit"
-        disabled={isPending}
+        disabled={isPending || !selectedPipeline}
         className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
       >
         {isPending ? "Creating…" : "Create Job"}

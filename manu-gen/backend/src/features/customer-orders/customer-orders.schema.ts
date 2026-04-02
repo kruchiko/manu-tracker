@@ -14,7 +14,7 @@ export const createCustomerOrderSchema = z.object({
     .min(1, "at least one line is required"),
 });
 
-export type CreateCustomerOrderInput = z.infer<typeof createCustomerOrderSchema>;
+export type CreateCustomerOrderInput = z.input<typeof createCustomerOrderSchema>;
 
 export const updateCustomerOrderSchema = z.object({
   customerName: z.string().min(1).optional(),

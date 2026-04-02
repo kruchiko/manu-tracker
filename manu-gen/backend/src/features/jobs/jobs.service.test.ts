@@ -3,6 +3,7 @@ import db from "../../db.js";
 import * as pipelinesService from "../pipelines/pipelines.service.js";
 import * as stationsService from "../stations/stations.service.js";
 import * as customerOrdersService from "../customer-orders/customer-orders.service.js";
+import * as eventsService from "../events/events.service.js";
 import * as jobsService from "./jobs.service.js";
 
 let pipelineId: string;
@@ -22,6 +23,7 @@ beforeEach(() => {
   stationId = stationsService.createStation({ name: "Test Station" }).id;
   const pipeline = pipelinesService.createPipeline({
     name: "Test Pipeline",
+    productType: "Widget",
     steps: [{ stationId, maxDurationSeconds: 120 }],
   });
   pipelineId = pipeline.id;
@@ -46,8 +48,8 @@ describe("createJob", () => {
   });
 
   it("should auto-increment job numbers", () => {
-    const j1 = jobsService.createJob({ productType: "A", quantity: 1, pipelineId });
-    const j2 = jobsService.createJob({ productType: "B", quantity: 2, pipelineId });
+    const j1 = jobsService.createJob({ productType: "Widget", quantity: 1, pipelineId });
+    const j2 = jobsService.createJob({ productType: "Widget", quantity: 2, pipelineId });
 
     expect(j1.jobNumber).toBe("JOB-0001");
     expect(j2.jobNumber).toBe("JOB-0002");
@@ -92,25 +94,25 @@ describe("getJobByTrayCode", () => {
 
 describe("listJobs", () => {
   it("should return jobs in descending order", () => {
-    jobsService.createJob({ productType: "A", quantity: 1, pipelineId });
-    jobsService.createJob({ productType: "B", quantity: 2, pipelineId });
+    jobsService.createJob({ productType: "Widget", quantity: 1, pipelineId });
+    jobsService.createJob({ productType: "Widget", quantity: 2, pipelineId });
 
     const jobs = jobsService.listJobs();
 
     expect(jobs).toHaveLength(2);
-    expect(jobs[0].productType).toBe("B");
-    expect(jobs[1].productType).toBe("A");
+    expect(jobs[0].jobNumber).toBe("JOB-0002");
+    expect(jobs[1].jobNumber).toBe("JOB-0001");
   });
 
   it("should respect limit and offset", () => {
-    jobsService.createJob({ productType: "A", quantity: 1, pipelineId });
-    jobsService.createJob({ productType: "B", quantity: 2, pipelineId });
-    jobsService.createJob({ productType: "C", quantity: 3, pipelineId });
+    jobsService.createJob({ productType: "Widget", quantity: 1, pipelineId });
+    jobsService.createJob({ productType: "Widget", quantity: 2, pipelineId });
+    jobsService.createJob({ productType: "Widget", quantity: 3, pipelineId });
 
     const page = jobsService.listJobs({ limit: 1, offset: 1 });
 
     expect(page).toHaveLength(1);
-    expect(page[0].productType).toBe("B");
+    expect(page[0].jobNumber).toBe("JOB-0002");
   });
 });
 
@@ -171,7 +173,7 @@ describe("allocations", () => {
   function createOrderWithLine() {
     const order = customerOrdersService.createCustomerOrder({
       customerName: "Acme",
-      lines: [{ productType: "Sprocket", quantity: 10 }],
+      lines: [{ productType: "Widget", quantity: 10 }],
     });
     return { orderId: order.id, lineId: order.lines[0].id };
   }
@@ -179,7 +181,7 @@ describe("allocations", () => {
   describe("addAllocation", () => {
     it("should allocate a quantity from a job to an order line", () => {
       const { lineId } = createOrderWithLine();
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
 
       const alloc = jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 5 });
 
@@ -192,7 +194,7 @@ describe("allocations", () => {
 
     it("should reject duplicate allocation for same job + order line", () => {
       const { lineId } = createOrderWithLine();
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
 
       jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 5 });
 
@@ -210,7 +212,7 @@ describe("allocations", () => {
     });
 
     it("should throw 404 for non-existent order line", () => {
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
 
       expect(() =>
         jobsService.addAllocation(job.id, { orderLineId: 999, quantity: 1 }),
@@ -219,7 +221,7 @@ describe("allocations", () => {
 
     it("should throw 422 when allocation exceeds job capacity", () => {
       const { lineId } = createOrderWithLine();
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 5, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 5, pipelineId });
 
       expect(() =>
         jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 10 }),
@@ -229,14 +231,14 @@ describe("allocations", () => {
     it("should throw 422 when remaining capacity is insufficient", () => {
       const order1 = customerOrdersService.createCustomerOrder({
         customerName: "First",
-        lines: [{ productType: "Bolt", quantity: 8 }],
+        lines: [{ productType: "Widget", quantity: 8 }],
       });
-      const job = jobsService.createJob({ productType: "Bolt", quantity: 10, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
       jobsService.addAllocation(job.id, { orderLineId: order1.lines[0].id, quantity: 8 });
 
       const order2 = customerOrdersService.createCustomerOrder({
         customerName: "Second",
-        lines: [{ productType: "Bolt", quantity: 5 }],
+        lines: [{ productType: "Widget", quantity: 5 }],
       });
 
       expect(() =>
@@ -260,7 +262,7 @@ describe("allocations", () => {
   describe("listAllocations", () => {
     it("should return allocations for a job", () => {
       const { lineId } = createOrderWithLine();
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
       jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 5 });
 
       const allocs = jobsService.listAllocations(job.id);
@@ -270,7 +272,7 @@ describe("allocations", () => {
     });
 
     it("should return empty array when no allocations", () => {
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 5, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 5, pipelineId });
       expect(jobsService.listAllocations(job.id)).toEqual([]);
     });
   });
@@ -278,7 +280,7 @@ describe("allocations", () => {
   describe("removeAllocation", () => {
     it("should remove an allocation", () => {
       const { lineId } = createOrderWithLine();
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
       const alloc = jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 5 });
 
       jobsService.removeAllocation(job.id, alloc.id);
@@ -287,11 +289,168 @@ describe("allocations", () => {
     });
 
     it("should throw 404 for non-existent allocation", () => {
-      const job = jobsService.createJob({ productType: "Sprocket", quantity: 20, pipelineId });
+      const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
 
       expect(() => jobsService.removeAllocation(job.id, 999)).toThrow(
         expect.objectContaining({ statusCode: 404 }),
       );
     });
+  });
+});
+
+describe("onTrackingEvent (status transitions)", () => {
+  it("should transition pending job to in_progress on first event", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
+    expect(jobsService.getJobById(job.id).status).toBe("pending");
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+
+    expect(jobsService.getJobById(job.id).status).toBe("in_progress");
+  });
+
+  it("should transition in_progress to completed when all steps departed", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+    expect(jobsService.getJobById(job.id).status).toBe("in_progress");
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "departed",
+    });
+    expect(jobsService.getJobById(job.id).status).toBe("completed");
+  });
+
+  it("should not change status for unknown tray codes", () => {
+    jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
+
+    eventsService.createEvent({
+      trayCode: "UNKNOWN-TRAY",
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+
+    const job = jobsService.getJobById(1);
+    expect(job.status).toBe("pending");
+  });
+
+  it("should not change completed status on further events", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "departed",
+    });
+    expect(jobsService.getJobById(job.id).status).toBe("completed");
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+    expect(jobsService.getJobById(job.id).status).toBe("completed");
+  });
+});
+
+describe("deleteJob", () => {
+  it("should delete a job with no allocations or events", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 5, pipelineId });
+    jobsService.deleteJob(job.id);
+
+    expect(() => jobsService.getJobById(job.id)).toThrow(
+      expect.objectContaining({ statusCode: 404 }),
+    );
+  });
+
+  it("should cascade-delete allocations and tracking events", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
+
+    const order = customerOrdersService.createCustomerOrder({
+      customerName: "Test",
+      lines: [{ productType: "Widget", quantity: 5 }],
+    });
+    jobsService.addAllocation(job.id, { orderLineId: order.lines[0].id, quantity: 3 });
+
+    eventsService.createEvent({
+      trayCode: job.trayCode,
+      stationId,
+      eyeId: "eye-1",
+      capturedAt: new Date().toISOString(),
+      phase: "arrived",
+    });
+
+    jobsService.deleteJob(job.id);
+
+    expect(() => jobsService.getJobById(job.id)).toThrow(
+      expect.objectContaining({ statusCode: 404 }),
+    );
+    const { cnt } = db.prepare("SELECT COUNT(*) AS cnt FROM tracking_events WHERE tray_code = ?").get(job.trayCode) as { cnt: number };
+    expect(cnt).toBe(0);
+  });
+
+  it("should throw 404 for non-existent job", () => {
+    expect(() => jobsService.deleteJob(999)).toThrow(
+      expect.objectContaining({ statusCode: 404 }),
+    );
+  });
+});
+
+describe("createJob validations", () => {
+  it("should throw 422 when quantity exceeds pipeline capacity", () => {
+    const capacityPipeline = pipelinesService.createPipeline({
+      name: "Capped",
+      productType: "Capped",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 10 }],
+    });
+
+    expect(() =>
+      jobsService.createJob({ productType: "Capped", quantity: 15, pipelineId: capacityPipeline.id }),
+    ).toThrow(expect.objectContaining({ statusCode: 422 }));
+  });
+
+  it("should allow quantity at exactly pipeline capacity", () => {
+    const capacityPipeline = pipelinesService.createPipeline({
+      name: "Exact",
+      productType: "Exact",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 10 }],
+    });
+
+    const job = jobsService.createJob({ productType: "Exact", quantity: 10, pipelineId: capacityPipeline.id });
+    expect(job.quantity).toBe(10);
+  });
+
+  it("should throw 422 when product type does not match pipeline", () => {
+    expect(() =>
+      jobsService.createJob({ productType: "Wrong", quantity: 1, pipelineId }),
+    ).toThrow(expect.objectContaining({ statusCode: 422 }));
   });
 });

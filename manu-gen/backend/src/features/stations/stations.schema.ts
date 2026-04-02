@@ -5,7 +5,7 @@ export const createStationSchema = z.object({
   location: z.string().optional().default(""),
 });
 
-export type CreateStationInput = z.infer<typeof createStationSchema>;
+export type CreateStationInput = z.input<typeof createStationSchema>;
 
 export const assignEyeSchema = z.object({
   eyeId: z.string().min(1, "eyeId is required"),

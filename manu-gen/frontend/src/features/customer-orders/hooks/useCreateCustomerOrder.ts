@@ -16,7 +16,8 @@ export function useCreateCustomerOrder() {
       return apiClient.post<CustomerOrder>("/customer-orders", body);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
     },
   });
 }

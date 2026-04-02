@@ -23,6 +23,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
     pipeline.steps.map((s) => ({
       stationId: s.stationId,
       maxDurationSeconds: s.maxDurationSeconds,
+      maxCapacity: s.maxCapacity,
     })),
   );
 
@@ -55,6 +56,7 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
       pipeline.steps.map((s) => ({
         stationId: s.stationId,
         maxDurationSeconds: s.maxDurationSeconds,
+        maxCapacity: s.maxCapacity,
       })),
     );
     setEditing(false);
@@ -66,7 +68,14 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
     <div className="rounded-lg border bg-white p-5 shadow-sm">
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <h3 className="font-semibold text-gray-900">{pipeline.name}</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-gray-900">{pipeline.name}</h3>
+            {pipeline.productType && (
+              <span className="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
+                {pipeline.productType}
+              </span>
+            )}
+          </div>
           {pipeline.description && (
             <p className="text-sm text-gray-500">{pipeline.description}</p>
           )}
@@ -74,6 +83,9 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
             {pipeline.steps.length} step{pipeline.steps.length !== 1 ? "s" : ""}
             {pipeline.totalExpectedSeconds !== null && (
               <span> &middot; ~{formatMinutes(pipeline.totalExpectedSeconds)} expected</span>
+            )}
+            {pipeline.effectiveCapacity !== null && (
+              <span> &middot; max {pipeline.effectiveCapacity} items/tray</span>
             )}
           </p>
         </div>
@@ -126,6 +138,9 @@ export function PipelineCard({ pipeline }: PipelineCardProps) {
                   {step.stationName}
                   {step.maxDurationSeconds !== null && (
                     <span className="ml-1 text-gray-400">{formatMinutes(step.maxDurationSeconds)}</span>
+                  )}
+                  {step.maxCapacity !== null && (
+                    <span className="ml-1 text-gray-400">/{step.maxCapacity}</span>
                   )}
                 </span>
               </div>

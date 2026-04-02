@@ -27,11 +27,15 @@ const SCHEMA: string[] = [
   )`,
 
   `CREATE TABLE IF NOT EXISTS pipelines (
-    id          TEXT PRIMARY KEY,
-    name        TEXT NOT NULL,
-    description TEXT NOT NULL DEFAULT '',
-    created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    id           TEXT PRIMARY KEY,
+    name         TEXT NOT NULL,
+    description  TEXT NOT NULL DEFAULT '',
+    product_type TEXT NOT NULL DEFAULT '',
+    created_at   TEXT NOT NULL DEFAULT (datetime('now'))
   )`,
+
+  `CREATE UNIQUE INDEX IF NOT EXISTS idx_pipelines_product_type
+   ON pipelines(product_type) WHERE product_type != ''`,
 
   `CREATE TABLE IF NOT EXISTS pipeline_steps (
     id                   INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -39,6 +43,7 @@ const SCHEMA: string[] = [
     station_id           TEXT NOT NULL REFERENCES stations(id),
     position             INTEGER NOT NULL CHECK (position > 0),
     max_duration_seconds INTEGER,
+    max_capacity         INTEGER,
     UNIQUE(pipeline_id, position),
     UNIQUE(pipeline_id, station_id)
   )`,
@@ -51,7 +56,8 @@ const SCHEMA: string[] = [
     notes        TEXT DEFAULT '',
     tray_code    TEXT NOT NULL UNIQUE,
     created_at   TEXT NOT NULL DEFAULT (datetime('now')),
-    pipeline_id  TEXT NOT NULL REFERENCES pipelines(id)
+    pipeline_id  TEXT NOT NULL REFERENCES pipelines(id),
+    status       TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','in_progress','completed'))
   )`,
 
   `CREATE TABLE IF NOT EXISTS customer_orders (
