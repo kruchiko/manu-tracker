@@ -23,6 +23,7 @@ beforeEach(() => {
   const station = stationsService.createStation({ name: "Seed Station" });
   const pipeline = pipelinesService.createPipeline({
     name: "Seed Pipeline",
+    productType: "Widget",
     steps: [{ stationId: station.id, maxDurationSeconds: null }],
   });
   testPipelineId = pipeline.id;
@@ -30,7 +31,7 @@ beforeEach(() => {
 
 function createTestJob(overrides?: Partial<{ productType: string; quantity: number }>) {
   return jobsService.createJob({
-    productType: overrides?.productType ?? "X",
+    productType: overrides?.productType ?? "Widget",
     quantity: overrides?.quantity ?? 1,
     pipelineId: testPipelineId,
   });
@@ -57,7 +58,7 @@ describe("getStationDurations", () => {
 
   it("should compute avg and max durations across orders", () => {
     const order1 = createTestJob();
-    const order2 = createTestJob({ productType: "Y" });
+    const order2 = createTestJob({ productType: "Widget" });
     const station1 = stationsService.createStation({ name: "Moulding" });
     const station2 = stationsService.createStation({ name: "Drying Room" });
 

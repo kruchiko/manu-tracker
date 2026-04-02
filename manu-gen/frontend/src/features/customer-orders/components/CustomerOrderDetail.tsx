@@ -287,6 +287,44 @@ export function CustomerOrderDetail({
         </div>
       </div>
 
+      <div className="rounded-lg border bg-white p-6 shadow-sm">
+        <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">
+          Order Summary
+        </h4>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b text-left text-gray-500">
+              <th className="py-2 pr-4 font-medium">Product Type</th>
+              <th className="py-2 pr-4 font-medium text-right">Requested</th>
+              <th className="py-2 pr-4 font-medium text-right">Allocated</th>
+              <th className="py-2 pr-4 font-medium text-right">Fulfilled</th>
+              <th className="py-2 font-medium text-right">Progress</th>
+            </tr>
+          </thead>
+          <tbody>
+            {order.lines.map((line) => {
+              const pct = line.quantity > 0 ? Math.round((Math.min(line.fulfilledQuantity, line.quantity) / line.quantity) * 100) : 0;
+              return (
+                <tr key={line.id} className="border-b last:border-0">
+                  <td className="py-2 pr-4 font-medium text-gray-900">{line.productType}</td>
+                  <td className="py-2 pr-4 text-right">{line.quantity}</td>
+                  <td className="py-2 pr-4 text-right">{line.allocatedQuantity}</td>
+                  <td className="py-2 pr-4 text-right">{line.fulfilledQuantity}</td>
+                  <td className="py-2 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
+                        <div className="h-2 rounded-full bg-green-500 transition-all" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="w-10 text-xs text-gray-500">{pct}%</span>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
       <div>
         <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">
           Line Items &amp; Job Allocations

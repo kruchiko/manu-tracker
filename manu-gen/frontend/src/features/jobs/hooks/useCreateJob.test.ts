@@ -22,6 +22,7 @@ const sampleJob: Job = {
   notes: "",
   trayCode: "TRAY-0001",
   createdAt: "2026-01-01T00:00:00.000Z",
+  status: "pending",
   pipelineId: "pipeline-abc",
   pipelineName: "Test Pipeline",
 };

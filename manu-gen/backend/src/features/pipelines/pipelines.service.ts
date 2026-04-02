@@ -12,25 +12,29 @@ import type {
 import { toPipeline } from "./pipelines.schema.js";
 
 const stmtInsert = db.prepare(
-  `INSERT INTO pipelines (id, name, description) VALUES (@id, @name, @description)`,
+  `INSERT INTO pipelines (id, name, description, product_type) VALUES (@id, @name, @description, @product_type)`,
 );
 
 const stmtGetById = db.prepare(
-  `SELECT id, name, description, created_at FROM pipelines WHERE id = ?`,
+  `SELECT id, name, description, product_type, created_at FROM pipelines WHERE id = ?`,
 );
 
 const stmtList = db.prepare(
-  `SELECT id, name, description, created_at FROM pipelines ORDER BY name LIMIT ? OFFSET ?`,
+  `SELECT id, name, description, product_type, created_at FROM pipelines ORDER BY name LIMIT ? OFFSET ?`,
+);
+
+const stmtGetByProductType = db.prepare(
+  `SELECT id, name, description, product_type, created_at FROM pipelines WHERE product_type = ?`,
 );
 
 const stmtUpdate = db.prepare(
-  `UPDATE pipelines SET name = COALESCE(@name, name), description = COALESCE(@description, description) WHERE id = @id`,
+  `UPDATE pipelines SET name = COALESCE(@name, name), description = COALESCE(@description, description), product_type = COALESCE(@product_type, product_type) WHERE id = @id`,
 );
 
 const stmtDelete = db.prepare(`DELETE FROM pipelines WHERE id = ?`);
 
 const stmtStepsByPipeline = db.prepare(
-  `SELECT ps.id, ps.pipeline_id, ps.station_id, ps.position, ps.max_duration_seconds, s.name AS station_name
+  `SELECT ps.id, ps.pipeline_id, ps.station_id, ps.position, ps.max_duration_seconds, ps.max_capacity, s.name AS station_name
    FROM pipeline_steps ps
    JOIN stations s ON s.id = ps.station_id
    WHERE ps.pipeline_id = ?
@@ -38,8 +42,8 @@ const stmtStepsByPipeline = db.prepare(
 );
 
 const stmtInsertStep = db.prepare(
-  `INSERT INTO pipeline_steps (pipeline_id, station_id, position, max_duration_seconds)
-   VALUES (@pipeline_id, @station_id, @position, @max_duration_seconds)`,
+  `INSERT INTO pipeline_steps (pipeline_id, station_id, position, max_duration_seconds, max_capacity)
+   VALUES (@pipeline_id, @station_id, @position, @max_duration_seconds, @max_capacity)`,
 );
 
 const stmtDeleteStepsByPipeline = db.prepare(
@@ -69,13 +73,19 @@ function insertSteps(
       station_id: step.stationId,
       position: i + 1,
       max_duration_seconds: step.maxDurationSeconds,
+      max_capacity: step.maxCapacity,
     });
   }
 }
 
 const createPipelineTx = db.transaction((input: CreatePipelineInput): string => {
   const id = generateId();
-  stmtInsert.run({ id, name: input.name, description: input.description ?? "" });
+  stmtInsert.run({
+    id,
+    name: input.name,
+    description: input.description ?? "",
+    product_type: input.productType,
+  });
   insertSteps(id, input.steps);
   return id;
 });
@@ -106,7 +116,12 @@ export function updatePipeline(id: string, input: UpdatePipelineInput): Pipeline
   if (!row) {
     throw new AppError(404, `Pipeline with id ${id} not found`);
   }
-  stmtUpdate.run({ id, name: input.name ?? null, description: input.description ?? null });
+  stmtUpdate.run({
+    id,
+    name: input.name ?? null,
+    description: input.description ?? null,
+    product_type: input.productType ?? null,
+  });
   return getPipelineById(id);
 }
 
@@ -152,4 +167,10 @@ export function deletePipeline(id: string): void {
 export function countJobsUsingPipeline(id: string): number {
   const row = stmtJobsUsingPipeline.get(id) as { cnt: number };
   return row.cnt;
+}
+
+export function getPipelineByProductType(productType: string): Pipeline | null {
+  const row = stmtGetByProductType.get(productType) as PipelineRow | undefined;
+  if (!row) return null;
+  return toPipeline(row, getStepRows(row.id));
 }

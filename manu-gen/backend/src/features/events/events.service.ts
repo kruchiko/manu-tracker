@@ -2,6 +2,7 @@ import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import type { CreateEventInput, TrackingEvent, TrackingEventRow } from "./events.schema.js";
 import { toTrackingEvent } from "./events.schema.js";
+import { onTrackingEvent } from "../jobs/jobs.service.js";
 
 const EVENT_COLUMNS = "id, tray_code, station_id, eye_id, captured_at, received_at, phase";
 
@@ -24,7 +25,9 @@ export function createEvent(input: CreateEventInput): TrackingEvent {
     captured_at: input.capturedAt,
     phase: input.phase ?? "scan",
   });
-  return getEventById(Number(result.lastInsertRowid));
+  const event = getEventById(Number(result.lastInsertRowid));
+  onTrackingEvent(input.trayCode);
+  return event;
 }
 
 export function getEventById(id: number): TrackingEvent {

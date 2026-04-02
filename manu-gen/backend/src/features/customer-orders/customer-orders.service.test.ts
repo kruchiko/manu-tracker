@@ -23,6 +23,7 @@ beforeEach(() => {
   stationId = stationsService.createStation({ name: "Test Station" }).id;
   pipelineId = pipelinesService.createPipeline({
     name: "Pipeline A",
+    productType: "Widget",
     steps: [{ stationId, maxDurationSeconds: 120 }],
   }).id;
 });
@@ -203,7 +204,7 @@ describe("deleteCustomerOrder", () => {
     );
   });
 
-  it("should throw 409 when order has allocations", () => {
+  it("should cascade-delete allocations when order is deleted", () => {
     const order = service.createCustomerOrder({
       customerName: "Acme",
       lines: [{ productType: "Widget", quantity: 10 }],
@@ -211,9 +212,12 @@ describe("deleteCustomerOrder", () => {
     const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
     jobsService.addAllocation(job.id, { orderLineId: order.lines[0].id, quantity: 5 });
 
-    expect(() => service.deleteCustomerOrder(order.id)).toThrow(
-      expect.objectContaining({ statusCode: 409 }),
+    service.deleteCustomerOrder(order.id);
+
+    expect(() => service.getCustomerOrderById(order.id)).toThrow(
+      expect.objectContaining({ statusCode: 404 }),
     );
+    expect(jobsService.listAllocations(job.id)).toHaveLength(0);
   });
 
   it("should throw 404 when order does not exist", () => {
@@ -221,115 +225,155 @@ describe("deleteCustomerOrder", () => {
       expect.objectContaining({ statusCode: 404 }),
     );
   });
+
+  it("should reduce shared job quantity when order is deleted", () => {
+    const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
+
+    const order1 = service.createCustomerOrder({
+      customerName: "A",
+      lines: [{ productType: "Widget", quantity: 5 }],
+    });
+    jobsService.addAllocation(job.id, { orderLineId: order1.lines[0].id, quantity: 5 });
+
+    const order2 = service.createCustomerOrder({
+      customerName: "B",
+      lines: [{ productType: "Widget", quantity: 3 }],
+    });
+    jobsService.addAllocation(job.id, { orderLineId: order2.lines[0].id, quantity: 3 });
+
+    service.deleteCustomerOrder(order1.id);
+
+    const updated = jobsService.getJobById(job.id);
+    expect(updated.quantity).toBe(15);
+    expect(jobsService.listAllocations(job.id)).toHaveLength(1);
+  });
+
+  it("should delete exclusively-serving jobs when order is deleted", () => {
+    // Need a pipeline with capacity for auto-allocation to create jobs
+    const capPipeline = pipelinesService.createPipeline({
+      name: "Cap Pipeline",
+      productType: "Cap",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 10 }],
+    });
+
+    const order = service.createCustomerOrder({
+      customerName: "Solo",
+      lines: [{ productType: "Cap", quantity: 15 }],
+    });
+    const autoJobIds = order.lines[0].allocations.map((a) => a.jobId);
+    expect(autoJobIds.length).toBe(2);
+
+    service.deleteCustomerOrder(order.id);
+
+    for (const jobId of autoJobIds) {
+      expect(() => jobsService.getJobById(jobId)).toThrow(
+        expect.objectContaining({ statusCode: 404 }),
+      );
+    }
+  });
 });
 
 describe("auto-allocation on order creation", () => {
-  it("should auto-allocate matching jobs to order lines", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
+  let capacityPipelineId: string;
 
+  beforeEach(() => {
+    // Create a pipeline with capacity configured
+    capacityPipelineId = pipelinesService.createPipeline({
+      name: "Capacity Pipeline",
+      productType: "Crone",
+      steps: [{ stationId, maxDurationSeconds: 120, maxCapacity: 10 }],
+    }).id;
+  });
+
+  it("should auto-create jobs and allocate when pipeline has capacity", () => {
     const order = service.createCustomerOrder({
       customerName: "Acme",
-      lines: [{ productType: "Widget", quantity: 10 }],
+      lines: [{ productType: "Crone", quantity: 8 }],
     });
 
-    expect(order.lines[0].allocatedQuantity).toBe(10);
+    expect(order.lines[0].allocatedQuantity).toBe(8);
     expect(order.lines[0].allocations).toHaveLength(1);
-    expect(order.lines[0].allocations[0].jobNumber).toBe("JOB-0001");
-    expect(order.lines[0].allocations[0].quantity).toBe(10);
     expect(order.allocationPct).toBe(100);
-    expect(order.fulfillmentPct).toBe(0);
   });
 
-  it("should not allocate more than the line needs", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 50, pipelineId });
+  it("should create multiple jobs when quantity exceeds capacity", () => {
+    const order = service.createCustomerOrder({
+      customerName: "Acme",
+      lines: [{ productType: "Crone", quantity: 25 }],
+    });
+
+    expect(order.lines[0].allocatedQuantity).toBe(25);
+    expect(order.lines[0].allocations).toHaveLength(3); // 10 + 10 + 5
+    expect(order.lines[0].allocations[0].quantity).toBe(10);
+    expect(order.lines[0].allocations[1].quantity).toBe(10);
+    expect(order.lines[0].allocations[2].quantity).toBe(5);
+    expect(order.allocationPct).toBe(100);
+  });
+
+  it("should pack into existing pending jobs before creating new ones", () => {
+    // Create a pending job with quantity 3, no allocations → capacity(10) - allocated(0) = 10 free
+    jobsService.createJob({ productType: "Crone", quantity: 3, pipelineId: capacityPipelineId });
 
     const order = service.createCustomerOrder({
       customerName: "Acme",
-      lines: [{ productType: "Widget", quantity: 5 }],
+      lines: [{ productType: "Crone", quantity: 15 }],
     });
 
-    expect(order.lines[0].allocatedQuantity).toBe(5);
-    expect(order.lines[0].allocations[0].quantity).toBe(5);
-  });
-
-  it("should spread across multiple jobs in FIFO order", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 6, pipelineId });
-    jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
-
-    const order = service.createCustomerOrder({
-      customerName: "Acme",
-      lines: [{ productType: "Widget", quantity: 12 }],
-    });
-
+    // 10 packed into existing job (grown from 3→10), then 5 in a new job
+    expect(order.lines[0].allocatedQuantity).toBe(15);
     expect(order.lines[0].allocations).toHaveLength(2);
-    expect(order.lines[0].allocations[0].jobNumber).toBe("JOB-0001");
-    expect(order.lines[0].allocations[0].quantity).toBe(6);
-    expect(order.lines[0].allocations[1].jobNumber).toBe("JOB-0002");
-    expect(order.lines[0].allocations[1].quantity).toBe(6);
-    expect(order.lines[0].allocatedQuantity).toBe(12);
+    expect(order.lines[0].allocations[0].quantity).toBe(10);
+    expect(order.lines[0].allocations[1].quantity).toBe(5);
   });
 
-  it("should partially allocate when job capacity is insufficient", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 3, pipelineId });
-
+  it("should not allocate when no pipeline matches the product type", () => {
     const order = service.createCustomerOrder({
       customerName: "Acme",
-      lines: [{ productType: "Widget", quantity: 10 }],
-    });
-
-    expect(order.lines[0].allocatedQuantity).toBe(3);
-    expect(order.lines[0].allocations).toHaveLength(1);
-    expect(order.allocationPct).toBe(30);
-    expect(order.fulfillmentPct).toBe(0);
-  });
-
-  it("should leave allocations empty when no matching jobs exist", () => {
-    jobsService.createJob({ productType: "Gadget", quantity: 50, pipelineId });
-
-    const order = service.createCustomerOrder({
-      customerName: "Acme",
-      lines: [{ productType: "Widget", quantity: 10 }],
+      lines: [{ productType: "Unknown", quantity: 10 }],
     });
 
     expect(order.lines[0].allocatedQuantity).toBe(0);
     expect(order.lines[0].allocations).toEqual([]);
   });
 
-  it("should respect already-allocated capacity from prior orders", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
+  it("should not pack into in_progress jobs", () => {
+    const job = jobsService.createJob({ productType: "Crone", quantity: 3, pipelineId: capacityPipelineId });
+    // Simulate starting the job by directly updating status
+    db.prepare("UPDATE jobs SET status = 'in_progress' WHERE id = ?").run(job.id);
 
-    service.createCustomerOrder({
-      customerName: "First",
-      lines: [{ productType: "Widget", quantity: 15 }],
+    const order = service.createCustomerOrder({
+      customerName: "Acme",
+      lines: [{ productType: "Crone", quantity: 5 }],
     });
 
-    const second = service.createCustomerOrder({
-      customerName: "Second",
-      lines: [{ productType: "Widget", quantity: 10 }],
-    });
-
-    expect(second.lines[0].allocatedQuantity).toBe(5);
-    expect(second.lines[0].allocations[0].quantity).toBe(5);
+    // Should create a new job, not pack into the in_progress one
+    expect(order.lines[0].allocatedQuantity).toBe(5);
+    expect(order.lines[0].allocations).toHaveLength(1);
+    // The allocation should NOT be on the in_progress job
+    expect(order.lines[0].allocations[0].jobId).not.toBe(job.id);
   });
 
-  it("should auto-allocate each line independently", () => {
-    jobsService.createJob({ productType: "Widget", quantity: 10, pipelineId });
-    jobsService.createJob({ productType: "Gadget", quantity: 20, pipelineId });
+  it("should handle multiple lines with different product types", () => {
+    // Add another pipeline for a different product
+    pipelinesService.createPipeline({
+      name: "Gadget Pipeline",
+      productType: "Gadget",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 5 }],
+    });
 
     const order = service.createCustomerOrder({
       customerName: "Acme",
       lines: [
-        { productType: "Widget", quantity: 5 },
-        { productType: "Gadget", quantity: 8 },
+        { productType: "Crone", quantity: 8 },
+        { productType: "Gadget", quantity: 12 },
       ],
     });
 
-    expect(order.lines[0].allocatedQuantity).toBe(5);
-    expect(order.lines[0].allocations[0].jobNumber).toBe("JOB-0001");
-    expect(order.lines[1].allocatedQuantity).toBe(8);
-    expect(order.lines[1].allocations[0].jobNumber).toBe("JOB-0002");
+    expect(order.lines[0].allocatedQuantity).toBe(8);
+    expect(order.lines[0].allocations).toHaveLength(1);
+    expect(order.lines[1].allocatedQuantity).toBe(12);
+    expect(order.lines[1].allocations).toHaveLength(3); // 5 + 5 + 2
     expect(order.allocationPct).toBe(100);
-    expect(order.fulfillmentPct).toBe(0);
   });
 });
 

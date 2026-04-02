@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
-import type { BoardJob, BoardJobPipeline } from "../dashboard.types";
+import type { BoardJob, BoardJobPipeline, JobStatus } from "../dashboard.types";
 import { formatDuration, parseUtc } from "../dashboard.utils";
+
+const STATUS_LABEL: Record<JobStatus, string> = {
+  pending: "Pending",
+  in_progress: "In Progress",
+  completed: "Completed",
+};
+
+const STATUS_COLOR: Record<JobStatus, string> = {
+  pending: "bg-gray-100 text-gray-700",
+  in_progress: "bg-yellow-100 text-yellow-800",
+  completed: "bg-green-100 text-green-800",
+};
 
 interface JobBoardRowProps {
   job: BoardJob;
@@ -94,6 +106,11 @@ export function JobBoardRow({ job, isSelected, onSelect }: JobBoardRowProps) {
     >
       <td className="py-3 pr-4 font-mono text-sm">{job.jobNumber}</td>
       <td className="py-3 pr-4 text-sm">{job.productType}</td>
+      <td className="py-3 pr-4 text-sm">
+        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[job.status]}`}>
+          {STATUS_LABEL[job.status]}
+        </span>
+      </td>
       <td className="py-3 pr-4 text-sm">
         <span className="text-gray-700">{job.pipeline.name}</span>
       </td>

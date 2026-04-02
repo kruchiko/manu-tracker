@@ -5,6 +5,7 @@ import { useJobBoard } from "../hooks/useJobBoard";
 import { OverviewVisibleContext } from "../OverviewVisibleContext";
 import { CustomerOrderList } from "../../customer-orders/components/CustomerOrderList";
 import { CustomerOrderDetail } from "../../customer-orders/components/CustomerOrderDetail";
+import { useOrderMetrics } from "../hooks/useOrderMetrics";
 
 type DashboardTab = "customer-orders" | "operations";
 
@@ -13,6 +14,7 @@ export function DashboardPage() {
   const [selectedJobId, setSelectedJobId] = useState<number | null>(null);
   const [selectedCustomerOrderId, setSelectedCustomerOrderId] = useState<number | null>(null);
   const { data: jobs } = useJobBoard();
+  const { data: orderMetrics } = useOrderMetrics();
   const selectedJob = jobs?.find((j) => j.id === selectedJobId) ?? null;
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -57,12 +59,63 @@ export function DashboardPage() {
             readonly
           />
         ) : (
-          <div className="rounded-lg border bg-white p-6 shadow-sm">
-            <h3 className="mb-4 text-lg font-semibold">Customer Orders</h3>
-            <CustomerOrderList
-              selectedId={selectedCustomerOrderId}
-              onSelect={(order) => setSelectedCustomerOrderId(order.id)}
-            />
+          <div className="space-y-6">
+            {orderMetrics && (
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <div className="rounded-lg border bg-white p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase text-gray-500">Total Orders</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{orderMetrics.totalOrders}</p>
+                </div>
+                <div className="rounded-lg border bg-white p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase text-gray-500">Fulfilled</p>
+                  <p className="mt-1 text-2xl font-bold text-green-700">{orderMetrics.fulfilledOrders}</p>
+                </div>
+                <div className="rounded-lg border bg-white p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase text-gray-500">Avg Jobs / Order</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{orderMetrics.avgJobsPerOrder}</p>
+                </div>
+                <div className="rounded-lg border bg-white p-4 shadow-sm">
+                  <p className="text-xs font-medium uppercase text-gray-500">Product Types</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{orderMetrics.byProductType.length}</p>
+                </div>
+              </div>
+            )}
+
+            {orderMetrics && orderMetrics.byProductType.length > 0 && (
+              <div className="rounded-lg border bg-white p-6 shadow-sm">
+                <h3 className="mb-3 text-sm font-semibold text-gray-900">Fulfillment by Product Type</h3>
+                <div className="space-y-2">
+                  {orderMetrics.byProductType.map((pt) => {
+                    const pct = pt.totalQuantity > 0 ? Math.round((pt.fulfilledQuantity / pt.totalQuantity) * 100) : 0;
+                    return (
+                      <div key={pt.productType} className="flex items-center gap-3">
+                        <span className="w-24 truncate text-sm font-medium text-gray-700">{pt.productType}</span>
+                        <div className="flex h-2 flex-1 overflow-hidden rounded-full bg-gray-200">
+                          <div
+                            className="rounded-full bg-green-500 transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-20 text-right text-xs text-gray-500">
+                          {pt.fulfilledQuantity}/{pt.totalQuantity} ({pct}%)
+                        </span>
+                        <span className="w-16 text-right text-xs text-gray-400">
+                          {pt.jobCount} job{pt.jobCount !== 1 ? "s" : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div className="rounded-lg border bg-white p-6 shadow-sm">
+              <h3 className="mb-4 text-lg font-semibold">Customer Orders</h3>
+              <CustomerOrderList
+                selectedId={selectedCustomerOrderId}
+                onSelect={(order) => setSelectedCustomerOrderId(order.id)}
+              />
+            </div>
           </div>
         )
       )}

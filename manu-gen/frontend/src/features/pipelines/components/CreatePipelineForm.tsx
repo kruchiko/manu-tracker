@@ -7,8 +7,9 @@ import type { StepFormValue } from "../pipelines.schema";
 export function CreatePipelineForm() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [productType, setProductType] = useState("");
   const [steps, setSteps] = useState<StepFormValue[]>([
-    { stationId: "", maxDurationSeconds: null },
+    { stationId: "", maxDurationSeconds: null, maxCapacity: null },
   ]);
   const [submitted, setSubmitted] = useState(false);
 
@@ -16,6 +17,7 @@ export function CreatePipelineForm() {
   const { data: stations } = useStations();
 
   const nameError = submitted && name.trim().length === 0;
+  const productTypeError = submitted && productType.trim().length === 0;
   const validSteps = steps.filter((s) => s.stationId.length > 0);
   const stepsError = submitted && validSteps.length === 0;
 
@@ -24,15 +26,17 @@ export function CreatePipelineForm() {
     setSubmitted(true);
 
     const trimmedName = name.trim();
-    if (trimmedName.length === 0 || validSteps.length === 0) return;
+    const trimmedProductType = productType.trim();
+    if (trimmedName.length === 0 || trimmedProductType.length === 0 || validSteps.length === 0) return;
 
     createPipeline.mutate(
-      { name: trimmedName, description: description.trim(), steps: validSteps },
+      { name: trimmedName, description: description.trim(), productType: trimmedProductType, steps: validSteps },
       {
         onSuccess: () => {
           setName("");
           setDescription("");
-          setSteps([{ stationId: "", maxDurationSeconds: null }]);
+          setProductType("");
+          setSteps([{ stationId: "", maxDurationSeconds: null, maxCapacity: null }]);
           setSubmitted(false);
         },
       },
@@ -41,7 +45,7 @@ export function CreatePipelineForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
           <label htmlFor="pipeline-name" className="mb-1 block text-sm font-medium text-gray-700">
             Name
@@ -59,6 +63,25 @@ export function CreatePipelineForm() {
           />
           {nameError && (
             <p className="mt-1 text-xs text-red-600">Pipeline name is required.</p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="pipeline-product-type" className="mb-1 block text-sm font-medium text-gray-700">
+            Product Type
+          </label>
+          <input
+            id="pipeline-product-type"
+            type="text"
+            value={productType}
+            onChange={(e) => setProductType(e.target.value)}
+            placeholder="e.g. Widget"
+            aria-invalid={productTypeError}
+            className={`w-full rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              productTypeError ? "border-red-400 ring-1 ring-red-400" : ""
+            }`}
+          />
+          {productTypeError && (
+            <p className="mt-1 text-xs text-red-600">Product type is required.</p>
           )}
         </div>
         <div>

@@ -158,6 +158,7 @@ describe("deleteStation", () => {
     const station = stationsService.createStation({ name: "In Pipeline" });
     pipelinesService.createPipeline({
       name: "Flow",
+      productType: "Widget",
       steps: [{ stationId: station.id, maxDurationSeconds: null }],
     });
 

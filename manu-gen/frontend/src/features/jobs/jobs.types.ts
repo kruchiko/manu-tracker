@@ -1,3 +1,5 @@
+export type JobStatus = "pending" | "in_progress" | "completed";
+
 export interface Job {
   id: number;
   jobNumber: string;
@@ -9,6 +11,7 @@ export interface Job {
   createdAt: string;
   pipelineId: string;
   pipelineName: string;
+  status: JobStatus;
 }
 
 export type JobsResponse = Job[];

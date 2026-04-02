@@ -13,6 +13,8 @@ import type {
 } from "./customer-orders.schema.js";
 import { toCustomerOrderSummary } from "./customer-orders.schema.js";
 import { stmtInsertAllocation } from "../../shared/allocation-statements.js";
+import { getPipelineByProductType } from "../pipelines/pipelines.service.js";
+import { createJobRaw, packIntoJob, deleteJob } from "../jobs/jobs.service.js";
 
 function formatOrderNumber(id: number): string {
   return `CO-${String(id).padStart(4, "0")}`;
@@ -68,15 +70,7 @@ const stmtFulfilledCountByLine = db.prepare(`
   SELECT COALESCE(SUM(ja.quantity), 0) AS total
   FROM job_allocations ja
   JOIN jobs j ON j.id = ja.job_id
-  WHERE ja.order_line_id = ?
-    AND (
-      SELECT COUNT(DISTINCT te.station_id)
-      FROM tracking_events te
-      WHERE te.tray_code = j.tray_code AND te.phase = 'departed'
-    ) >= (
-      SELECT COUNT(*) FROM pipeline_steps ps WHERE ps.pipeline_id = j.pipeline_id
-    )
-    AND (SELECT COUNT(*) FROM pipeline_steps ps2 WHERE ps2.pipeline_id = j.pipeline_id) > 0
+  WHERE ja.order_line_id = ? AND j.status = 'completed'
 `);
 
 const stmtAllocsByLine = db.prepare(`
@@ -87,21 +81,20 @@ const stmtAllocsByLine = db.prepare(`
   ORDER BY ja.id
 `);
 
-const stmtAvailableJobs = db.prepare(`
-  SELECT j.id, j.quantity - COALESCE(SUM(ja.quantity), 0) AS available
+const stmtPendingJobs = db.prepare(`
+  SELECT j.id, j.quantity, COALESCE(SUM(ja.quantity), 0) AS allocated
   FROM jobs j
   LEFT JOIN job_allocations ja ON ja.job_id = j.id
-  WHERE j.product_type = ?
+  WHERE j.pipeline_id = ? AND j.status = 'pending'
   GROUP BY j.id
-  HAVING available > 0
   ORDER BY j.id ASC
 `);
 
-const stmtAllocCountByOrder = db.prepare(`
-  SELECT COUNT(*) AS cnt FROM job_allocations ja
-  JOIN order_lines ol ON ol.id = ja.order_line_id
-  WHERE ol.customer_order_id = ?
-`);
+interface PendingJobRow {
+  id: number;
+  quantity: number;
+  allocated: number;
+}
 
 interface AllocRow {
   id: number;
@@ -142,24 +135,36 @@ function computePcts(lines: OrderLine[]): { allocationPct: number; fulfillmentPc
   };
 }
 
-interface AvailableJobRow {
-  id: number;
-  available: number;
-}
+function autoCreateAndAllocate(
+  orderLineId: number,
+  productType: string,
+  quantityNeeded: number,
+): void {
+  const pipeline = getPipelineByProductType(productType);
+  if (!pipeline) return;
 
-function autoAllocateLine(orderLineId: number, productType: string, quantityNeeded: number): void {
-  const jobs = stmtAvailableJobs.all(productType) as AvailableJobRow[];
+  const capacity = pipeline.effectiveCapacity;
+  if (!capacity || capacity <= 0) return;
+
   let remaining = quantityNeeded;
 
-  for (const job of jobs) {
+  const pendingJobs = stmtPendingJobs.all(pipeline.id) as PendingJobRow[];
+  for (const pj of pendingJobs) {
     if (remaining <= 0) break;
-    const toAllocate = Math.min(job.available, remaining);
-    stmtInsertAllocation.run({
-      order_line_id: orderLineId,
-      job_id: job.id,
-      quantity: toAllocate,
-    });
-    remaining -= toAllocate;
+    const space = capacity - pj.allocated;
+    if (space <= 0) continue;
+    const toAdd = Math.min(space, remaining);
+    const growBy = Math.max(0, (pj.allocated + toAdd) - pj.quantity);
+    if (growBy > 0) packIntoJob(pj.id, growBy);
+    stmtInsertAllocation.run({ order_line_id: orderLineId, job_id: pj.id, quantity: toAdd });
+    remaining -= toAdd;
+  }
+
+  while (remaining > 0) {
+    const batch = Math.min(capacity, remaining);
+    const jobId = createJobRaw(productType, batch, pipeline.id);
+    stmtInsertAllocation.run({ order_line_id: orderLineId, job_id: jobId, quantity: batch });
+    remaining -= batch;
   }
 }
 
@@ -180,7 +185,7 @@ const createOrderTx = db.transaction((input: CreateCustomerOrderInput): number =
       product_type: line.productType,
       quantity: line.quantity,
     });
-    autoAllocateLine(
+    autoCreateAndAllocate(
       Number(result.lastInsertRowid),
       line.productType,
       line.quantity,
@@ -246,18 +251,64 @@ export function updateCustomerOrder(
   return getCustomerOrderById(id);
 }
 
+const stmtAllocsByOrder = db.prepare(`
+  SELECT ja.job_id, ja.quantity
+  FROM job_allocations ja
+  JOIN order_lines ol ON ol.id = ja.order_line_id
+  WHERE ol.customer_order_id = ?
+`);
+
+const stmtOtherAllocCount = db.prepare(`
+  SELECT COUNT(*) AS cnt FROM job_allocations
+  WHERE job_id = ? AND order_line_id NOT IN (
+    SELECT id FROM order_lines WHERE customer_order_id = ?
+  )
+`);
+
+const stmtDeleteAllocsByOrder = db.prepare(`
+  DELETE FROM job_allocations WHERE order_line_id IN (
+    SELECT id FROM order_lines WHERE customer_order_id = ?
+  )
+`);
+
+const stmtUpdateJobQty = db.prepare(`UPDATE jobs SET quantity = quantity - @delta WHERE id = @id`);
+const stmtJobQuantity = db.prepare(`SELECT quantity FROM jobs WHERE id = ?`);
+
 const deleteOrderTx = db.transaction((id: number): void => {
   const existing = stmtGetById.get(id) as CustomerOrderRow | undefined;
   if (!existing) {
     throw new AppError(404, `Customer order with id ${id} not found`);
   }
-  const { cnt } = stmtAllocCountByOrder.get(id) as { cnt: number };
-  if (cnt > 0) {
-    throw new AppError(
-      409,
-      `Cannot delete order "${existing.order_number}": ${cnt} job allocation(s) exist`,
-    );
+
+  const allocs = stmtAllocsByOrder.all(id) as { job_id: number; quantity: number }[];
+
+  const jobDeltas = new Map<number, number>();
+  for (const a of allocs) {
+    jobDeltas.set(a.job_id, (jobDeltas.get(a.job_id) ?? 0) + a.quantity);
   }
+
+  // Decide fate of each job BEFORE deleting allocations
+  const jobsToDelete = new Set<number>();
+  const jobsToShrink = new Map<number, number>();
+  for (const [jobId, delta] of jobDeltas) {
+    const { cnt } = stmtOtherAllocCount.get(jobId, id) as { cnt: number };
+    if (cnt === 0) {
+      jobsToDelete.add(jobId);
+    } else {
+      const row = stmtJobQuantity.get(jobId) as { quantity: number };
+      jobsToShrink.set(jobId, Math.min(delta, row.quantity - 1));
+    }
+  }
+
+  stmtDeleteAllocsByOrder.run(id);
+
+  for (const jobId of jobsToDelete) {
+    deleteJob(jobId);
+  }
+  for (const [jobId, safeDelta] of jobsToShrink) {
+    if (safeDelta > 0) stmtUpdateJobQty.run({ id: jobId, delta: safeDelta });
+  }
+
   stmtDeleteLines.run(id);
   stmtDelete.run(id);
 });

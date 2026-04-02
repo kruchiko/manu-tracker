@@ -7,12 +7,15 @@ export interface BoardJobPipeline {
   elapsedSeconds: number | null;
 }
 
+export type JobStatus = "pending" | "in_progress" | "completed";
+
 export interface BoardJob {
   id: number;
   jobNumber: string;
   productType: string;
   trayCode: string;
   createdAt: string;
+  status: JobStatus;
   currentStation: { id: string; name: string } | null;
   lastSeenAt: string | null;
   stationArrivedAt: string | null;

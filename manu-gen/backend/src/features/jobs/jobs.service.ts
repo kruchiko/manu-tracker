@@ -2,6 +2,7 @@ import QRCode from "qrcode";
 import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
 import { parseUtcMs, toIso } from "../../shared/datetime.js";
+import { getPipelineById } from "../pipelines/pipelines.service.js";
 import type {
   CreateJobInput,
   CreateAllocationInput,
@@ -23,7 +24,7 @@ const QR_OPTIONS = {
   errorCorrectionLevel: "H",
 } as const;
 
-const JOB_COLUMNS = `o.id, o.job_number, o.product_type, o.quantity, o.notes, o.tray_code, o.created_at, o.pipeline_id, p.name AS pipeline_name,
+const JOB_COLUMNS = `o.id, o.job_number, o.product_type, o.quantity, o.notes, o.tray_code, o.created_at, o.pipeline_id, o.status, p.name AS pipeline_name,
   COALESCE((SELECT SUM(ja.quantity) FROM job_allocations ja WHERE ja.job_id = o.id), 0) AS allocated_quantity`;
 
 function formatJobNumber(id: number): string {
@@ -70,6 +71,19 @@ const createJobTx = db.transaction((input: CreateJobInput): number => {
 });
 
 export function createJob(input: CreateJobInput): Job {
+  const pipeline = getPipelineById(input.pipelineId);
+  if (pipeline.productType && pipeline.productType !== input.productType) {
+    throw new AppError(
+      422,
+      `Product type "${input.productType}" does not match pipeline product type "${pipeline.productType}"`,
+    );
+  }
+  if (pipeline.effectiveCapacity !== null && input.quantity > pipeline.effectiveCapacity) {
+    throw new AppError(
+      422,
+      `Quantity ${input.quantity} exceeds pipeline capacity of ${pipeline.effectiveCapacity}`,
+    );
+  }
   const id = createJobTx(input);
   return getJobById(id);
 }
@@ -95,6 +109,25 @@ export function listJobs({ limit = 50, offset = 0 }: { limit?: number; offset?: 
   return rows.map(toJob);
 }
 
+const stmtDeleteAllocsByJob = db.prepare("DELETE FROM job_allocations WHERE job_id = ?");
+const stmtTrayCodeById = db.prepare("SELECT tray_code FROM jobs WHERE id = ?");
+const stmtDeleteEventsByTray = db.prepare("DELETE FROM tracking_events WHERE tray_code = ?");
+const stmtDeleteJob = db.prepare("DELETE FROM jobs WHERE id = ?");
+
+const deleteJobTx = db.transaction((id: number) => {
+  const row = stmtTrayCodeById.get(id) as { tray_code: string } | undefined;
+  if (!row) {
+    throw new AppError(404, `Job with id ${id} not found`);
+  }
+  stmtDeleteAllocsByJob.run(id);
+  stmtDeleteEventsByTray.run(row.tray_code);
+  stmtDeleteJob.run(id);
+});
+
+export function deleteJob(id: number): void {
+  deleteJobTx(id);
+}
+
 const stmtJobBoard = db.prepare(`
   SELECT
     o.id,
@@ -102,6 +135,7 @@ const stmtJobBoard = db.prepare(`
     o.product_type,
     o.tray_code,
     o.created_at,
+    o.status,
     CASE WHEN ranked.phase = 'departed' THEN NULL ELSE ranked.station_id END AS station_id,
     CASE WHEN ranked.phase = 'departed' THEN NULL ELSE s.name END AS station_name,
     ranked.captured_at AS last_seen_at,
@@ -335,4 +369,58 @@ export function removeAllocation(jobId: number, allocationId: number): void {
     throw new AppError(404, `Allocation ${allocationId} not found on job ${jobId}`);
   }
   stmtDeleteAllocation.run(allocationId, jobId);
+}
+
+const stmtUpdateQuantity = db.prepare(`UPDATE jobs SET quantity = quantity + @delta WHERE id = @id`);
+
+const stmtUpdateStatus = db.prepare(`UPDATE jobs SET status = @status WHERE id = @id`);
+
+const stmtJobByTrayCode = db.prepare(`SELECT id, status, pipeline_id FROM jobs WHERE tray_code = ?`);
+
+const stmtDepartedStationCount = db.prepare(`
+  SELECT COUNT(DISTINCT te.station_id) AS cnt
+  FROM tracking_events te
+  WHERE te.tray_code = ? AND te.phase = 'departed'
+`);
+
+const stmtPipelineStepCount = db.prepare(`
+  SELECT COUNT(*) AS cnt FROM pipeline_steps WHERE pipeline_id = ?
+`);
+
+export function packIntoJob(jobId: number, additionalQuantity: number): void {
+  stmtUpdateQuantity.run({ id: jobId, delta: additionalQuantity });
+}
+
+export function createJobRaw(productType: string, quantity: number, pipelineId: string): number {
+  const { next_id: nextId } = stmtNextId.get() as { next_id: number };
+  stmtInsert.run({
+    id: nextId,
+    job_number: formatJobNumber(nextId),
+    product_type: productType,
+    quantity,
+    notes: "",
+    tray_code: formatTrayCode(nextId),
+    pipeline_id: pipelineId,
+  });
+  return nextId;
+}
+
+export function onTrackingEvent(trayCode: string): void {
+  const job = stmtJobByTrayCode.get(trayCode) as
+    | { id: number; status: string; pipeline_id: string }
+    | undefined;
+  if (!job) return;
+
+  if (job.status === "pending") {
+    stmtUpdateStatus.run({ id: job.id, status: "in_progress" });
+    return;
+  }
+
+  if (job.status === "in_progress") {
+    const { cnt: departed } = stmtDepartedStationCount.get(trayCode) as { cnt: number };
+    const { cnt: totalSteps } = stmtPipelineStepCount.get(job.pipeline_id) as { cnt: number };
+    if (totalSteps > 0 && departed >= totalSteps) {
+      stmtUpdateStatus.run({ id: job.id, status: "completed" });
+    }
+  }
 }
