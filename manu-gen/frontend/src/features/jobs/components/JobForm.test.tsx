@@ -19,13 +19,13 @@ describe("JobForm", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mocked(usePipelines).mockReturnValue({
-      data: [{ id: "pipeline-1", name: "Pipeline A", steps: [{ stationId: "s1", maxDurationSeconds: 60 }], description: "", totalExpectedSeconds: 60, createdAt: "" }],
+      data: [{ id: "pipeline-1", name: "Pipeline A", productType: "Widget", steps: [{ stationId: "s1", maxDurationSeconds: 60 }], description: "", totalExpectedSeconds: 60, effectiveCapacity: 20, createdAt: "" }],
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof usePipelines>);
   });
 
-  it("should render product type, quantity, pipeline, and notes fields", () => {
+  it("should render pipeline, quantity, and notes fields", () => {
     vi.mocked(useCreateJob).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
@@ -34,27 +34,21 @@ describe("JobForm", () => {
 
     render(<JobForm onJobCreated={vi.fn()} />, { wrapper: createWrapper() });
 
-    expect(screen.getByLabelText("Product Type")).toBeInTheDocument();
-    expect(screen.getByLabelText("Quantity")).toBeInTheDocument();
     expect(screen.getByLabelText("Pipeline")).toBeInTheDocument();
+    expect(screen.getByLabelText(/Quantity/)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create Job" })).toBeInTheDocument();
   });
 
-  it("should show validation error when product type is empty", async () => {
+  it("should disable submit button when no pipeline is selected", () => {
     vi.mocked(useCreateJob).mockReturnValue({
       mutate: vi.fn(),
       isPending: false,
       error: null,
     } as unknown as ReturnType<typeof useCreateJob>);
 
-    const user = userEvent.setup();
     render(<JobForm onJobCreated={vi.fn()} />, { wrapper: createWrapper() });
 
-    await user.click(screen.getByRole("button", { name: "Create Job" }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/Product type is required/i)).toBeInTheDocument();
-    });
+    expect(screen.getByRole("button", { name: "Create Job" })).toBeDisabled();
   });
 
   it("should display server error", () => {
