@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManuTracker — Logo v3 V5 Fixed (Blue System)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sidebar-bg: #0d1f3c;
+  --sidebar-gradient: linear-gradient(170deg, #0d1f3c 0%, #1a3a6e 100%);
+  --sidebar-border: #1a2f4a;
+  --sidebar-active: #1a3d6e;
+  --sidebar-active-accent: #90c4f0;
+  --sidebar-text: #c4d4e8;
+  --sidebar-text-muted: #5a7a9e;
+  --logo-manu: #90c4f0;
+  --logo-dot: #90c4f0;
+  --logo-dot-orange: #c45c1a;
+  --logo-connector: rgba(255,255,255,0.15);
+  --accent: #1a5faa;
+  --accent-muted: #5a8fd4;
+  --alert: #c45c1a;
+  --bg: #f2f5f7;
+  --border: #dde2e8;
+  --text: #1a1f2e;
+  --text-muted: #6b7280;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; }
+body { background: var(--bg); font-family: 'Barlow Condensed', sans-serif; padding: 48px 40px 100px; }
+
+.page-title { font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 40px; }
+
+.section-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 20px; margin-top: 48px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+
+.card { border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.panel { display: flex; align-items: flex-start; justify-content: flex-start; padding: 32px 32px; min-height: 110px; }
+.panel.dark  { background: var(--sidebar-bg); }
+.panel.light { background: #fff; border-top: 1px solid var(--border); }
+.meta { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); padding: 8px 28px 10px; background: #fff; border-top: 1px solid var(--border); }
+
+/*
+  KEY FIX: wrap wordmark + dot row in inline-flex column.
+  The wordmark defines the width naturally.
+  The dot-row is set to width:100% so it stretches to match exactly.
+*/
+.logo-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.wordmark {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.dot-row {
+  display: flex;
+  align-items: center;
+  width: 100%; /* stretches to wordmark width */
+}
+.dot-row .d {
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot-row .l {
+  flex: 1; /* connectors share remaining space equally */
+  height: 2px;
+  border-radius: 1px;
+}
+</style>
+</head>
+<body>
+
+<div class="page-title">ManuTracker — Logo V5 · Dot width fixed to wordmark</div>
+
+<div class="section-label">Size variations — dots always match wordmark width exactly</div>
+<div class="grid">
+
+  <!-- 18px — sidebar size -->
+  <div class="card">
+    <div class="panel dark">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:18px;">
+          <span style="color:#90c4f0">Manu</span><span style="color:#fff">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:7px;height:7px;background:#c45c1a;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel light">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:18px;">
+          <span style="color:#1a5faa">Manu</span><span style="color:#1a1f2e">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:7px;height:7px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:7px;height:7px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:7px;height:7px;background:#c45c1a;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:7px;height:7px;background:#1a5faa;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">18px — sidebar size</div>
+  </div>
+
+  <!-- 20px — default app size -->
+  <div class="card">
+    <div class="panel dark">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:20px;">
+          <span style="color:#90c4f0">Manu</span><span style="color:#fff">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:8px;height:8px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:8px;height:8px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:8px;height:8px;background:#c45c1a;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:8px;height:8px;background:#90c4f0;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel light">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:20px;">
+          <span style="color:#1a5faa">Manu</span><span style="color:#1a1f2e">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:8px;height:8px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:8px;height:8px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:8px;height:8px;background:#c45c1a;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:8px;height:8px;background:#1a5faa;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">20px — standard app header</div>
+  </div>
+
+  <!-- 24px — larger header -->
+  <div class="card">
+    <div class="panel dark">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:24px;">
+          <span style="color:#90c4f0">Manu</span><span style="color:#fff">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:9px;height:9px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:9px;height:9px;background:#90c4f0;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:9px;height:9px;background:#c45c1a;"></div>
+          <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+          <div class="d" style="width:9px;height:9px;background:#90c4f0;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel light">
+      <div class="logo-wrap">
+        <div class="wordmark" style="font-size:24px;">
+          <span style="color:#1a5faa">Manu</span><span style="color:#1a1f2e">Tracker</span>
+        </div>
+        <div class="dot-row">
+          <div class="d" style="width:9px;height:9px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:9px;height:9px;background:#1a5faa;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:9px;height:9px;background:#c45c1a;"></div>
+          <div class="l" style="background:#dde2e8;"></div>
+          <div class="d" style="width:9px;height:9px;background:#1a5faa;"></div>
+        </div>
+      </div>
+    </div>
+    <div class="meta">24px — landing page / larger contexts</div>
+  </div>
+
+</div>
+
+<!-- Sidebar context -->
+<div class="section-label" style="margin-top:56px;">Sidebar context — 220px · 18px size</div>
+<div style="display:inline-flex;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.15);">
+  <div style="background:linear-gradient(170deg,#0d1f3c 0%,#1a3a6e 100%);width:220px;padding:20px 20px 24px;">
+
+    <!-- Logo -->
+    <div class="logo-wrap" style="margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #1a2f4a;">
+      <div class="wordmark" style="font-size:18px;">
+        <span style="color:#90c4f0">Manu</span><span style="color:#fff">Tracker</span>
+      </div>
+      <div class="dot-row">
+        <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+        <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+        <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+        <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+        <div class="d" style="width:7px;height:7px;background:#c45c1a;"></div>
+        <div class="l" style="background:rgba(255,255,255,0.15);"></div>
+        <div class="d" style="width:7px;height:7px;background:#90c4f0;"></div>
+      </div>
+    </div>
+
+    <!-- Fake nav to show full sidebar context -->
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#5a7a9e;margin-bottom:6px;">Operations</div>
+    <div style="background:#1a3d6e;border-left:3px solid #90c4f0;padding:8px 12px;margin-bottom:2px;font-family:'Barlow',sans-serif;font-size:13px;font-weight:500;color:#fff;border-radius:0 3px 3px 0;">Dashboard</div>
+    <div style="padding:8px 12px;margin-bottom:2px;font-family:'Barlow',sans-serif;font-size:13px;color:#c4d4e8;border-left:3px solid transparent;">Customer Orders</div>
+    <div style="padding:8px 12px;margin-bottom:14px;font-family:'Barlow',sans-serif;font-size:13px;color:#c4d4e8;border-left:3px solid transparent;">Jobs</div>
+    <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#5a7a9e;margin-bottom:6px;">Configuration</div>
+    <div style="padding:8px 12px;margin-bottom:2px;font-family:'Barlow',sans-serif;font-size:13px;color:#c4d4e8;border-left:3px solid transparent;">Pipelines</div>
+    <div style="padding:8px 12px;font-family:'Barlow',sans-serif;font-size:13px;color:#c4d4e8;border-left:3px solid transparent;">Stations</div>
+  </div>
+</div>
+
+<p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;color:var(--text-muted);margin-top:48px;">ManuTracker · Logo V5 Fixed · April 2026</p>
+
+</body>
+</html>
