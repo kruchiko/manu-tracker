@@ -2,7 +2,21 @@
 @import "./tokens/design-tokens.css";
 @import "tailwindcss";
 
-@theme {
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@theme inline {
   /* Colors — surfaces */
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -30,10 +44,10 @@
   --color-status-pending: var(--status-pending);
   --color-status-pending-bg: var(--status-pending-bg);
 
-  /* Colors — batch */
-  --color-batch: var(--color-batch);
-  --color-batch-bg: var(--color-batch-bg);
-  --color-batch-border: var(--color-batch-border);
+  /* Colors — batch (inline values to avoid circular refs with :root --color-batch) */
+  --color-batch: #7c4dbd;
+  --color-batch-bg: #f0ebfa;
+  --color-batch-border: #e0d5f5;
 
   /* Colors — borders */
   --color-border: var(--border);
@@ -67,18 +81,18 @@
   --color-chart-4: var(--chart-4);
   --color-chart-grid: var(--chart-grid);
 
-  /* Typography — font families */
-  --font-heading: var(--font-heading);
-  --font-body: var(--font-body);
-  --font-mono: var(--font-mono);
+  /* Typography — font families (inline values to avoid circular refs with :root) */
+  --font-heading: "Barlow Condensed", sans-serif;
+  --font-body: "Barlow", sans-serif;
+  --font-mono: "DM Mono", monospace;
 
-  /* Shadows */
-  --shadow-sm: var(--shadow-sm);
-  --shadow-md: var(--shadow-md);
-  --shadow-lg: var(--shadow-lg);
+  /* Shadows (inline values to avoid circular refs with :root) */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.14);
 
-  /* Border radius */
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
+  /* Border radius (inline values to avoid circular refs with :root) */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
 }

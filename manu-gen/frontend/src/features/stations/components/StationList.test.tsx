@@ -5,6 +5,13 @@ import { StationList } from "./StationList";
 import type { Station } from "../stations.types";
 
 vi.mock("../hooks/useStations", () => ({ useStations: vi.fn() }));
+vi.mock("../hooks/useDeleteStation", () => ({
+  useDeleteStation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+    error: null,
+  })),
+}));
 
 import { useStations } from "../hooks/useStations";
 
@@ -18,16 +25,16 @@ describe("StationList", () => {
     vi.resetAllMocks();
   });
 
-  it("should show loading state", () => {
+  it("should show loading skeleton", () => {
     vi.mocked(useStations).mockReturnValue({
       isLoading: true,
       error: null,
       data: undefined,
     } as unknown as ReturnType<typeof useStations>);
 
-    render(<StationList />, { wrapper: createWrapper() });
+    const { container } = render(<StationList />, { wrapper: createWrapper() });
 
-    expect(screen.getByText("Loading stations...")).toBeInTheDocument();
+    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
   });
 
   it("should show error message when fetch fails", () => {
@@ -52,11 +59,11 @@ describe("StationList", () => {
     render(<StationList />, { wrapper: createWrapper() });
 
     expect(
-      screen.getByText("No stations yet. Create one above."),
+      screen.getByText("No stations yet. Create one to get started."),
     ).toBeInTheDocument();
   });
 
-  it("should render station cards", () => {
+  it("should render stations in a data table", () => {
     vi.mocked(useStations).mockReturnValue({
       isLoading: false,
       error: null,
@@ -65,8 +72,30 @@ describe("StationList", () => {
 
     render(<StationList />, { wrapper: createWrapper() });
 
+    expect(screen.getByText("All Stations")).toBeInTheDocument();
+    expect(screen.getByText("2 stations")).toBeInTheDocument();
+
     expect(screen.getByText("Polishing")).toBeInTheDocument();
     expect(screen.getByText("Floor 2")).toBeInTheDocument();
+    expect(screen.getByText("eye-1")).toBeInTheDocument();
+
     expect(screen.getByText("Casting")).toBeInTheDocument();
+    expect(screen.getByText("No camera")).toBeInTheDocument();
+  });
+
+  it("should render table column headers", () => {
+    vi.mocked(useStations).mockReturnValue({
+      isLoading: false,
+      error: null,
+      data: sampleStations,
+    } as unknown as ReturnType<typeof useStations>);
+
+    render(<StationList />, { wrapper: createWrapper() });
+
+    expect(screen.getByText("Station")).toBeInTheDocument();
+    expect(screen.getByText("Location")).toBeInTheDocument();
+    expect(screen.getByText("Slot capacity")).toBeInTheDocument();
+    expect(screen.getByText("Camera")).toBeInTheDocument();
+    expect(screen.getByText("Actions")).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createJobSchema, type CreateJobFormValues } from "../jobs.schema";
 import { useCreateJob } from "../hooks/useCreateJob";
@@ -15,7 +15,7 @@ export function JobForm({ onJobCreated }: JobFormProps) {
     register,
     handleSubmit,
     reset,
-    watch,
+    control,
     setValue,
     formState: { errors },
   } = useForm<CreateJobFormValues>({
@@ -26,7 +26,7 @@ export function JobForm({ onJobCreated }: JobFormProps) {
   const { mutate, isPending, error } = useCreateJob();
   const { data: pipelines } = usePipelines();
 
-  const selectedPipelineId = watch("pipelineId");
+  const selectedPipelineId = useWatch({ control, name: "pipelineId" });
   const selectedPipeline = pipelines?.find((p) => p.id === selectedPipelineId);
 
   useEffect(() => {

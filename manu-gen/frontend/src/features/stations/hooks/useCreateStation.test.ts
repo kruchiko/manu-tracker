@@ -36,10 +36,11 @@ describe("useCreateStation", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(apiClient.post).toHaveBeenCalledWith("/stations", {
-      name: "Polishing",
-      location: "Floor 2",
-    });
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/stations",
+      { name: "Polishing", location: "Floor 2" },
+      expect.anything(),
+    );
   });
 
   it("should invalidate the stations query on success", async () => {
