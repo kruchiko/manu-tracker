@@ -1,1 +1,84 @@
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap");
+@import "../../../docs/design/v2/tokens/manutracker-tokens-v2.css";
 @import "tailwindcss";
+
+@theme {
+  /* Colors — surfaces */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-hover: var(--surface-hover);
+
+  /* Colors — accent */
+  --color-accent: var(--accent);
+  --color-accent-dark: var(--accent-dark);
+  --color-accent-light: var(--accent-light);
+  --color-accent-muted: var(--accent-muted);
+
+  /* Colors — alert (orange) */
+  --color-alert: var(--alert);
+  --color-alert-dark: var(--alert-dark);
+  --color-alert-light: var(--alert-light);
+
+  /* Colors — semantic status */
+  --color-status-ok: var(--status-ok);
+  --color-status-ok-bg: var(--status-ok-bg);
+  --color-status-warn: var(--status-warn);
+  --color-status-warn-bg: var(--status-warn-bg);
+  --color-status-late: var(--status-late);
+  --color-status-late-bg: var(--status-late-bg);
+  --color-status-pending: var(--status-pending);
+  --color-status-pending-bg: var(--status-pending-bg);
+
+  /* Colors — batch */
+  --color-batch: var(--color-batch);
+  --color-batch-bg: var(--color-batch-bg);
+  --color-batch-border: var(--color-batch-border);
+
+  /* Colors — borders */
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* Colors — text */
+  --color-text: var(--text);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-on-dark: var(--text-on-dark);
+
+  /* Colors — sidebar */
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-sidebar-bg-hover: var(--sidebar-bg-hover);
+  --color-sidebar-active: var(--sidebar-active);
+  --color-sidebar-text: var(--sidebar-text);
+  --color-sidebar-text-muted: var(--sidebar-text-muted);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-active-accent: var(--sidebar-active-accent);
+
+  /* Colors — CTA */
+  --color-cta-bg: var(--cta-bg);
+  --color-cta-bg-hover: var(--cta-bg-hover);
+  --color-cta-text: var(--cta-text);
+
+  /* Colors — charts */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-grid: var(--chart-grid);
+
+  /* Typography — font families */
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+
+  /* Shadows */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Border radius */
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+}
