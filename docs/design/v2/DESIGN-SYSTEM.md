@@ -398,7 +398,6 @@ Three rendering modes using shared status tokens:
 ```
 MANUTRACKER (logo + dot row)
 ─────────────────────────────
-[New Order — orange CTA button]
 
 OPERATIONS
   Dashboard
@@ -415,7 +414,6 @@ CONFIGURATION
 - No collapsible sections — flat labeled list
 - Section labels: DM Mono, 10px, `--tracking-widest` (0.18em), uppercase, `--sidebar-text-muted`
 - Active item: background `--sidebar-active`, left border `3px solid --sidebar-active-accent`, `--weight-medium`
-- "New Order" CTA: full-width orange button directly under logo, always visible
 - Sidebar: sticky, full viewport height, `--sidebar-gradient` background
 
 ---

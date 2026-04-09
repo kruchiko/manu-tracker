@@ -6,11 +6,13 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export function Layout({ currentPage, onNavigate, children }: LayoutProps) {
+export function Layout({ currentPage, onNavigate, children }: LayoutProps): React.JSX.Element {
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-bg">
       <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      <main className="flex-1 p-6 md:p-8">{children}</main>
+      <main className="flex-1 p-[--content-padding-sm] lg:p-[--content-padding]">
+        {children}
+      </main>
     </div>
   );
 }
