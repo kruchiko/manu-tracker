@@ -10,7 +10,7 @@ export function Layout({ currentPage, onNavigate, children }: LayoutProps): Reac
   return (
     <div className="flex min-h-screen bg-bg">
       <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      <main className="flex-1 p-[--content-padding-sm] lg:p-[--content-padding]">
+      <main className="min-w-0 flex-1 overflow-y-auto p-[var(--content-padding-sm)] lg:p-[var(--content-padding)]">
         {children}
       </main>
     </div>

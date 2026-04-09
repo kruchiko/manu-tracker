@@ -1,6 +1,12 @@
+import type { ZodType } from "zod";
+
 const BASE_URL = import.meta.env.VITE_API_URL ?? "";
 
-async function request<T>(path: string, init?: RequestInit): Promise<T> {
+async function request<T>(
+  path: string,
+  init?: RequestInit,
+  schema?: ZodType<T>,
+): Promise<T> {
   const { headers: initHeaders, ...restInit } = init ?? {};
   const response = await fetch(`${BASE_URL}${path}`, {
     headers: { "Content-Type": "application/json", ...initHeaders },
@@ -20,7 +26,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     return undefined as T;
   }
 
-  return response.json() as Promise<T>;
+  const data: unknown = await response.json();
+  return schema ? schema.parse(data) : (data as T);
 }
 
 async function requestNoContent(path: string, init?: RequestInit): Promise<void> {
@@ -41,24 +48,16 @@ async function requestNoContent(path: string, init?: RequestInit): Promise<void>
 }
 
 export const apiClient = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body: unknown) =>
-    request<T>(path, {
-      method: "POST",
-      body: JSON.stringify(body),
-    }),
-  put: <T>(path: string, body: unknown) =>
-    request<T>(path, {
-      method: "PUT",
-      body: JSON.stringify(body),
-    }),
-  patch: <T>(path: string, body: unknown) =>
-    request<T>(path, {
-      method: "PATCH",
-      body: JSON.stringify(body),
-    }),
-  delete: <T>(path: string) =>
-    request<T>(path, { method: "DELETE" }),
+  get: <T>(path: string, schema?: ZodType<T>) =>
+    request<T>(path, undefined, schema),
+  post: <T>(path: string, body: unknown, schema?: ZodType<T>) =>
+    request<T>(path, { method: "POST", body: JSON.stringify(body) }, schema),
+  put: <T>(path: string, body: unknown, schema?: ZodType<T>) =>
+    request<T>(path, { method: "PUT", body: JSON.stringify(body) }, schema),
+  patch: <T>(path: string, body: unknown, schema?: ZodType<T>) =>
+    request<T>(path, { method: "PATCH", body: JSON.stringify(body) }, schema),
+  delete: <T>(path: string, schema?: ZodType<T>) =>
+    request<T>(path, { method: "DELETE" }, schema),
   deleteNoContent: (path: string) =>
     requestNoContent(path, { method: "DELETE" }),
 };

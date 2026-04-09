@@ -1,16 +1,34 @@
-import { CreateStationForm } from "./CreateStationForm";
+import { useState } from "react";
+import { Plus } from "lucide-react";
+import { PageHeader } from "../../../shared/components/PageHeader";
 import { StationList } from "./StationList";
+import { NewStationView } from "./NewStationView";
 
-export function StationsPage() {
+type StationsView = "list" | "new";
+
+export function StationsPage(): React.JSX.Element {
+  const [view, setView] = useState<StationsView>("list");
+
+  if (view === "new") {
+    return <NewStationView onBack={() => setView("list")} />;
+  }
+
   return (
-    <div className="mx-auto max-w-6xl">
-      <h2 className="mb-6 text-xl font-semibold text-gray-900">Stations</h2>
-
-      <div className="mb-8 rounded-lg border bg-white p-6 shadow-sm">
-        <h3 className="mb-4 text-lg font-semibold">New Station</h3>
-        <CreateStationForm />
-      </div>
-
+    <div className="flex flex-col">
+      <PageHeader
+        title="Stations"
+        subtitle="Physical devices and locations where production happens"
+        action={
+          <button
+            type="button"
+            onClick={() => setView("new")}
+            className="inline-flex h-[32px] items-center gap-[6px] rounded-[var(--radius-md)] border border-accent bg-accent px-[14px] font-body text-[13px] font-medium text-white transition-all duration-[var(--duration-fast)] hover:bg-accent-dark"
+          >
+            <Plus size={13} strokeWidth={2} />
+            New Station
+          </button>
+        }
+      />
       <StationList />
     </div>
   );

@@ -10,6 +10,9 @@ dist/
 build/
 *.egg-info/
 
+# Test artifacts
+test-results/
+
 # Environment
 .env
 .env.local

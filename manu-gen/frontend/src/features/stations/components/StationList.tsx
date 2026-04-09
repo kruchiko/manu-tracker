@@ -1,18 +1,59 @@
+import { PackageOpen } from "lucide-react";
 import { useStations } from "../hooks/useStations";
-import { StationCard } from "./StationCard";
+import { ListCard } from "../../../shared/components/ListCard";
+import { StationTable } from "./StationTable";
 
-export function StationList() {
+function SkeletonRow({ hasBorder }: { hasBorder: boolean }): React.JSX.Element {
+  return (
+    <div
+      className={`flex gap-[22px] px-[22px] py-[13px] ${hasBorder ? "border-b border-border" : ""}`}
+    >
+      <div className="h-4 w-24 animate-pulse rounded bg-surface-2" />
+      <div className="h-4 w-36 animate-pulse rounded bg-surface-2" />
+      <div className="h-4 w-16 animate-pulse rounded bg-surface-2" />
+      <div className="h-4 w-16 animate-pulse rounded bg-surface-2" />
+      <div className="ml-auto h-4 w-24 animate-pulse rounded bg-surface-2" />
+    </div>
+  );
+}
+
+function LoadingSkeleton(): React.JSX.Element {
+  return (
+    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-sm">
+      <div className="flex items-center justify-between border-b border-border px-[24px] py-[14px]">
+        <div className="h-4 w-28 animate-pulse rounded bg-surface-2" />
+        <div className="h-3 w-16 animate-pulse rounded bg-surface-2" />
+      </div>
+      <div className="bg-surface-2 px-[22px] py-[10px]">
+        <div className="flex gap-[22px]">
+          <div className="h-3 w-16 animate-pulse rounded bg-border" />
+          <div className="h-3 w-16 animate-pulse rounded bg-border" />
+          <div className="h-3 w-20 animate-pulse rounded bg-border" />
+          <div className="h-3 w-14 animate-pulse rounded bg-border" />
+          <div className="ml-auto h-3 w-14 animate-pulse rounded bg-border" />
+        </div>
+      </div>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <SkeletonRow key={i} hasBorder={i < 4} />
+      ))}
+    </div>
+  );
+}
+
+export function StationList(): React.JSX.Element {
   const { data, isLoading, error } = useStations();
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">Loading stations...</p>;
+    return <LoadingSkeleton />;
   }
 
   if (error) {
     return (
-      <p className="text-sm text-red-600">
-        Failed to load stations: {error.message}
-      </p>
+      <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-[var(--space-8)] text-center shadow-sm">
+        <p className="text-[13px] text-status-late">
+          Failed to load stations: {error.message}
+        </p>
+      </div>
     );
   }
 
@@ -20,17 +61,26 @@ export function StationList() {
 
   if (stations.length === 0) {
     return (
-      <p className="text-sm text-gray-500">
-        No stations yet. Create one above.
-      </p>
+      <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-[var(--space-12)] text-center shadow-sm">
+        <PackageOpen
+          size={40}
+          strokeWidth={1.5}
+          className="mx-auto mb-[var(--space-4)] text-text-muted"
+        />
+        <p className="text-[13px] text-text-muted">
+          No stations yet. Create one to get started.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {stations.map((station) => (
-        <StationCard key={station.id} station={station} />
-      ))}
-    </div>
+    <ListCard
+      title="All Stations"
+      count={stations.length}
+      countLabel={stations.length === 1 ? "station" : "stations"}
+    >
+      <StationTable stations={stations} />
+    </ListCard>
   );
 }
