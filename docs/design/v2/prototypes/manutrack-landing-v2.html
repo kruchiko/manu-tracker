@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ManuTrack — Know Where Every Order Is</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Barlow+Condensed:wght@600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f2f5f7;
+    --surface:   #ffffff;
+    --surface2:  #eef1f4;
+    --border:    #dde2e8;
+    --border2:   #c4cdd6;
+    --accent:    #c45c1a;
+    --text:      #1a1f2e;
+    --muted:     #6b7280;
+    --muted2:    #a0aab4;
+    --danger:    #b83b2a;
+    --ok:        #1a7a3b;
+    --warn:      #a06010;
+    --blue:      #1a5faa;
+    --blue-light:#e8f0fa;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    font-weight: 300;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+  nav {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(245,243,239,0.95);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+  }
+  nav .inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .logo {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .logo span { color: var(--blue); }
+  nav a.cta-small {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: #fff;
+    background: var(--text);
+    text-decoration: none;
+    padding: 10px 24px;
+    letter-spacing: 0.08em;
+    transition: background 0.2s;
+    text-transform: uppercase;
+  }
+  nav a.cta-small:hover { background: var(--accent); }
+  .container { max-width: 1080px; margin: 0 auto; padding: 0 32px; }
+  .hero {
+    padding: 100px 0 88px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-rule {
+    position: absolute;
+    top: 0; bottom: 0; right: 0;
+    width: 42%;
+    background: var(--surface2);
+    border-left: 1px solid var(--border);
+    z-index: 0;
+  }
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: 58% 42%;
+    align-items: center;
+  }
+  @media (max-width: 720px) {
+    .hero-inner { grid-template-columns: 1fr; }
+    .hero-rule { display: none; }
+  }
+  .hero-left { padding-right: 56px; }
+  .hero-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-tag::before { content: ''; display: inline-block; width: 20px; height: 1px; background: var(--blue); }
+  .hero h1 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: clamp(52px, 6.5vw, 88px);
+    line-height: 0.96;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+  .hero h1 em { font-style: normal; color: var(--accent); display: block; }
+  .hero-sub { font-size: 17px; color: var(--muted); max-width: 480px; margin-bottom: 48px; line-height: 1.75; }
+  .hero-sub strong { color: var(--text); font-weight: 500; }
+  .hero-actions { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 15px 32px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s, transform 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-primary:hover { background: #a84d14; transform: translateY(-1px); }
+  .btn-ghost {
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    padding: 15px 20px;
+    text-decoration: none;
+    border: 1px solid var(--border2);
+    transition: border-color 0.2s, color 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+  .hero-right {
+    padding-left: 56px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+  @media (max-width: 720px) { .hero-right { padding-left: 0; padding-top: 48px; } }
+  .hero-stat { border-left: 3px solid var(--blue); padding-left: 20px; }
+  .hero-stat-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 44px;
+    letter-spacing: 0.01em;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .hero-stat-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .proof-bar { border-bottom: 1px solid var(--border); background: var(--surface); padding: 20px 0; }
+  .proof-inner {
+    display: flex;
+    gap: 40px;
+    align-items: center;
+    flex-wrap: wrap;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  .proof-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .proof-item::before { content: ''; width: 6px; height: 6px; background: var(--blue); flex-shrink: 0; }
+  .section { padding: 88px 0; }
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: clamp(36px, 4.5vw, 56px);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-bottom: 48px;
+    line-height: 1.0;
+  }
+  .pain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 40px;
+  }
+  .pain-card { background: var(--surface); padding: 36px 32px; transition: background 0.2s; }
+  .pain-card:hover { background: #faf9f6; }
+  .pain-quote {
+    font-size: 15px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.7;
+    margin-bottom: 20px;
+    padding-left: 16px;
+    border-left: 2px solid var(--danger);
+  }
+  .pain-card p {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .how-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 72px;
+    align-items: start;
+  }
+  @media (max-width: 720px) { .how-layout { grid-template-columns: 1fr; } }
+  .steps { display: flex; flex-direction: column; }
+  .step {
+    display: grid;
+    grid-template-columns: 52px 1fr;
+    gap: 20px;
+    padding: 28px 0;
+    border-bottom: 1px solid var(--border);
+    cursor: default;
+  }
+  .step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 36px;
+    color: var(--border2);
+    line-height: 1;
+    transition: color 0.25s;
+  }
+  .step:hover .step-num { color: var(--accent); }
+  .step-title { font-weight: 500; font-size: 16px; margin-bottom: 6px; color: var(--text); }
+  .step-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  .dashboard-mock {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    position: sticky;
+    top: 88px;
+  }
+  .mock-header {
+    background: var(--text);
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mock-title { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(255,255,255,0.5); letter-spacing: 0.1em; }
+  .mock-live {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: #5fdd73;
+    letter-spacing: 0.1em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .mock-live::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: #5fdd73;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+  .mock-body { padding: 16px; }
+  .mock-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 68px 72px;
+    gap: 8px;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    align-items: center;
+  }
+  .mock-row:hover { background: #faf8f5; }
+  .mock-row-header {
+    color: var(--muted2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-size: 10px;
+    border-color: transparent;
+    margin-bottom: 2px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+  .order-id { color: var(--blue); font-weight: 500; }
+  .stage-tag { font-size: 10px; padding: 3px 7px; text-align: center; letter-spacing: 0.04em; font-family: 'DM Mono', monospace; }
+  .stage-a { background: #e8f0fa; color: #1a5faa; }
+  .stage-b { background: #fef3e2; color: #a06010; }
+  .stage-c { background: #e4f0e8; color: #1a7a3b; }
+  .stage-d { background: #e8eef8; color: #1a5faa; }
+  .mock-time { color: var(--muted); }
+  .status-ok { color: var(--ok); }
+  .status-warn { color: var(--warn); }
+  .status-late { color: var(--danger); font-weight: 500; }
+  .mock-footer {
+    border-top: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 14px 18px;
+    display: flex;
+    gap: 24px;
+  }
+  .kpi { display: flex; flex-direction: column; gap: 2px; }
+  .kpi-val {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--text);
+    line-height: 1;
+  }
+  .kpi-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted2);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .value-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .value-card {
+    background: var(--surface);
+    padding: 40px 36px;
+    position: relative;
+    overflow: hidden;
+  }
+  .value-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.3s;
+  }
+  .value-card:hover::after { transform: scaleX(1); }
+  .value-num {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 48px;
+    color: var(--surface2);
+    line-height: 1;
+    margin-bottom: 20px;
+    display: block;
+  }
+  .value-card h3 { font-weight: 500; font-size: 16px; margin-bottom: 10px; color: var(--text); }
+  .value-card p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+  .compare-table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); margin-top: 48px; }
+  .compare-table th {
+    background: var(--surface2);
+    padding: 18px 24px;
+    text-align: left;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .compare-table th:last-child { background: var(--blue); color: #fff; }
+  .compare-table td {
+    padding: 16px 24px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+  }
+  .compare-table tr:last-child td { border-bottom: none; }
+  .compare-table td:first-child { color: var(--muted); font-size: 13px; font-style: italic; }
+  .compare-table td:nth-child(2) { color: var(--muted); }
+  .compare-table td:last-child { background: #fdf9f6; }
+  .check { color: var(--ok); margin-right: 6px; font-weight: 600; }
+  .cross { color: var(--danger); margin-right: 6px; }
+  .process-steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin-top: 48px;
+  }
+  @media (max-width: 600px) { .process-steps { grid-template-columns: 1fr; } }
+  .process-card { background: var(--surface); padding: 40px 32px; }
+  .process-n {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: 72px;
+    color: var(--surface2);
+    line-height: 1;
+    margin-bottom: 16px;
+    display: block;
+  }
+  .process-week {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--blue);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .process-card h3 { font-weight: 500; font-size: 16px; margin-bottom: 10px; }
+  .process-card p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+  .gdpr-block {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 48px;
+  }
+  @media (max-width: 700px) { .gdpr-block { grid-template-columns: 1fr; } }
+  .gdpr-col { padding: 44px 40px; }
+  .gdpr-col:first-child { border-right: 1px solid var(--border); }
+  @media (max-width: 700px) { .gdpr-col:first-child { border-right: none; border-bottom: 1px solid var(--border); } }
+  .gdpr-col h3 { font-weight: 600; font-size: 16px; margin-bottom: 14px; }
+  .gdpr-col p { font-size: 14px; color: var(--muted); line-height: 1.7; margin-bottom: 12px; }
+  .gdpr-tags { margin-top: 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .gdpr-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 5px 10px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    text-transform: uppercase;
+    background: var(--surface2);
+  }
+  .cta-section {
+    background: var(--text);
+    padding: 100px 0;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .cta-section h2 {
+    font-family: 'Barlow Condensed', sans-serif;
+    font-weight: 700;
+    font-size: clamp(44px, 6vw, 76px);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    line-height: 0.96;
+    color: #fff;
+    margin-bottom: 20px;
+    position: relative;
+  }
+  .cta-section h2 em { font-style: normal; color: var(--accent); display: block; }
+  .cta-section p {
+    font-size: 16px;
+    color: rgba(255,255,255,0.5);
+    max-width: 460px;
+    margin: 0 auto 40px;
+    line-height: 1.75;
+    position: relative;
+  }
+  .btn-cta {
+    background: var(--accent);
+    color: #fff;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    padding: 18px 48px;
+    text-decoration: none;
+    display: inline-block;
+    text-transform: uppercase;
+    position: relative;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .btn-cta:hover { background: #a84d14; transform: translateY(-2px); }
+  .cta-note {
+    margin-top: 24px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    position: relative;
+  }
+  .cta-promise {
+    margin-top: 40px;
+    display: flex;
+    gap: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+    position: relative;
+  }
+  .cta-promise-item {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cta-promise-item::before { content: ''; width: 5px; height: 5px; background: var(--accent); flex-shrink: 0; }
+  footer { border-top: 1px solid var(--border); padding: 36px 0; background: var(--bg); }
+  footer .inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  footer p { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); letter-spacing: 0.06em; }
+  footer a { color: var(--muted); text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--accent); }
+  .divider { height: 1px; background: var(--border); }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  .hero-tag    { animation: fadeUp 0.6s ease both; }
+  .hero h1     { animation: fadeUp 0.6s 0.1s ease both; }
+  .hero-sub    { animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-actions{ animation: fadeUp 0.6s 0.3s ease both; }
+  @media (max-width: 600px) {
+    .section { padding: 64px 0; }
+    .hero { padding: 64px 0 56px; }
+    .compare-table th, .compare-table td { padding: 12px 14px; font-size: 12px; }
+    .gdpr-col { padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="inner">
+    <a class="logo" href="#"><span style="color:var(--blue);">Manu</span>Track</a>
+    <a class="cta-small" href="#contact">Request a Demo</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-rule"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-left">
+        <div class="hero-tag">Production Tracking · Built for Manufacturers</div>
+        <h1>Always know<br><em>where every<br>order is</em></h1>
+        <p class="hero-sub">
+          <strong>Without changing how your team works.</strong><br>
+          Cameras and QR labels give you a live view of every order moving through your production — automatically, passively, in real time.
+        </p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#contact">Book a Free Workshop Walk</a>
+          <a class="btn-ghost" href="#how">See How It Works</a>
+        </div>
+      </div>
+      <div class="hero-right">
+        <div class="hero-stat">
+          <div class="hero-stat-val">&lt; 10 sec</div>
+          <div class="hero-stat-label">To locate any active order</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">2–3 wks</div>
+          <div class="hero-stat-label">From walkthrough to live system</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-val">Zero</div>
+          <div class="hero-stat-label">Change to worker behavior required</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="proof-bar">
+  <div class="proof-inner">
+    <div class="proof-item">No worker scanning</div>
+    <div class="proof-item">Runs on-premise</div>
+    <div class="proof-item">GDPR-compliant by design</div>
+    <div class="proof-item">Betriebsrat-ready</div>
+    <div class="proof-item">Works with your existing workflow</div>
+  </div>
+</div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-label">The Problem</div>
+    <h2>Sound familiar?</h2>
+    <p style="color:var(--muted);max-width:520px;font-size:15px;line-height:1.75">
+      When you're running multiple orders simultaneously, these questions come up every day — and nobody has a fast, reliable answer.
+    </p>
+    <div class="pain-grid">
+      <div class="pain-card">
+        <p class="pain-quote">"Where is the Müller order right now? Was it loaded this morning or is it still in the previous stage?"</p>
+        <p>Order visibility</p>
+      </div>
+      <div class="pain-card">
+        <p class="pain-quote">"How long has this batch been sitting here? Nobody wrote it down."</p>
+        <p>Stage duration tracking</p>
+      </div>
+      <div class="pain-card">
+        <p class="pain-quote">"Why was this delivery late? We don't have records of when each step actually started."</p>
+        <p>Delay accountability</p>
+      </div>
+      <div class="pain-card">
+        <p class="pain-quote">"The incoming shift has no idea what's happening. Handover takes 20 minutes and things still get missed."</p>
+        <p>Shift handover</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section" id="how">
+  <div class="container">
+    <div class="section-label">How It Works</div>
+    <h2>Three changes.<br>Full visibility.</h2>
+    <div class="how-layout">
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <div class="step-title">A label goes on every production unit</div>
+            <p class="step-desc">When an order starts, you print a small QR label and attach it to the unit moving through production — a tray, a batch carrier, the part itself. Takes seconds. Replaces whatever you're using now: paper slips, chalk marks, memory.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <div class="step-title">Cameras read the labels automatically</div>
+            <p class="step-desc">At each station in your workflow, a mounted camera reads the QR label as the unit passes and records the time. Workers do nothing differently — no scanning, no buttons, no apps to learn.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <div class="step-title">You see everything on one screen</div>
+            <p class="step-desc">A live dashboard shows every active order, its current stage, how long it has been there, and which orders are running behind. Accessible from any device on your local network.</p>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-mock">
+        <div class="mock-header">
+          <span class="mock-title">ManuTrack — Live Orders</span>
+          <span class="mock-live">Live</span>
+        </div>
+        <div class="mock-body">
+          <div class="mock-row mock-row-header">
+            <span>Order</span><span>Stage</span><span>Time</span><span>Status</span>
+          </div>
+          <div class="mock-row">
+            <span class="order-id">ORD-0041</span>
+            <span class="stage-tag stage-a">Station 3</span>
+            <span class="mock-time">3h 12m</span>
+            <span class="status-ok">On track</span>
+          </div>
+          <div class="mock-row">
+            <span class="order-id">ORD-0039</span>
+            <span class="stage-tag stage-b">Station 2</span>
+            <span class="mock-time">7h 44m</span>
+            <span class="status-warn">Review</span>
+          </div>
+          <div class="mock-row">
+            <span class="order-id">ORD-0037</span>
+            <span class="stage-tag stage-c">Station 4</span>
+            <span class="mock-time">1h 05m</span>
+            <span class="status-ok">On track</span>
+          </div>
+          <div class="mock-row">
+            <span class="order-id">ORD-0035</span>
+            <span class="stage-tag stage-d">Packaging</span>
+            <span class="mock-time">0h 28m</span>
+            <span class="status-ok">On track</span>
+          </div>
+          <div class="mock-row">
+            <span class="order-id">ORD-0033</span>
+            <span class="stage-tag stage-a">Station 3</span>
+            <span class="mock-time">11h 02m</span>
+            <span class="status-late">Delayed</span>
+          </div>
+        </div>
+        <div class="mock-footer">
+          <div class="kpi"><span class="kpi-val">5</span><span class="kpi-label">Active orders</span></div>
+          <div class="kpi"><span class="kpi-val" style="color:var(--ok)">4</span><span class="kpi-label">On schedule</span></div>
+          <div class="kpi"><span class="kpi-val" style="color:var(--danger)">1</span><span class="kpi-label">Needs attention</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section" style="background:var(--surface2)">
+  <div class="container">
+    <div class="section-label">What You Get</div>
+    <h2>Five things you can do<br>from day one.</h2>
+    <div class="value-grid">
+      <div class="value-card">
+        <span class="value-num">01</span>
+        <h3>Full order visibility</h3>
+        <p>Know exactly where every active order is at any moment. No phone calls to the floor. No walking around to check.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-num">02</span>
+        <h3>Bottleneck detection</h3>
+        <p>See which stages consistently run over time. If one step takes 4 hours on average but 9 hours on Fridays — you will see it in the data.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-num">03</span>
+        <h3>2-minute shift handover</h3>
+        <p>The incoming shift opens one screen and sees the full current state. No verbal briefings. No forgotten updates.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-num">04</span>
+        <h3>Delivery accountability</h3>
+        <p>When a customer asks why an order was late — you have a timestamped answer. Every stage of every order is on record.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-num">05</span>
+        <h3>Realistic delivery estimates</h3>
+        <p>Give customers accurate timelines based on actual stage durations — not optimistic guesses that damage trust when wrong.</p>
+      </div>
+      <div class="value-card">
+        <span class="value-num">—</span>
+        <h3>Zero behavior change required</h3>
+        <p>Workers attach a label to the unit. The cameras do the rest. No apps to learn. No scanners to carry. No new process to enforce.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-label">Why ManuTrack</div>
+    <h2>Not another tool<br>nobody actually uses.</h2>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Situation</th>
+          <th>Current approach</th>
+          <th>With ManuTrack</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Finding an order's location</td>
+          <td><span class="cross">✕</span>Ask around or walk the floor</td>
+          <td><span class="check">✓</span>Check one screen in under 10 seconds</td>
+        </tr>
+        <tr>
+          <td>Recording stage transitions</td>
+          <td><span class="cross">✕</span>Paper slips that get lost, or nobody records them at all</td>
+          <td><span class="check">✓</span>Cameras record every transition automatically</td>
+        </tr>
+        <tr>
+          <td>Identifying bottlenecks</td>
+          <td><span class="cross">✕</span>Gut feeling — "that stage always takes too long"</td>
+          <td><span class="check">✓</span>Actual duration data per stage, per order</td>
+        </tr>
+        <tr>
+          <td>Shift handover</td>
+          <td><span class="cross">✕</span>15–20 minute verbal briefing, things still get forgotten</td>
+          <td><span class="check">✓</span>Incoming shift sees live state immediately</td>
+        </tr>
+        <tr>
+          <td>Explaining a late delivery</td>
+          <td><span class="cross">✕</span>"We think it was delayed somewhere" — no proof</td>
+          <td><span class="check">✓</span>Full timestamped stage history for every order</td>
+        </tr>
+        <tr>
+          <td>Worker adoption</td>
+          <td>—</td>
+          <td><span class="check">✓</span>Attach a label to the unit. That is all workers do.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section">
+  <div class="container">
+    <div class="section-label">Getting Started</div>
+    <h2>Proof before commitment.<br>Evidence before investment.</h2>
+    <p style="color:var(--muted);max-width:520px;font-size:15px;line-height:1.75">
+      We start with a free walkthrough of your production floor. We observe how your orders actually flow, assess what labelling approach fits your process, and configure the system around your specific workflow — not a generic template.
+    </p>
+    <div class="process-steps">
+      <div class="process-card">
+        <span class="process-n">01</span>
+        <div class="process-week">Days 1–5</div>
+        <h3>Label tool live</h3>
+        <p>Every production unit gets a printed QR identity. Anyone can scan it with a phone to see the full order details. Works standalone — no cameras needed yet. First value delivered in the first week.</p>
+      </div>
+      <div class="process-card">
+        <span class="process-n">02</span>
+        <div class="process-week">Week 2</div>
+        <h3>First camera station</h3>
+        <p>One camera at one station proves automatic reading works in your specific environment — your lighting, your unit sizes, your pace. We only move forward once it works reliably.</p>
+      </div>
+      <div class="process-card">
+        <span class="process-n">03</span>
+        <div class="process-week">Weeks 2–3</div>
+        <h3>Live dashboard</h3>
+        <p>Additional stations go live. You can now answer "where is this order?" and "how long did each stage take?" from any device, without asking anyone.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="section" style="background:var(--surface2)">
+  <div class="container">
+    <div class="section-label">Compliance</div>
+    <h2>Built for German<br>manufacturing law.</h2>
+    <div class="gdpr-block">
+      <div class="gdpr-col">
+        <h3>GDPR — No personal data collected</h3>
+        <p>ManuTrack tracks production units and timestamps — physical objects, not people. No names, no biometrics, no personal identifiers are captured or stored at any point.</p>
+        <p>All data is processed on a local machine in your workshop. Nothing leaves your network without your instruction.</p>
+        <div class="gdpr-tags">
+          <span class="gdpr-tag">On-Premise</span>
+          <span class="gdpr-tag">No Cloud Required</span>
+          <span class="gdpr-tag">AVV Included</span>
+        </div>
+      </div>
+      <div class="gdpr-col">
+        <h3>Betriebsrat-ready</h3>
+        <p>ManuTrack records stage durations of production units — not individual worker activity. There is no individual attribution by design, not just by policy.</p>
+        <p>We provide a plain-German technical summary of exactly what data is collected and a template Betriebsvereinbarung for works council review. Typically resolved in one meeting.</p>
+        <div class="gdpr-tags">
+          <span class="gdpr-tag">§87 BetrVG</span>
+          <span class="gdpr-tag">No Individual Attribution</span>
+          <span class="gdpr-tag">Template Agreement Included</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<section class="cta-section" id="contact">
+  <div class="container">
+    <h2>Stop guessing.<br><em>Start knowing.</em></h2>
+    <p>We begin with a free 90-minute walkthrough of your production floor. No commitment, no sales pitch. We observe how your orders move and tell you honestly whether ManuTrack is the right fit.</p>
+    <a class="btn-cta" href="/cdn-cgi/l/email-protection#751d1019191a3518141b00010714161e5b1110">Book Your Free Workshop Walk</a>
+    <p class="cta-note"><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="29414c454546694448475c5d5b484a42074d4c">[email&#160;protected]</a> &nbsp;·&nbsp; Berlin-based &nbsp;·&nbsp; Responses within 1 business day</p>
+    <div class="cta-promise">
+      <div class="cta-promise-item">No commitment required</div>
+      <div class="cta-promise-item">Pricing discussed after discovery</div>
+      <div class="cta-promise-item">We come to you</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="inner">
+    <a class="logo" href="#"><span style="color:var(--blue);">Manu</span>Track</a>
+    <p>Production tracking for small manufacturer

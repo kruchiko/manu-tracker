@@ -1,0 +1,214 @@
+/*
+ * ============================================================
+ * MANUTRACKER — Design Tokens v2.1
+ * ============================================================
+ * Last updated: April 2026
+ *
+ * Single source of truth for all visual tokens.
+ * Reference tokens by their full name in all component styles.
+ * Never use raw hex values directly in component CSS.
+ *
+ * Fonts — load via Google Fonts or self-host:
+ *
+ *   @import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+ *
+ *   Barlow Condensed — headings, page titles, KPI stat values, logo
+ *   Barlow           — body text, form labels, descriptions, nav items
+ *   DM Mono          — codes, IDs, timestamps, data fields, table headers
+ *
+ * Palette: Blue (approved v4+). No teal/green in structural chrome.
+ * Orange (#c45c1a) is a SIGNAL color only — CTAs and alerts.
+ *
+ * CSS CLASS CONVENTION: Use v5 full names only.
+ *   Canonical:    .app-content, .page-header, .btn-primary, .data-table
+ *   Deprecated:   .ac, .bh, .btn-p (short aliases from prototype — do not use)
+ * ============================================================ */
+
+:root {
+  /* ── 1. Sidebar & Navigation ── */
+  --sidebar-gradient:      linear-gradient(170deg, #0d1f3c 0%, #1a3a6e 100%);
+  --sidebar-bg:            #0d1f3c;
+  --sidebar-bg-hover:      #162d52;
+  --sidebar-active:        #1a3d6e;
+  --sidebar-text:          #c4d4e8;
+  --sidebar-text-muted:    #5a7a9e;
+  --sidebar-border:        #1a2f4a;
+  --sidebar-active-accent: #90c4f0;
+
+  /* ── 2. Page Backgrounds ── */
+  --bg:              #f2f5f7;
+  --surface:         #ffffff;
+  --surface-2:       #eef1f4;
+  --surface-hover:   #f8f9fb;
+
+  /* ── 3. Borders ── */
+  --border:          #dde2e8;
+  --border-strong:   #c4cdd6;
+  --border-focus:    rgba(26, 95, 170, 0.12);
+
+  /* ── 4. Primary Accent — Blue ── */
+  --accent:          #1a5faa;
+  --accent-dark:     #134a88;
+  --accent-light:    #e8f0fa;
+  --accent-muted:    #5a8fd4;
+
+  /* ── 5. Alert Accent — Orange (restricted: CTAs + alerts only) ── */
+  --alert:           #c45c1a;
+  --alert-dark:      #a84d14;
+  --alert-light:     #fdf0e8;
+
+  /* ── 6. Semantic Status ── */
+  --status-ok:         #1a7a3b;
+  --status-ok-bg:      #e8f5ec;
+  --status-warn:       #a06010;
+  --status-warn-bg:    #fef3e2;
+  --status-late:       #b83b2a;
+  --status-late-bg:    #fde8e4;
+  --status-pending:    #4a5568;
+  --status-pending-bg: #edf0f4;
+
+  /* ── 7. Batch — Purple ── */
+  --color-batch:        #7c4dbd;
+  --color-batch-bg:     #f0ebfa;
+  --color-batch-border: #e0d5f5;
+  --color-batch-dark:   #5a3490;
+
+  /* ── 8. Text Hierarchy ── */
+  --text:            #1a1f2e;
+  --text-secondary:  #4a5568;
+  --text-muted:      #6b7280;
+  --text-disabled:   #a0aab4;
+  --text-on-dark:    #ffffff;
+
+  /* ── 9. Typography ── */
+  --font-heading:    'Barlow Condensed', sans-serif;
+  --font-body:       'Barlow', sans-serif;
+  --font-mono:       'DM Mono', monospace;
+
+  --text-xs:         11px;
+  --text-sm:         13px;
+  --text-base:       14px;
+  --text-md:         16px;
+  --text-lg:         20px;
+  --text-xl:         28px;
+  --text-2xl:        36px;
+  --text-heading:    26px;
+  --text-logo:       19px;
+
+  --weight-light:    300;
+  --weight-regular:  400;
+  --weight-medium:   500;
+  --weight-semibold: 600;
+  --weight-bold:     700;
+  --weight-extrabold:800;
+
+  --tracking-tight:  -0.01em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.06em;
+  --tracking-wider:   0.14em;
+  --tracking-widest:  0.18em;
+
+  /* ── 10. Spacing — 4px base ── */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── 11. Layout ── */
+  --sidebar-width:       220px;
+  --content-padding:     32px 36px;
+  --content-padding-sm:  20px;
+  --card-padding:        24px;
+  --card-padding-sm:     16px;
+  --table-cell-v:        13px;
+  --table-cell-h:        22px;
+  --input-height:        36px;
+  --btn-height:          34px;
+  --btn-height-sm:       28px;
+  --btn-height-lg:       36px;
+  --modal-width:         460px;
+  --min-viewport-width:  1024px;
+
+  /* ── 12. Border Radius ── */
+  --radius-sm:   4px;
+  --radius-md:   6px;
+  --radius-lg:   8px;
+
+  /* ── 13. Shadows ── */
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.07), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:   0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,0.14);
+
+  /* ── 14. Data Visualization ── */
+  --chart-1:     #1a5faa;
+  --chart-2:     #5a8fd4;
+  --chart-3:     #c45c1a;
+  --chart-4:     #4a90a4;
+  --chart-grid:  #e8ecf0;
+
+  /* ── 15. Logo Component ── */
+  --logo-manu:       #90c4f0;
+  --logo-tracker:    #ffffff;
+  --logo-dot-teal:   #90c4f0;
+  --logo-dot-orange: #c45c1a;
+  --logo-connector:  rgba(255,255,255,0.15);
+
+  /* ── 16. Sidebar CTA Component ── */
+  --cta-bg:       #c45c1a;
+  --cta-bg-hover: #a84d14;
+  --cta-text:     #ffffff;
+
+  /* ── 17. Motion ── */
+  --duration-instant:  0ms;
+  --duration-fast:     100ms;
+  --duration-normal:   200ms;
+  --duration-slow:     300ms;
+  --easing-default:    cubic-bezier(0.4, 0, 0.2, 1);
+  --easing-enter:      cubic-bezier(0, 0, 0.2, 1);
+  --easing-exit:       cubic-bezier(0.4, 0, 1, 1);
+}
+
+/* ── Base Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
