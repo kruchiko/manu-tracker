@@ -99,12 +99,17 @@ Every text element must use the correct font family. This is a design contract, 
 
 ## Prototype Reading Rules
 
-The HTML prototype is a **layout and structure reference**, not a copy-paste source.
+The HTML prototype is the **authoritative reference for what to render** — which elements exist, their structure, and layout. It is not a copy-paste source.
+
+**Hierarchy of truth:**
+- **What to render** (structure, which elements exist, screen layout): prototype wins over DESIGN-SYSTEM.md if they conflict. DESIGN-SYSTEM.md may contain stale descriptions of removed or changed elements.
+- **How to style it** (token values — colors, spacing, sizes): token file wins over prototype if they conflict.
+- **Component prop APIs and state specs**: DESIGN-SYSTEM.md is authoritative (prototype has no prop tables).
 
 1. **Use full token names only.** The prototype contains short aliases (`.ac`, `.btn-p`, `.dt`, `.lc`) — these are deprecated. Map them to their full equivalents (`.app-content`, `.btn-primary`, `.data-table`, etc.).
 2. **Inline SVGs in the prototype are placeholders.** Use Lucide React components instead. See DESIGN-SYSTEM.md Section 7 for the icon mapping table.
 3. **Prototype JS is throwaway.** The `nav()`, `switchTab()`, and modal functions are vanilla JS demos. Implement equivalent behavior in React with proper state management.
-4. **When prototype and token file conflict, the token file wins.** Example: prototype may show `32px` button height; token file defines `--btn-height: 34px`. Use the token.
+4. **When prototype and token file conflict on values, the token file wins.** Example: prototype may show `32px` button height; token file defines `--btn-height: 34px`. Use the token.
 
 ---
 
