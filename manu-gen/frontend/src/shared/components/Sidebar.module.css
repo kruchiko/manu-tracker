@@ -168,3 +168,11 @@
     display: none;
   }
 }
+
+@media print {
+  .aside,
+  .mobileToggle,
+  .overlay {
+    display: none !important;
+  }
+}

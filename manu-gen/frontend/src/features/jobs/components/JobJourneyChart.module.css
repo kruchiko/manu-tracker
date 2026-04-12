@@ -1,0 +1,51 @@
+.empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.legend {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-sm);
+}
+
+.swatch {
+  display: inline-block;
+  height: 12px;
+  width: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.stationName {
+  color: var(--text-secondary);
+}
+
+.duration {
+  color: var(--text-muted);
+}
+
+.tooltip {
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  box-shadow: var(--shadow-sm);
+}
+
+.tooltipTitle {
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.tooltipSub {
+  color: var(--text-muted);
+}

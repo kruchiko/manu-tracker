@@ -16,3 +16,16 @@
     padding: var(--content-padding);
   }
 }
+
+@media print {
+  .layout {
+    display: block;
+    min-height: auto;
+    background: #fff;
+  }
+
+  .main {
+    padding: 0;
+    overflow: visible;
+  }
+}
