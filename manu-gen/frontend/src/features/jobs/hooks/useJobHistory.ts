@@ -1,6 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "../../../shared/api/client";
-import type { JobHistoryEntry } from "../dashboard.types";
+import type { JobHistoryEntry } from "../jobs.types";
 
 export function useJobHistory(jobId: number | null) {
   return useQuery({

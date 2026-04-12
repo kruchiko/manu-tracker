@@ -1,51 +1,94 @@
+import { useCallback, useEffect, useRef } from "react";
 import { useQrCode } from "../hooks/useQrCode";
 import type { Job } from "../jobs.types";
+import styles from "./QrPreview.module.css";
 
 interface QrPreviewProps {
   job: Job;
+  /** Horizontal layout for job detail sidebar (prototype QR card). */
+  variant?: "default" | "inline";
+  /** Fires once when the preview is ready to print (QR image decoded, or error / empty settled). */
+  onReady?: () => void;
 }
 
-export function QrPreview({ job }: QrPreviewProps) {
+export function QrPreview({ job, variant = "default", onReady }: QrPreviewProps) {
   const { data: qrData, isLoading, error } = useQrCode(job.id);
+  const readySent = useRef(false);
+  const onReadyRef = useRef(onReady);
+
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
+
+  const fireReady = useCallback(() => {
+    if (readySent.current) return;
+    readySent.current = true;
+    onReadyRef.current?.();
+  }, []);
+
+  useEffect(() => {
+    readySent.current = false;
+  }, [job.id]);
+
+  useEffect(() => {
+    if (isLoading) return;
+    if (error || !qrData) {
+      fireReady();
+    }
+  }, [isLoading, error, qrData, fireReady]);
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-8 text-gray-500">
-        Loading QR code…
-      </div>
+      <div className={styles.center}>Loading QR code…</div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4 text-sm text-red-600">
+      <div className={styles.error}>
         Failed to load QR code: {error.message}
       </div>
     );
   }
 
-  // TanStack Query types data as T | undefined regardless of the state machine;
-  // this guard satisfies the type checker and is a defensive fallback.
   if (!qrData) {
     return null;
   }
 
+  const isInline = variant === "inline";
+  const rootClass = isInline ? styles.inlineRoot : styles.root;
+  const qrClass = isInline ? styles.inlineQr : styles.qr;
+  const trayClass = isInline ? styles.inlineTrayCode : styles.trayCode;
+  const jobNoClass = isInline ? styles.inlineJobNumber : styles.jobNumber;
+  const printExtra = isInline ? styles.inlinePrintBtn : "";
+
+  const labels = (
+    <>
+      <p className={trayClass}>{job.trayCode}</p>
+      <p className={jobNoClass}>{job.jobNumber}</p>
+    </>
+  );
+
   return (
-    <div className="flex flex-col items-center gap-4 p-4">
+    <div className={rootClass}>
       <img
         src={qrData.qr}
         alt="QR code"
-        className="h-48 w-48 print:h-64 print:w-64"
+        className={qrClass}
+        onLoad={fireReady}
+        onError={fireReady}
       />
 
-      <div className="text-center">
-        <p className="text-2xl font-bold tracking-widest">{job.trayCode}</p>
-        <p className="text-sm text-gray-500">{job.jobNumber}</p>
-      </div>
+      {isInline ? (
+        <div className={styles.textBlock}>{labels}</div>
+      ) : (
+        <div className={styles.labelBlock}>{labels}</div>
+      )}
 
       <button
+        type="button"
         onClick={() => window.print()}
-        className="rounded bg-gray-800 px-4 py-2 text-sm font-medium text-white hover:bg-gray-900 print:hidden"
+        className={`${styles.printBtn} ${styles.printHidden} ${printExtra}`.trim()}
       >
         Print
       </button>

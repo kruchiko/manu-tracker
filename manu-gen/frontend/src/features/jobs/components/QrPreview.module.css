@@ -1,0 +1,144 @@
+.center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.error {
+  padding: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--status-late);
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.inlineRoot {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-4);
+  padding: 0;
+  width: 100%;
+}
+
+.qr {
+  height: 12rem;
+  width: 12rem;
+}
+
+.inlineQr {
+  height: 5rem;
+  width: 5rem;
+  flex-shrink: 0;
+}
+
+@media print {
+  .qr,
+  .inlineQr {
+    height: 16rem;
+    width: 16rem;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Sticker output: encode payload in the QR bitmap only. */
+  .labelBlock,
+  .textBlock {
+    display: none !important;
+  }
+
+  .root,
+  .inlineRoot {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    width: auto;
+    margin: 0 auto;
+    padding: 0;
+  }
+
+  .printHidden {
+    display: none !important;
+  }
+}
+
+.trayCode {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text);
+  text-align: center;
+}
+
+.inlineTrayCode {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-wide);
+  color: var(--text);
+  text-align: left;
+}
+
+.jobNumber {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.inlineJobNumber {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.textBlock {
+  min-width: 0;
+}
+
+.labelBlock {
+  min-width: 0;
+}
+
+.inlinePrintBtn {
+  margin-left: auto;
+}
+
+.printBtn {
+  display: inline-flex;
+  height: 36px;
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--text);
+  padding: 0 var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-on-dark);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--easing-default),
+    border-color var(--duration-fast) var(--easing-default);
+}
+
+.printBtn:hover {
+  background: var(--text-secondary);
+  border-color: var(--text-secondary);
+}
+
+.printBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+

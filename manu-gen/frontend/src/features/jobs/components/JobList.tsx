@@ -1,114 +1,105 @@
-import { useJobs } from "../hooks/useJobs";
-import { useDeleteJob } from "../hooks/useDeleteJob";
-import type { Job, JobStatus } from "../jobs.types";
+import { Printer } from "lucide-react";
+import type { Job } from "../jobs.types";
+import { filterJobsByTab, type JobsTableFilter } from "./jobListFilters";
+import { JobStatusBadge } from "./JobStatusBadge";
+import styles from "./JobList.module.css";
 
-const STATUS_LABEL: Record<JobStatus, string> = {
-  pending: "Pending",
-  in_progress: "In Progress",
-  completed: "Completed",
-};
+export type { JobsTableFilter };
 
-const STATUS_COLOR: Record<JobStatus, string> = {
-  pending: "bg-gray-100 text-gray-700",
-  in_progress: "bg-yellow-100 text-yellow-800",
-  completed: "bg-green-100 text-green-800",
-};
-
-interface JobListProps {
-  selectedJobId: number | null;
-  onSelectJob: (job: Job) => void;
+function jobsErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "string") return error;
+  return "Unknown error";
 }
 
-export function JobList({ selectedJobId, onSelectJob }: JobListProps) {
-  const { data, isLoading, error } = useJobs();
-  const deleteMutation = useDeleteJob();
+interface JobListProps {
+  jobs: Job[] | undefined;
+  jobsLoading: boolean;
+  jobsError: unknown;
+  filter: JobsTableFilter;
+  onViewJob: (job: Job) => void;
+  onPrintJob: (job: Job) => void;
+}
 
-  if (isLoading) {
-    return <p className="text-sm text-gray-500">Loading jobs…</p>;
+export function JobList({
+  jobs: jobsData,
+  jobsLoading,
+  jobsError,
+  filter,
+  onViewJob,
+  onPrintJob,
+}: JobListProps) {
+  if (jobsLoading) {
+    return <p className={styles.loading}>Loading jobs…</p>;
   }
 
-  if (error) {
-    return <p className="text-sm text-red-600">Failed to load jobs: {error.message}</p>;
+  if (jobsError) {
+    return (
+      <p className={styles.error}>Failed to load jobs: {jobsErrorMessage(jobsError)}</p>
+    );
   }
 
-  const jobs = data ?? [];
+  const jobs = filterJobsByTab(jobsData ?? [], filter);
+
+  if ((jobsData ?? []).length === 0) {
+    return <p className={styles.empty}>No jobs yet. Create one with Create Job manually.</p>;
+  }
 
   if (jobs.length === 0) {
     return (
-      <p className="text-sm text-gray-500">No jobs yet. Create one above.</p>
+      <p className={styles.empty}>No jobs match this filter. Try another tab or clear the filter.</p>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm" role="grid">
+    <div className={styles.scroll}>
+      <table className={styles.table}>
         <thead>
-          <tr className="border-b text-left text-gray-500">
-            <th className="py-2 pr-4 font-medium">Job #</th>
-            <th className="py-2 pr-4 font-medium">Product</th>
-            <th className="py-2 pr-4 font-medium">Pipeline</th>
-            <th className="py-2 pr-4 font-medium">Qty</th>
-            <th className="py-2 pr-4 font-medium">Allocated</th>
-            <th className="py-2 pr-4 font-medium">Status</th>
-            <th className="py-2 pr-4 font-medium">Tray Code</th>
-            <th className="py-2 pr-4 font-medium">Created At</th>
-            <th className="py-2 font-medium"></th>
+          <tr>
+            <th className={styles.th}>Job #</th>
+            <th className={styles.th}>Product type</th>
+            <th className={styles.th}>Order</th>
+            <th className={styles.th}>Pipeline</th>
+            <th className={styles.th}>Qty</th>
+            <th className={styles.th}>Tray</th>
+            <th className={styles.th}>Status</th>
+            <th className={`${styles.th} ${styles.thActions}`}>Actions</th>
           </tr>
         </thead>
         <tbody>
           {jobs.map((job) => (
-            <tr
-              key={job.id}
-              onClick={() => onSelectJob(job)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  onSelectJob(job);
-                }
-              }}
-              tabIndex={0}
-              aria-selected={selectedJobId === job.id}
-              className={`cursor-pointer border-b hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-                selectedJobId === job.id ? "bg-blue-50" : ""
-              }`}
-            >
-              <td className="py-2 pr-4 font-mono">{job.jobNumber}</td>
-              <td className="py-2 pr-4">{job.productType}</td>
-              <td className="py-2 pr-4">{job.pipelineName}</td>
-              <td className="py-2 pr-4">{job.quantity}</td>
-              <td className="py-2 pr-4">
-                {job.allocatedQuantity === 0 ? (
-                  <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800">
-                    Unassigned
-                  </span>
-                ) : (
-                  <span className="text-xs text-gray-600">
-                    {job.allocatedQuantity} / {job.quantity}
-                  </span>
-                )}
+            <tr key={job.id} className={styles.row}>
+              <td className={`${styles.td} ${styles.mono} ${styles.jobNumber}`}>{job.jobNumber}</td>
+              <td className={`${styles.td} ${styles.productCell}`}>
+                <strong className={styles.productStrong}>{job.productType}</strong>
               </td>
-              <td className="py-2 pr-4">
-                <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[job.status]}`}>
-                  {STATUS_LABEL[job.status]}
-                </span>
+              <td className={`${styles.td} ${styles.mono}`}>
+                <span className={styles.dash}>—</span>
               </td>
-              <td className="py-2 pr-4 font-mono">{job.trayCode}</td>
-              <td className="py-2 pr-4">
-                {new Date(job.createdAt).toLocaleString()}
+              <td className={`${styles.td} ${styles.muted}`}>{job.pipelineName}</td>
+              <td className={`${styles.td} ${styles.monoQty}`}>{job.quantity}</td>
+              <td className={`${styles.td} ${styles.mono}`}>{job.trayCode}</td>
+              <td className={styles.td}>
+                <JobStatusBadge status={job.status} />
               </td>
-              <td className="py-2">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (confirm(`Delete ${job.jobNumber}? This will also remove its allocations and tracking events.`)) {
-                      deleteMutation.mutate(job.id);
-                    }
-                  }}
-                  className="rounded px-2 py-1 text-xs text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
+              <td className={`${styles.td} ${styles.actionsCell}`}>
+                <div className={styles.actions}>
+                  <button
+                    type="button"
+                    className={styles.printBtn}
+                    onClick={() => onPrintJob(job)}
+                  >
+                    <Printer size={11} strokeWidth={1.5} aria-hidden />
+                    Print Label
+                  </button>
+                  <button
+                    type="button"
+                    className={styles.viewBtn}
+                    onClick={() => onViewJob(job)}
+                  >
+                    View
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

@@ -69,4 +69,12 @@ describe("useJobs", () => {
 
     expect(result.current.error?.message).toBe("Network error");
   });
+
+  it("should not call the API when enabled is false", async () => {
+    renderHook(() => useJobs({ enabled: false }), {
+      wrapper: createWrapper(),
+    });
+
+    await waitFor(() => expect(apiClient.get).not.toHaveBeenCalled());
+  });
 });

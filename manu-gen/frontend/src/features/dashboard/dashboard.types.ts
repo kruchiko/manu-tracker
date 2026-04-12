@@ -1,11 +1,8 @@
-export interface BoardJobPipeline {
-  id: string;
-  name: string;
-  stepPosition: number;
-  totalSteps: number;
-  expectedSeconds: number | null;
-  elapsedSeconds: number | null;
-}
+import type { JobHistoryEntry, JobHistoryPhase, JobPipelineProgress } from "../jobs/jobs.types";
+
+export type BoardJobPipeline = JobPipelineProgress;
+
+export type { JobHistoryEntry, JobHistoryPhase };
 
 export type JobStatus = "pending" | "in_progress" | "completed";
 
@@ -20,17 +17,7 @@ export interface BoardJob {
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
   maxDurationSeconds: number | null;
-  pipeline: BoardJobPipeline;
-}
-
-export type JobHistoryPhase = "arrived" | "departed" | "scan";
-
-export interface JobHistoryEntry {
-  id: number;
-  phase: JobHistoryPhase;
-  station: string;
-  at: string;
-  durationSeconds: number | null;
+  pipeline: JobPipelineProgress;
 }
 
 export interface HourlyBucket {

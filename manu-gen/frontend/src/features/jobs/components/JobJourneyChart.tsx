@@ -1,7 +1,8 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import type { JobHistoryEntry } from "../dashboard.types";
-import { formatDuration } from "../dashboard.utils";
-import { buildStationColorMap } from "../dashboard.colors";
+import type { JobHistoryEntry } from "../jobs.types";
+import { formatDuration } from "../utils/duration";
+import { buildStationFillMap } from "../utils/chartFills";
+import styles from "./JobJourneyChart.module.css";
 
 interface JobJourneyChartProps {
   entries: JobHistoryEntry[];
@@ -24,7 +25,7 @@ function aggregateByStation(entries: JobHistoryEntry[]): StationSegment[] {
     totals.set(entry.station, (totals.get(entry.station) ?? 0) + entry.durationSeconds);
   }
 
-  const colorMap = buildStationColorMap(stationOrder);
+  const colorMap = buildStationFillMap(stationOrder);
 
   return stationOrder.map((station) => ({
     station,
@@ -37,9 +38,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   if (!active || !payload?.[0]) return null;
   const { station, seconds } = payload[0].payload;
   return (
-    <div className="rounded-md border bg-white px-3 py-2 text-sm shadow-lg">
-      <p className="font-medium text-gray-900">{station}</p>
-      <p className="text-gray-500">{formatDuration(seconds)}</p>
+    <div className={styles.tooltip}>
+      <p className={styles.tooltipTitle}>{station}</p>
+      <p className={styles.tooltipSub}>{formatDuration(seconds)}</p>
     </div>
   );
 }
@@ -48,7 +49,7 @@ export function JobJourneyChart({ entries }: JobJourneyChartProps) {
   const segments = aggregateByStation(entries);
 
   if (segments.length === 0) {
-    return <p className="text-sm text-gray-500">No duration data to display.</p>;
+    return <p className={styles.empty}>No duration data to display.</p>;
   }
 
   return (
@@ -66,15 +67,12 @@ export function JobJourneyChart({ entries }: JobJourneyChartProps) {
         </BarChart>
       </ResponsiveContainer>
 
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className={styles.legend}>
         {segments.map((seg) => (
-          <div key={seg.station} className="flex items-center gap-1.5 text-sm">
-            <span
-              className="inline-block h-3 w-3 rounded-sm"
-              style={{ backgroundColor: seg.color }}
-            />
-            <span className="text-gray-700">{seg.station}</span>
-            <span className="text-gray-400">{formatDuration(seg.seconds)}</span>
+          <div key={seg.station} className={styles.legendItem}>
+            <span className={styles.swatch} style={{ backgroundColor: seg.color }} />
+            <span className={styles.stationName}>{seg.station}</span>
+            <span className={styles.duration}>{formatDuration(seg.seconds)}</span>
           </div>
         ))}
       </div>
