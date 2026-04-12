@@ -6,6 +6,7 @@ import {
   createStationSchema,
   type CreateStationFormValues,
 } from "../stations.schema";
+import styles from "./NewStationView.module.css";
 
 interface NewStationViewProps {
   onBack: () => void;
@@ -25,22 +26,14 @@ function FieldGroup({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className="mb-[18px] last:mb-0">
-      <label className="mb-[5px] block font-body text-[13px] font-medium text-text">
+    <div className={styles.fieldGroup}>
+      <label className={styles.fieldLabel}>
         {label}
-        {optional && (
-          <span className="ml-[3px] text-[11px] font-normal text-text-muted">
-            {optional}
-          </span>
-        )}
+        {optional && <span className={styles.fieldOptional}>{optional}</span>}
       </label>
       {children}
-      {hint && !error && (
-        <p className="mt-[4px] text-[11px] text-text-muted">{hint}</p>
-      )}
-      {error && (
-        <p className="mt-[4px] text-[11px] text-status-late">{error}</p>
-      )}
+      {hint && !error && <p className={styles.fieldHint}>{hint}</p>}
+      {error && <p className={styles.fieldError}>{error}</p>}
     </div>
   );
 }
@@ -61,57 +54,38 @@ function StationPreview({
   const slots = Math.min(Math.max(slotCapacity, 1), 15);
 
   return (
-    <div className="rounded-[var(--radius-lg)] border border-border bg-surface-2">
-      <div className="px-[var(--space-6)] py-[var(--space-4)]">
-        <span className="font-mono text-[10px] uppercase tracking-[var(--tracking-wider)] text-text-muted">
-          Preview
-        </span>
-        <p className="mt-[var(--space-1)] text-[length:var(--text-xs)] text-text-muted">
-          How this station will appear in the stations list and on the
-          dashboard.
+    <div className={styles.previewCard}>
+      <div className={styles.previewHeader}>
+        <span className={styles.previewLabel}>Preview</span>
+        <p className={styles.previewHint}>
+          How this station will appear in the stations list and on the dashboard.
         </p>
       </div>
 
-      <div className="flex flex-col gap-[var(--space-5)] p-[var(--space-6)]">
-        {/* Station card preview */}
+      <div className={styles.previewBody}>
         <div>
-          <div className="mb-[var(--space-2)] font-mono text-[10px] uppercase tracking-[var(--tracking-wider)] text-text-muted">
-            Station card
-          </div>
-          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-sm">
-            <div className="flex items-start justify-between border-b border-border px-[var(--space-4)] py-[var(--space-3)]">
+          <div className={styles.previewSectionLabel}>Station card</div>
+          <div className={styles.previewMockCard}>
+            <div className={styles.previewMockHeader}>
               <div>
-                <div className="text-[15px] font-semibold text-text">
-                  {displayName}
-                </div>
-                <div className="mt-[2px] text-[length:var(--text-sm)] text-text-muted">
-                  {displayLocation}
-                </div>
+                <div className={styles.previewMockName}>{displayName}</div>
+                <div className={styles.previewMockLocation}>{displayLocation}</div>
               </div>
               {cameraId ? (
-                <span className="rounded-[var(--radius-sm)] bg-status-ok-bg px-[var(--space-2)] py-[2px] font-mono text-[10px] font-medium tracking-[var(--tracking-wide)] text-status-ok">
-                  {cameraId}
-                </span>
+                <span className={styles.previewCameraBadge}>{cameraId}</span>
               ) : (
-                <span className="rounded-[var(--radius-sm)] border border-dashed border-border-strong bg-surface-2 px-[var(--space-2)] py-[2px] font-mono text-[10px] text-text-muted">
-                  No camera
-                </span>
+                <span className={styles.previewCameraNone}>No camera</span>
               )}
             </div>
-            <div className="flex items-center justify-between px-[var(--space-4)] py-[var(--space-3)]">
-              <span className="font-mono text-[10px] uppercase tracking-[var(--tracking-wide)] text-text-muted">
-                Capacity
-              </span>
-              <div className="flex items-center gap-[var(--space-2)]">
-                <div className="flex gap-[3px]">
+            <div className={styles.previewCapacityRow}>
+              <span className={styles.previewCapacityLabel}>Capacity</span>
+              <div className={styles.previewCapacityValue}>
+                <div className={styles.previewSlotDots}>
                   {Array.from({ length: slots }).map((_, i) => (
-                    <div
-                      key={i}
-                      className="size-[9px] rounded-[2px] border border-accent-muted bg-accent-light"
-                    />
+                    <div key={i} className={styles.previewSlotDot} />
                   ))}
                 </div>
-                <span className="font-mono text-[length:var(--text-xs)] text-text-muted">
+                <span className={styles.previewSlotLabel}>
                   {slots} {slots === 1 ? "slot" : "slots"}
                   {slotCapacity === 0 && " (default)"}
                 </span>
@@ -123,9 +97,6 @@ function StationPreview({
     </div>
   );
 }
-
-const inputClasses =
-  "h-[36px] w-full rounded-[var(--radius-md)] border border-border bg-surface px-[12px] font-body text-[13px] text-text placeholder:text-text-disabled transition-[border-color,box-shadow] duration-[var(--duration-fast)] focus:border-accent focus:outline-none focus:shadow-[0_0_0_3px_rgba(26,95,170,.12)]";
 
 export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Element {
   const {
@@ -159,10 +130,8 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
       submitLabel="Create Station"
       isSubmitting={isPending}
       left={
-        <div className="sticky top-[24px] rounded-[var(--radius-lg)] border border-border bg-surface p-[20px] shadow-sm">
-          <h2 className="mb-[16px] text-[13px] font-semibold text-text">
-            Station details
-          </h2>
+        <div className={styles.formCard}>
+          <h2 className={styles.formTitle}>Station details</h2>
           <div>
             <FieldGroup
               label="Name"
@@ -171,18 +140,15 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
             >
               <input
                 {...register("name")}
-                className={inputClasses}
+                className={styles.input}
                 placeholder="e.g. Kiln A, Drying Room, Inspection Bench"
               />
             </FieldGroup>
 
-            <FieldGroup
-              label="Location"
-              optional="optional"
-            >
+            <FieldGroup label="Location" optional="optional">
               <input
                 {...register("location")}
-                className={inputClasses}
+                className={styles.input}
                 placeholder="e.g. Building B, Floor 2"
               />
             </FieldGroup>
@@ -196,7 +162,7 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
               <input
                 type="number"
                 {...register("slotCapacity", { valueAsNumber: true })}
-                className={`${inputClasses} max-w-[120px]`}
+                className={`${styles.input} ${styles.inputNarrow}`}
                 placeholder="1"
                 min={1}
                 max={15}
@@ -210,16 +176,14 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
             >
               <input
                 {...register("cameraId")}
-                className={inputClasses}
+                className={styles.input}
                 placeholder="e.g. cam-01, eye-3"
               />
             </FieldGroup>
           </div>
 
           {serverError && (
-            <div className="mt-[var(--space-5)] rounded-[var(--radius-md)] bg-status-late-bg p-[var(--space-3)] text-[length:var(--text-sm)] text-status-late">
-              {serverError.message}
-            </div>
+            <div className={styles.serverError}>{serverError.message}</div>
           )}
         </div>
       }

@@ -179,12 +179,62 @@
   --easing-exit:       cubic-bezier(0.4, 0, 1, 1);
 }
 
-/*
- * Base reset, html/body/a styles, and prefers-reduced-motion are
- * intentionally omitted from this frontend copy. Tailwind provides
- * its own reset (Preflight), and base element styles will be applied
- * via Tailwind utilities during the per-component migration.
- *
- * See the canonical file for the full reference:
- * docs/design/v2/tokens/manutracker-tokens-v2.css
- */
+/* ── Base Reset ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-weight: var(--weight-regular);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+table {
+  border-collapse: collapse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

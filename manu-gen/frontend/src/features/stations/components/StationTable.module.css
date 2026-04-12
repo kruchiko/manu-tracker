@@ -1,0 +1,126 @@
+.slotRow {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.slotDots {
+  display: flex;
+  gap: 3px;
+}
+
+.slotDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid var(--accent-muted);
+  background: var(--accent-light);
+}
+
+.slotLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.badgeOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  background: var(--status-ok-bg);
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--status-ok);
+}
+
+.badgeDot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--status-ok);
+}
+
+.badgeNone {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+  padding: 3px 9px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+}
+
+.actionsRow {
+  display: flex;
+  min-width: 130px;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.btnGhost {
+  display: inline-flex;
+  height: var(--btn-height-sm);
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  background: none;
+  padding: 0 10px;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: color var(--duration-fast) var(--easing-default),
+              background-color var(--duration-fast) var(--easing-default);
+}
+
+.btnGhost:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnDanger {
+  color: var(--status-late);
+}
+
+.btnDanger:hover {
+  background: var(--status-late-bg);
+}
+
+.btnMuted {
+  color: var(--text-muted);
+}
+
+.btnMuted:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.errorTruncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--status-late);
+}
+
+.stationName {
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.stationLocation {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}

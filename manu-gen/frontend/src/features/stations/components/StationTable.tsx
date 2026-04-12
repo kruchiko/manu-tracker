@@ -2,6 +2,7 @@ import { useState } from "react";
 import { DataTable, type Column } from "../../../shared/components/DataTable";
 import { useDeleteStation } from "../hooks/useDeleteStation";
 import type { Station } from "../stations.types";
+import styles from "./StationTable.module.css";
 
 interface StationTableProps {
   stations: Station[];
@@ -10,16 +11,13 @@ interface StationTableProps {
 function SlotCapacityCell({ count }: { count: number }): React.JSX.Element {
   const display = Math.min(Math.max(count, 1), 15);
   return (
-    <div className="flex items-center gap-[7px]">
-      <div className="flex gap-[3px]">
+    <div className={styles.slotRow}>
+      <div className={styles.slotDots}>
         {Array.from({ length: display }).map((_, i) => (
-          <div
-            key={i}
-            className="size-[9px] rounded-[2px] border border-accent-muted bg-accent-light"
-          />
+          <div key={i} className={styles.slotDot} />
         ))}
       </div>
-      <span className="font-mono text-[11px] text-text-muted">
+      <span className={styles.slotLabel}>
         {display} {display === 1 ? "slot" : "slots"}
       </span>
     </div>
@@ -29,17 +27,13 @@ function SlotCapacityCell({ count }: { count: number }): React.JSX.Element {
 function CameraBadge({ eyeId }: { eyeId: string | null }): React.JSX.Element {
   if (eyeId) {
     return (
-      <span className="inline-flex items-center gap-[5px] whitespace-nowrap rounded-[var(--radius-sm)] bg-status-ok-bg px-[9px] py-[3px] font-mono text-[11px] text-status-ok">
-        <span className="block size-[5px] shrink-0 rounded-full bg-status-ok" />
+      <span className={styles.badgeOk}>
+        <span className={styles.badgeDot} />
         {eyeId}
       </span>
     );
   }
-  return (
-    <span className="inline-flex items-center whitespace-nowrap rounded-[var(--radius-sm)] border border-dashed border-border-strong bg-surface-2 px-[9px] py-[3px] font-mono text-[11px] text-text-disabled">
-      No camera
-    </span>
-  );
+  return <span className={styles.badgeNone}>No camera</span>;
 }
 
 function ActionsCell({ station }: { station: Station }): React.JSX.Element {
@@ -61,24 +55,21 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
     });
   }
 
-  const btnGhost =
-    "inline-flex h-[28px] items-center gap-[6px] rounded-[var(--radius-md)] border border-transparent px-[10px] font-body text-[12px] font-medium transition-all duration-[var(--duration-fast)]";
-
   if (confirmDelete) {
     return (
-      <div className="flex min-w-[130px] items-center justify-end gap-[4px]">
+      <div className={styles.actionsRow}>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); handleDelete(); }}
           disabled={deleteStation.isPending}
-          className={`${btnGhost} text-status-late hover:bg-status-late-bg disabled:opacity-60`}
+          className={`${styles.btnGhost} ${styles.btnDanger}`}
         >
           {deleteStation.isPending ? "Deleting..." : "Confirm"}
         </button>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); setDeleteError(null); }}
-          className={`${btnGhost} text-text-muted hover:bg-surface-2 hover:text-text`}
+          className={`${styles.btnGhost} ${styles.btnMuted}`}
         >
           Cancel
         </button>
@@ -88,14 +79,14 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
 
   if (deleteError) {
     return (
-      <div className="flex min-w-[130px] items-center justify-end gap-[4px]">
-        <span className="max-w-[200px] truncate text-[11px] text-status-late" title={deleteError}>
+      <div className={styles.actionsRow}>
+        <span className={styles.errorTruncate} title={deleteError}>
           {deleteError}
         </span>
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); setDeleteError(null); }}
-          className={`${btnGhost} text-text-muted hover:bg-surface-2 hover:text-text`}
+          className={`${styles.btnGhost} ${styles.btnMuted}`}
         >
           OK
         </button>
@@ -104,11 +95,11 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
   }
 
   return (
-    <div className="flex min-w-[130px] items-center justify-end gap-[4px]">
+    <div className={styles.actionsRow}>
       <button
         type="button"
         onClick={(e) => e.stopPropagation()}
-        className={`${btnGhost} text-text-muted hover:bg-surface-2 hover:text-text`}
+        className={`${styles.btnGhost} ${styles.btnMuted}`}
       >
         Edit
       </button>
@@ -118,7 +109,7 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
           e.stopPropagation();
           handleDelete();
         }}
-        className={`${btnGhost} text-status-late hover:bg-status-late-bg`}
+        className={`${styles.btnGhost} ${styles.btnDanger}`}
         aria-label={`Delete station ${station.name}`}
       >
         Delete
@@ -133,16 +124,14 @@ export function StationTable({ stations }: StationTableProps): React.JSX.Element
       key: "name",
       header: "Station",
       render: (station) => (
-        <span className="text-[14px] font-semibold text-text">
-          {station.name}
-        </span>
+        <span className={styles.stationName}>{station.name}</span>
       ),
     },
     {
       key: "location",
       header: "Location",
       render: (station) => (
-        <span className="text-[13px] text-text-secondary">
+        <span className={styles.stationLocation}>
           {station.location || "\u2014"}
         </span>
       ),

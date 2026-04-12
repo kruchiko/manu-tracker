@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import styles from "./DataTable.module.css";
 
 export interface Column<T> {
   key: string;
@@ -21,15 +22,13 @@ export function DataTable<T>({
   onRowClick,
 }: DataTableProps<T>): React.JSX.Element {
   return (
-    <table className="w-full border-collapse">
+    <table className={styles.table}>
       <thead>
-        <tr className="bg-surface-2">
+        <tr className={styles.headerRow}>
           {columns.map((col) => (
             <th
               key={col.key}
-              className={`whitespace-nowrap border-b border-border px-[22px] py-[10px] font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-text-muted ${
-                col.align === "right" ? "text-right" : "text-left"
-              }`}
+              className={`${styles.headerCell} ${col.align === "right" ? styles.headerCellRight : ""}`}
             >
               {col.header}
             </th>
@@ -41,16 +40,14 @@ export function DataTable<T>({
           <tr
             key={getRowKey(row)}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
-            className={`group ${onRowClick ? "cursor-pointer" : ""} ${
-              rowIndex < rows.length - 1 ? "[&>td]:border-b [&>td]:border-border" : ""
+            className={`${styles.row} ${onRowClick ? styles.rowClickable : ""} ${
+              rowIndex < rows.length - 1 ? styles.rowBorder : ""
             }`}
           >
             {columns.map((col) => (
               <td
                 key={col.key}
-                className={`px-[22px] py-[13px] align-middle transition-colors duration-[var(--duration-fast)] group-hover:bg-surface-hover ${
-                  col.align === "right" ? "text-right" : "text-left"
-                }`}
+                className={`${styles.cell} ${col.align === "right" ? styles.cellRight : ""}`}
               >
                 {col.render(row)}
               </td>

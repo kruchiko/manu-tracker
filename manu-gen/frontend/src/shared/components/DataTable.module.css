@@ -1,0 +1,52 @@
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.headerRow {
+  background: var(--surface-2);
+}
+
+.headerCell {
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  padding: 10px var(--table-cell-h);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-muted);
+  text-align: left;
+}
+
+.headerCellRight {
+  text-align: right;
+}
+
+.row {
+  cursor: default;
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+.cell {
+  padding: var(--table-cell-v) var(--table-cell-h);
+  vertical-align: middle;
+  text-align: left;
+  transition: background-color var(--duration-fast) var(--easing-default);
+}
+
+.cellRight {
+  text-align: right;
+}
+
+.rowBorder .cell {
+  border-bottom: 1px solid var(--border);
+}
+
+.row:hover .cell {
+  background: var(--surface-hover);
+}

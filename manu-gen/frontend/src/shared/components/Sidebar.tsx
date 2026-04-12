@@ -9,6 +9,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import styles from "./Sidebar.module.css";
 
 export type PageId =
   | "dashboard"
@@ -53,25 +54,25 @@ interface SidebarProps {
 
 function LogoDots(): React.JSX.Element {
   return (
-    <div className="flex w-full items-center" aria-hidden>
-      <div className="size-[6px] shrink-0 rounded-full bg-[var(--logo-dot-teal)]" />
-      <div className="h-[1.5px] flex-1 rounded-[1px] bg-[var(--logo-connector)]" />
-      <div className="size-[6px] shrink-0 rounded-full bg-[var(--logo-dot-teal)]" />
-      <div className="h-[1.5px] flex-1 rounded-[1px] bg-[var(--logo-connector)]" />
-      <div className="size-[6px] shrink-0 rounded-full bg-[var(--logo-dot-orange)]" />
-      <div className="h-[1.5px] flex-1 rounded-[1px] bg-[var(--logo-connector)]" />
-      <div className="size-[6px] shrink-0 rounded-full bg-[var(--logo-dot-teal)]" />
+    <div className={styles.logoDots} aria-hidden>
+      <div className={`${styles.dot} ${styles.dotTeal}`} />
+      <div className={styles.connector} />
+      <div className={`${styles.dot} ${styles.dotTeal}`} />
+      <div className={styles.connector} />
+      <div className={`${styles.dot} ${styles.dotOrange}`} />
+      <div className={styles.connector} />
+      <div className={`${styles.dot} ${styles.dotTeal}`} />
     </div>
   );
 }
 
 function SidebarBrand(): React.JSX.Element {
   return (
-    <div className="border-b border-sidebar-border px-[20px] pt-[20px] pb-[18px]">
-      <div className="inline-flex flex-col items-stretch gap-[6px]">
-        <div className="whitespace-nowrap font-heading text-[length:var(--text-logo)] font-bold uppercase leading-[1] tracking-[0.07em]">
-          <span className="text-[var(--logo-manu)]">Manu</span>
-          <span className="text-[var(--logo-tracker)]">Tracker</span>
+    <div className={styles.brand}>
+      <div className={styles.brandInner}>
+        <div className={styles.logoText}>
+          <span className={styles.logoManu}>Manu</span>
+          <span className={styles.logoTracker}>Tracker</span>
         </div>
         <LogoDots />
       </div>
@@ -80,11 +81,7 @@ function SidebarBrand(): React.JSX.Element {
 }
 
 function SectionLabel({ children }: { children: string }): React.JSX.Element {
-  return (
-    <div className="px-[20px] pb-[6px] font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-sidebar-text-muted">
-      {children}
-    </div>
-  );
+  return <div className={styles.sectionLabel}>{children}</div>;
 }
 
 function NavItemButton({
@@ -102,23 +99,17 @@ function NavItemButton({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center gap-[10px] border-l-[3px] px-[20px] py-[9px] text-left font-body text-[14px] transition-colors duration-[var(--duration-fast)] ${
-        isActive
-          ? "border-l-sidebar-active-accent bg-sidebar-active font-medium text-white"
-          : "border-l-transparent text-sidebar-text hover:bg-sidebar-bg-hover hover:text-white"
-      }`}
+      className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
     >
-      <Icon size={15} strokeWidth={1.5} className={isActive ? "opacity-100" : "opacity-65"} />
+      <Icon
+        size={15}
+        strokeWidth={1.5}
+        className={isActive ? undefined : styles.iconDim}
+      />
       {item.label}
     </button>
   );
 }
-
-const asideBase = [
-  "fixed inset-y-0 left-0 z-40 flex w-[var(--sidebar-width)] shrink-0 flex-col overflow-y-auto",
-  "bg-[image:var(--sidebar-gradient)] transition-transform",
-  "lg:sticky lg:top-0 lg:h-screen lg:translate-x-0",
-].join(" ");
 
 export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -134,13 +125,9 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.El
 
       {NAV_SECTIONS.map((section, sectionIndex) => (
         <div key={section.label}>
-          {sectionIndex > 0 && (
-            <div className="mx-0 my-[8px] h-px bg-sidebar-border" />
-          )}
-          <div className="pt-[20px] pb-[4px]">
+          {sectionIndex > 0 && <div className={styles.sectionDivider} />}
+          <div className={styles.section}>
             <SectionLabel>{section.label}</SectionLabel>
-          </div>
-          <div className="flex flex-col">
             {section.items.map((item) => (
               <NavItemButton
                 key={item.id}
@@ -160,7 +147,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.El
       <button
         type="button"
         onClick={() => setMobileOpen(!mobileOpen)}
-        className="fixed top-[16px] left-[16px] z-50 rounded-[var(--radius-md)] bg-sidebar-bg p-[8px] text-white shadow-md lg:hidden"
+        className={styles.mobileToggle}
         aria-label="Toggle navigation"
       >
         {mobileOpen ? (
@@ -172,7 +159,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.El
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/20 lg:hidden"
+          className={styles.overlay}
           onClick={() => setMobileOpen(false)}
           onKeyDown={(e) => {
             if (e.key === "Escape") setMobileOpen(false);
@@ -182,7 +169,7 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.El
       )}
 
       <aside
-        className={`${asideBase} ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`${styles.aside} ${mobileOpen ? styles.asideOpen : ""}`}
       >
         {sidebarContent}
       </aside>

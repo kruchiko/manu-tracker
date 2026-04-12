@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import styles from "./ListCard.module.css";
 
 interface ListCardProps {
   title: string;
@@ -9,10 +10,10 @@ interface ListCardProps {
 
 export function ListCard({ title, count, countLabel, children }: ListCardProps): React.JSX.Element {
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-sm">
-      <div className="flex items-center justify-between border-b border-border px-[24px] py-[14px]">
-        <span className="text-[length:var(--text-base)] font-semibold text-text">{title}</span>
-        <span className="font-mono text-[10px] tracking-[0.08em] text-text-muted">
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <span className={styles.title}>{title}</span>
+        <span className={styles.count}>
           {count} {countLabel}
         </span>
       </div>

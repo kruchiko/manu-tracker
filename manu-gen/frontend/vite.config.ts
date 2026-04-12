@@ -3,7 +3,6 @@
 import { defineConfig } from "vitest/config";
 import type { ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
-import tailwindcss from "@tailwindcss/vite";
 
 const API_TARGET = process.env.API_TARGET ?? "http://localhost:3000";
 
@@ -22,7 +21,7 @@ function apiProxy(): ProxyOptions {
 }
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
   server: {
     proxy: {
       "/jobs": apiProxy(),
