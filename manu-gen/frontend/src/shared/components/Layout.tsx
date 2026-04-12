@@ -1,4 +1,5 @@
 import { Sidebar, type PageId } from "./Sidebar";
+import styles from "./Layout.module.css";
 
 interface LayoutProps {
   currentPage: PageId;
@@ -8,9 +9,9 @@ interface LayoutProps {
 
 export function Layout({ currentPage, onNavigate, children }: LayoutProps): React.JSX.Element {
   return (
-    <div className="flex min-h-screen bg-bg">
+    <div className={styles.layout}>
       <Sidebar currentPage={currentPage} onNavigate={onNavigate} />
-      <main className="min-w-0 flex-1 overflow-y-auto p-[var(--content-padding-sm)] lg:p-[var(--content-padding)]">
+      <main className={styles.main}>
         {children}
       </main>
     </div>

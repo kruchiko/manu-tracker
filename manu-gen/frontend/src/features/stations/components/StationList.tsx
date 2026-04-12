@@ -2,36 +2,33 @@ import { PackageOpen } from "lucide-react";
 import { useStations } from "../hooks/useStations";
 import { ListCard } from "../../../shared/components/ListCard";
 import { StationTable } from "./StationTable";
+import styles from "./StationList.module.css";
 
 function SkeletonRow({ hasBorder }: { hasBorder: boolean }): React.JSX.Element {
   return (
-    <div
-      className={`flex gap-[22px] px-[22px] py-[13px] ${hasBorder ? "border-b border-border" : ""}`}
-    >
-      <div className="h-4 w-24 animate-pulse rounded bg-surface-2" />
-      <div className="h-4 w-36 animate-pulse rounded bg-surface-2" />
-      <div className="h-4 w-16 animate-pulse rounded bg-surface-2" />
-      <div className="h-4 w-16 animate-pulse rounded bg-surface-2" />
-      <div className="ml-auto h-4 w-24 animate-pulse rounded bg-surface-2" />
+    <div className={`${styles.skeletonRow} ${hasBorder ? styles.skeletonRowBorder : ""}`}>
+      <div className={styles.skeleton} style={{ width: 96 }} />
+      <div className={styles.skeleton} style={{ width: 144 }} />
+      <div className={styles.skeleton} style={{ width: 64 }} />
+      <div className={styles.skeleton} style={{ width: 64 }} />
+      <div className={styles.skeleton} style={{ width: 96, marginLeft: "auto" }} />
     </div>
   );
 }
 
 function LoadingSkeleton(): React.JSX.Element {
   return (
-    <div className="overflow-hidden rounded-[var(--radius-lg)] border border-border bg-surface shadow-sm">
-      <div className="flex items-center justify-between border-b border-border px-[24px] py-[14px]">
-        <div className="h-4 w-28 animate-pulse rounded bg-surface-2" />
-        <div className="h-3 w-16 animate-pulse rounded bg-surface-2" />
+    <div className={styles.skeletonCard}>
+      <div className={styles.skeletonHeader}>
+        <div className={styles.skeleton} style={{ width: 112 }} />
+        <div className={styles.skeleton} style={{ width: 64, height: 12 }} />
       </div>
-      <div className="bg-surface-2 px-[22px] py-[10px]">
-        <div className="flex gap-[22px]">
-          <div className="h-3 w-16 animate-pulse rounded bg-border" />
-          <div className="h-3 w-16 animate-pulse rounded bg-border" />
-          <div className="h-3 w-20 animate-pulse rounded bg-border" />
-          <div className="h-3 w-14 animate-pulse rounded bg-border" />
-          <div className="ml-auto h-3 w-14 animate-pulse rounded bg-border" />
-        </div>
+      <div className={styles.skeletonTableHeader}>
+        <div className={styles.skeletonSmall} style={{ width: 64 }} />
+        <div className={styles.skeletonSmall} style={{ width: 64 }} />
+        <div className={styles.skeletonSmall} style={{ width: 80 }} />
+        <div className={styles.skeletonSmall} style={{ width: 56 }} />
+        <div className={styles.skeletonSmall} style={{ width: 56, marginLeft: "auto" }} />
       </div>
       {Array.from({ length: 5 }).map((_, i) => (
         <SkeletonRow key={i} hasBorder={i < 4} />
@@ -49,8 +46,8 @@ export function StationList(): React.JSX.Element {
 
   if (error) {
     return (
-      <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-[var(--space-8)] text-center shadow-sm">
-        <p className="text-[13px] text-status-late">
+      <div className={`${styles.stateCard} ${styles.errorCard}`}>
+        <p className={styles.errorText}>
           Failed to load stations: {error.message}
         </p>
       </div>
@@ -61,13 +58,9 @@ export function StationList(): React.JSX.Element {
 
   if (stations.length === 0) {
     return (
-      <div className="rounded-[var(--radius-lg)] border border-border bg-surface p-[var(--space-12)] text-center shadow-sm">
-        <PackageOpen
-          size={40}
-          strokeWidth={1.5}
-          className="mx-auto mb-[var(--space-4)] text-text-muted"
-        />
-        <p className="text-[13px] text-text-muted">
+      <div className={`${styles.stateCard} ${styles.emptyCard}`}>
+        <PackageOpen size={40} strokeWidth={1.5} className={styles.emptyIcon} />
+        <p className={styles.emptyText}>
           No stations yet. Create one to get started.
         </p>
       </div>

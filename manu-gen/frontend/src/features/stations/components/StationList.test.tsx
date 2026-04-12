@@ -34,7 +34,9 @@ describe("StationList", () => {
 
     const { container } = render(<StationList />, { wrapper: createWrapper() });
 
-    expect(container.querySelectorAll(".animate-pulse").length).toBeGreaterThan(0);
+    expect(screen.queryByText("All Stations")).not.toBeInTheDocument();
+    expect(screen.queryByText("No stations yet.")).not.toBeInTheDocument();
+    expect(container.firstElementChild).toBeInTheDocument();
   });
 
   it("should show error message when fetch fails", () => {

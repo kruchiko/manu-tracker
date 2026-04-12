@@ -1,0 +1,18 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: var(--content-padding-sm);
+}
+
+@media (min-width: 1024px) {
+  .main {
+    padding: var(--content-padding);
+  }
+}
