@@ -23,6 +23,10 @@ function apiProxy(): ProxyOptions {
 export default defineConfig({
   plugins: [react()],
   server: {
+    watch: {
+      usePolling: true,
+      interval: 1000,
+    },
     proxy: {
       "/jobs": apiProxy(),
       "/customer-orders": apiProxy(),

@@ -137,7 +137,8 @@ The HTML prototype is the **authoritative reference for what to render** — whi
 - **Component prop APIs and state specs**: DESIGN-SYSTEM.md is authoritative (prototype has no prop tables).
 
 1. **Use full token names only.** The prototype contains short aliases (`.ac`, `.btn-p`, `.dt`, `.lc`) — these are deprecated. Map them to their full equivalents (`.app-content`, `.btn-primary`, `.data-table`, etc.).
-2. **Inline SVGs in the prototype are placeholders.** Use Lucide React components instead. See DESIGN-SYSTEM.md Section 7 for the icon mapping table.
+2. **Icons vs. illustrations.** For **UI affordance icons** (close, chevron, package, actions in chrome), use Lucide React per DESIGN-SYSTEM.md Section 7. The prototype often uses inline SVG for those — treat those as placeholders.
+   **Decorative diagrams** (custom flow shapes, hint-banner schematics, anything not available as a Lucide glyph) may stay as inline SVG or pure CSS, with colors and type sizes driven by design tokens (`currentColor`, `var(--text-illustration-label)`, spacing tokens). If a new size is needed, add it to the canonical token file rather than hardcoding pixels in TSX.
 3. **Prototype JS is throwaway.** The `nav()`, `switchTab()`, and modal functions are vanilla JS demos. Implement equivalent behavior in React with proper state management.
 4. **When prototype and token file conflict on values, the token file wins.** Example: prototype may show `32px` button height; token file defines `--btn-height: 34px`. Use the token.
 
@@ -158,7 +159,7 @@ Run this for every component you implement or migrate.
 - [ ] Correct font size, weight, and letter-spacing tokens
 - [ ] Spacing uses `var(--space-*)` tokens (4px base scale)
 - [ ] Border radius uses `var(--radius-*)` tokens
-- [ ] Icons use Lucide React, size 20px default, stroke 1.5, `currentColor`
+- [ ] **UI icons** use Lucide React, size 20px default, stroke 1.5, `currentColor` (diagram-only art may use tokenized SVG/CSS as above)
 - [ ] All interactive states implemented: default, hover, focus, active, disabled
 - [ ] Loading and error states implemented where applicable
 - [ ] Keyboard accessible: focusable, Enter/Space activate, visible focus ring
@@ -194,5 +195,5 @@ Run this for every component you implement or migrate.
 - **Hardcoding font-family in TSX.** Use `var(--font-heading)`, `var(--font-body)`, `var(--font-mono)` in the `.module.css` file.
 - **Skipping the mono font for data.** Table headers, IDs, timestamps, badges, and codes must use DM Mono. Barlow in a table header is a design bug.
 - **Inventing spacing values.** Use `var(--space-5)` (20px) or `var(--space-6)` (24px). Never use a pixel value outside the 4px token scale.
-- **Using inline SVG instead of Lucide React.** The prototype uses inline SVGs for demo purposes. Production code uses `<Icon size={20} strokeWidth={1.5} />` from `lucide-react`.
+- **Using inline SVG for standard UI icons.** Prefer Lucide for buttons, nav, tables, and forms. Inline SVG is an anti-pattern **only** when a Lucide equivalent exists. Custom illustrative markup is allowed if styled with tokens.
 - **Global CSS for component styles.** Each component's styles live in its own `.module.css` file. Only `index.css` and `design-tokens.css` are global.
