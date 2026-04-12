@@ -100,6 +100,10 @@
   --text-heading:    26px;
   --text-logo:       19px;
 
+  /* Illustration-only labels (smaller than --text-xs; not running body text). */
+  --text-illustration-label: 8px;
+  --text-illustration-meta:  9px;
+
   --weight-light:    300;
   --weight-regular:  400;
   --weight-medium:   500;

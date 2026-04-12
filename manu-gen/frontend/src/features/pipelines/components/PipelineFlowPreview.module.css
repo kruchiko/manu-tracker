@@ -1,0 +1,81 @@
+.row {
+  display: flex;
+  align-items: flex-start;
+}
+
+.node {
+  display: flex;
+  align-items: flex-start;
+}
+
+.nodeContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  margin-bottom: var(--space-1);
+}
+
+.name {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  line-height: 1.2;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.detailLine {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  letter-spacing: var(--tracking-wide);
+  white-space: nowrap;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.connector {
+  width: var(--space-6);
+  height: 1.5px;
+  background: var(--accent-muted);
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.moreChip {
+  display: inline-flex;
+  align-items: center;
+  height: var(--btn-height-sm);
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--accent-light);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--accent);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--easing-default),
+              color var(--duration-fast) var(--easing-default);
+}
+
+.moreChip:hover {
+  background: var(--accent);
+  color: var(--text-on-dark);
+}
+
+.moreChip:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
