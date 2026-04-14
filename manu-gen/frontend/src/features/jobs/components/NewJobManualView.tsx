@@ -7,6 +7,7 @@ import { createJobSchema, type CreateJobFormValues } from "../jobs.schema";
 import { useCreateJob } from "../hooks/useCreateJob";
 import { usePipelines } from "../../pipelines/hooks/usePipelines";
 import type { Job } from "../jobs.types";
+import prim from "../../../shared/components/createFormPrimitives.module.css";
 import styles from "./NewJobManualView.module.css";
 
 interface NewJobManualViewProps {
@@ -22,15 +23,15 @@ function JobGenerationPreview({
   hasPipeline: boolean;
 }): React.JSX.Element {
   return (
-    <div className={styles.previewColumn}>
-      <div className={styles.previewHeader}>
-        <span className={styles.previewTitle}>What will be generated</span>
-        <span className={styles.previewHint}>
+    <div className={prim.previewShell}>
+      <div className={prim.previewHeaderRow}>
+        <span className={prim.previewTitle}>What will be generated</span>
+        <span className={prim.previewHintInline}>
           A preview of the job and tray that the system will create on save.
         </span>
       </div>
 
-      <div className={styles.previewBody}>
+      <div className={prim.previewBody}>
         <div className={styles.previewCard}>
           <div className={styles.previewCardBanner}>
             <div className={styles.previewCardBannerLabel}>Job that will be created</div>
@@ -129,7 +130,6 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
   }
 
   return (
-    <div className={styles.root}>
       <FormPageLayout
         backLabel="Jobs"
         onBack={onBack}
@@ -139,8 +139,8 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
         submitLabel="Create Job"
         isSubmitting={isPending}
         left={
-          <div className={styles.formCard}>
-            <h2 className={styles.formTitle}>Job details</h2>
+          <div className={prim.formCard}>
+            <h2 className={prim.formSectionTitle}>Job details</h2>
 
             <div className={styles.warnBox}>
               <strong>Fallback scenario.</strong>
@@ -153,14 +153,14 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
               Jobs created here will not appear in any Customer Order.
             </div>
 
-            <div className={styles.fieldGroup}>
-              <label htmlFor="pipelineId" className={styles.label}>
+            <div className={prim.fieldGroup}>
+              <label htmlFor="pipelineId" className={prim.fieldLabel}>
                 Pipeline
               </label>
               <select
                 id="pipelineId"
                 {...register("pipelineId")}
-                className={`${styles.input} ${errors.pipelineId ? styles.inputError : ""}`}
+                className={`${prim.select} ${errors.pipelineId ? prim.inputError : ""}`}
               >
                 <option value="">Select pipeline…</option>
                 {pipelines?.map((p) => (
@@ -171,12 +171,12 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
                 ))}
               </select>
               {errors.pipelineId && (
-                <p className={styles.fieldError}>{errors.pipelineId.message}</p>
+                <p className={prim.fieldError}>{errors.pipelineId.message}</p>
               )}
             </div>
 
-            <div className={styles.fieldGroup}>
-              <span className={styles.label}>Product type</span>
+            <div className={prim.fieldGroup}>
+              <span className={prim.fieldLabel}>Product type</span>
               <div className={styles.readonlyRow}>
                 <Clock size={11} strokeWidth={1.5} className={styles.readonlyIcon} aria-hidden />
                 <span
@@ -187,19 +187,22 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
                   {selectedPipeline?.productType ?? "Auto-filled from selected pipeline"}
                 </span>
               </div>
-              <p className={styles.fieldHint}>Set automatically once a pipeline is selected.</p>
+              <p className={prim.fieldHint}>Set automatically once a pipeline is selected.</p>
             </div>
 
             <input type="hidden" {...register("productType")} />
             {errors.productType && (
-              <p className={styles.fieldError}>Select a pipeline to set the product type</p>
+              <p className={prim.fieldError}>Select a pipeline to set the product type</p>
             )}
 
-            <div className={styles.fieldGroup}>
-              <label htmlFor="quantity" className={styles.label}>
+            <div className={prim.fieldGroup}>
+              <label htmlFor="quantity" className={prim.fieldLabel}>
                 Quantity
                 {selectedPipeline?.effectiveCapacity != null && (
-                  <span className={styles.optional}> (max {selectedPipeline.effectiveCapacity})</span>
+                  <span className={prim.fieldOptional}>
+                    {" "}
+                    (max {selectedPipeline.effectiveCapacity})
+                  </span>
                 )}
               </label>
               <input
@@ -208,28 +211,29 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
                 min={1}
                 max={selectedPipeline?.effectiveCapacity ?? undefined}
                 {...register("quantity", { valueAsNumber: true })}
-                className={`${styles.input} ${styles.inputNarrow}`}
+                className={`${prim.input} ${prim.inputNarrow}`}
                 placeholder="20"
               />
               {errors.quantity && (
-                <p className={styles.fieldError}>{errors.quantity.message}</p>
+                <p className={prim.fieldError}>{errors.quantity.message}</p>
               )}
             </div>
 
-            <div className={styles.fieldGroup}>
-              <label htmlFor="notes" className={styles.label}>
-                Reason <span className={styles.optional}>(optional)</span>
+            <div className={prim.fieldGroup}>
+              <label htmlFor="notes" className={prim.fieldLabel}>
+                Reason{" "}
+                <span className={prim.fieldOptional}>(optional)</span>
               </label>
               <textarea
                 id="notes"
                 {...register("notes")}
                 rows={3}
-                className={styles.textarea}
+                className={prim.textarea}
                 placeholder="Why is this job being created manually?"
               />
             </div>
 
-            {error && <p className={styles.serverError}>Error: {error.message}</p>}
+            {error && <div className={prim.serverError}>Error: {error.message}</div>}
           </div>
         }
         right={
@@ -239,6 +243,5 @@ export function NewJobManualView({ onBack, onCreated }: NewJobManualViewProps) {
           />
         }
       />
-    </div>
   );
 }

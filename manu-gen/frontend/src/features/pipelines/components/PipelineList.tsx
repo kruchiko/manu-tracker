@@ -44,10 +44,9 @@ function LoadingSkeleton(): React.JSX.Element {
 
 interface PipelineActionsProps {
   pipeline: Pipeline;
-  onEdit: (pipeline: Pipeline) => void;
 }
 
-function PipelineActions({ pipeline, onEdit }: PipelineActionsProps): React.JSX.Element {
+function PipelineActions({ pipeline }: PipelineActionsProps): React.JSX.Element {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const deletePipeline = useDeletePipeline();
 
@@ -66,7 +65,10 @@ function PipelineActions({ pipeline, onEdit }: PipelineActionsProps): React.JSX.
       <div className={styles.actionGroup}>
         <button
           type="button"
-          onClick={handleDelete}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDelete();
+          }}
           disabled={deletePipeline.isPending}
           className={`${styles.btnGhost} ${styles.btnDanger}`}
         >
@@ -74,7 +76,10 @@ function PipelineActions({ pipeline, onEdit }: PipelineActionsProps): React.JSX.
         </button>
         <button
           type="button"
-          onClick={() => setConfirmDelete(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmDelete(false);
+          }}
           className={`${styles.btnGhost} ${styles.btnMuted}`}
         >
           Cancel
@@ -85,10 +90,14 @@ function PipelineActions({ pipeline, onEdit }: PipelineActionsProps): React.JSX.
 
   return (
     <div className={styles.actionGroup}>
-      <button type="button" onClick={() => onEdit(pipeline)} className={`${styles.btnGhost} ${styles.btnMuted}`}>
-        Edit
-      </button>
-      <button type="button" onClick={handleDelete} className={`${styles.btnGhost} ${styles.btnDanger}`}>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete();
+        }}
+        className={`${styles.btnGhost} ${styles.btnDanger}`}
+      >
         Delete
       </button>
     </div>
@@ -162,7 +171,7 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
       align: "right",
       render: (pipeline) => (
         <div className={styles.actionsCell}>
-          <PipelineActions pipeline={pipeline} onEdit={onEdit} />
+          <PipelineActions pipeline={pipeline} />
         </div>
       ),
     },
@@ -178,6 +187,7 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
         columns={columns}
         rows={pipelines}
         getRowKey={(p) => p.id}
+        onRowClick={onEdit}
       />
     </ListCard>
   );

@@ -1,0 +1,311 @@
+/* Station-specific preview blocks + danger zone (shared primitives in createFormPrimitives.module.css) */
+
+.previewSectionLabel {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--text-muted);
+}
+
+.previewMockCard {
+  overflow: hidden;
+  max-width: 380px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.previewMockHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  padding: 14px var(--space-4) 12px;
+}
+
+.previewMockName {
+  font-size: 15px;
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+.previewMockLocation {
+  margin-top: 2px;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.previewCameraBadge {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--accent-muted);
+  background: var(--accent-light);
+  padding: 3px var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--accent);
+}
+
+.previewCameraNone {
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+  padding: 3px var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.previewCapacityRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-3) var(--space-4);
+}
+
+.previewCapacityLabel {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  color: var(--text-muted);
+}
+
+.previewCapacityValue {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.previewSlotDots {
+  display: flex;
+  gap: 3px;
+}
+
+.previewSlotDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  border: 1px solid var(--accent-muted);
+  background: var(--accent-light);
+}
+
+.previewSlotDotFilled {
+  border-color: var(--accent-dark);
+  background: var(--accent);
+}
+
+.previewSlotDotEmpty {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.previewSlotLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.previewDashCard {
+  max-width: 380px;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: 14px var(--space-4);
+}
+
+/* Name on its own row so long station names never collide with many slot squares */
+.previewDashTitleRow {
+  margin-bottom: var(--space-2);
+  min-width: 0;
+}
+
+.previewDashName {
+  display: block;
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Full-width row for squares only — avoids wrapping when ratio/queue share the row */
+.previewDashSlotsRow {
+  margin-bottom: var(--space-2);
+  min-width: 0;
+  width: 100%;
+}
+
+.previewDashSlotTrack {
+  overflow-x: auto;
+  min-width: 0;
+}
+
+.previewDashSlotDots {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 3px;
+  width: max-content;
+}
+
+.previewDashMetricsEndRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.previewDashSlot {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  border: 1px solid var(--accent-dark);
+  background: var(--accent);
+}
+
+.previewDashSlotIdle {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+
+.previewDashRatio {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.previewDashQueue {
+  flex-shrink: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  padding: 2px 7px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.previewDashFootnote {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.previewPipelineList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.previewPipelineRow {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.previewPipelineName {
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.previewPipelineMeta {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.previewPipelineFootnote {
+  margin-top: var(--space-3);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.previewEmptyPipelines {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+/* Danger zone (edit only) */
+.dangerZone {
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+.dangerZoneLabel {
+  margin-bottom: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wider);
+  color: var(--status-late);
+}
+
+.dangerZoneCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--status-late-bg);
+  padding: var(--space-3) var(--space-4);
+}
+
+.dangerZoneTitle {
+  margin-bottom: 3px;
+  font-size: 13px;
+  font-weight: var(--weight-medium);
+  color: var(--text);
+}
+
+.dangerZoneBody {
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.dangerButton {
+  flex-shrink: 0;
+  white-space: nowrap;
+  display: inline-flex;
+  height: var(--btn-height);
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--status-late);
+  background: var(--surface);
+  padding: 0 var(--space-3);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--status-late);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--easing-default),
+    color var(--duration-fast) var(--easing-default);
+}
+
+.dangerButton:hover:not(:disabled) {
+  background: var(--status-late);
+  color: var(--surface);
+}
+
+.dangerButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.dangerError {
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--status-late);
+}

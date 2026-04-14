@@ -4,6 +4,7 @@ import { useCreatePipeline } from "../hooks/useCreatePipeline";
 import { useStations } from "../../stations/hooks/useStations";
 import { PipelineStepEditor } from "./PipelineStepEditor";
 import type { StepFormValue } from "../pipelines.schema";
+import prim from "../../../shared/components/createFormPrimitives.module.css";
 import styles from "./NewPipelineView.module.css";
 
 interface NewPipelineViewProps {
@@ -22,13 +23,18 @@ function FieldGroup({
   children: React.ReactNode;
 }): React.JSX.Element {
   return (
-    <div className={styles.fieldGroup}>
-      <label className={styles.fieldLabel}>
+    <div className={prim.fieldGroup}>
+      <label className={prim.fieldLabel}>
         {label}
-        {optional && <span className={styles.fieldOptional}>{optional}</span>}
+        {optional !== undefined && optional !== "" && (
+          <>
+            {" "}
+            <span className={prim.fieldOptional}>({optional})</span>
+          </>
+        )}
       </label>
       {children}
-      {error && <p className={styles.fieldError}>{error}</p>}
+      {error && <p className={prim.fieldError}>{error}</p>}
     </div>
   );
 }
@@ -78,12 +84,12 @@ export function NewPipelineView({ onBack }: NewPipelineViewProps): React.JSX.Ele
       submitLabel="Create Pipeline"
       isSubmitting={createPipeline.isPending}
       left={
-        <div className={styles.formCard}>
-          <h2 className={styles.formTitle}>Pipeline details</h2>
+        <div className={prim.formCard}>
+          <h2 className={prim.formSectionTitle}>Pipeline details</h2>
           <div>
             <FieldGroup label="Name" error={nameError}>
               <input
-                className={styles.input}
+                className={prim.input}
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -93,7 +99,7 @@ export function NewPipelineView({ onBack }: NewPipelineViewProps): React.JSX.Ele
 
             <FieldGroup label="Product type" error={productTypeError}>
               <input
-                className={styles.input}
+                className={prim.input}
                 type="text"
                 value={productType}
                 onChange={(e) => setProductType(e.target.value)}
@@ -103,7 +109,7 @@ export function NewPipelineView({ onBack }: NewPipelineViewProps): React.JSX.Ele
 
             <FieldGroup label="Description" optional="optional">
               <input
-                className={styles.input}
+                className={prim.input}
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -133,7 +139,7 @@ export function NewPipelineView({ onBack }: NewPipelineViewProps): React.JSX.Ele
           </div>
 
           {createPipeline.error && (
-            <div className={styles.serverError}>{createPipeline.error.message}</div>
+            <div className={prim.serverError}>{createPipeline.error.message}</div>
           )}
         </div>
       }

@@ -1,22 +1,45 @@
 import { useMemo, useState } from "react";
 import { useForm, useFieldArray, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Calendar, Check, ChevronLeft, Plus } from "lucide-react";
+import { AlertCircle, Calendar, Check, Plus } from "lucide-react";
+import { ScreenHeader } from "../../../shared/components/ScreenHeader";
+import formStyles from "../../../shared/components/formScreenShared.module.css";
+import prim from "../../../shared/components/createFormPrimitives.module.css";
 import {
   createCustomerOrderSchema,
   type CreateCustomerOrderFormValues,
 } from "../customer-orders.schema";
 import { useCreateCustomerOrder } from "../hooks/useCreateCustomerOrder";
 import { usePipelines } from "../../pipelines/hooks/usePipelines";
+import type { Pipeline } from "../../pipelines/pipelines.types";
 import type { CustomerOrder } from "../customer-orders.types";
 import styles from "./CustomerOrderForm.module.css";
+
+/** Stored pipeline id only counts if it exists and matches the line’s product type. */
+function effectivePipelineIdForLine(
+  pipelines: Pipeline[] | undefined,
+  productTrimmed: string,
+  storedId: string,
+): string {
+  if (!storedId) return "";
+  const p = (pipelines ?? []).find((x) => String(x.id) === storedId);
+  if (!p) return "";
+  if (!productTrimmed) return storedId;
+  return p.productType.trim() === productTrimmed ? storedId : "";
+}
 
 interface CustomerOrderFormProps {
   onCreated: (order: CustomerOrder) => void;
   onCancel: () => void;
+  /** Navigates to Pipelines when the user activates “create one” in the line status. */
+  onNavigateToPipelines?: () => void;
 }
 
-export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProps) {
+export function CustomerOrderForm({
+  onCreated,
+  onCancel,
+  onNavigateToPipelines,
+}: CustomerOrderFormProps) {
   const {
     register,
     control,
@@ -50,16 +73,20 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
       const line = lines[i];
       const q = typeof line?.quantity === "number" ? line.quantity : 0;
       qty += q;
-      const productOk = (line?.productType ?? "").trim().length > 0;
+      const productTrimmed = (line?.productType ?? "").trim();
+      const productOk = productTrimmed.length > 0;
       const fieldId = fields[i]?.id;
-      const pid = fieldId ? pipelineByLineId[fieldId] : "";
+      const storedId = fieldId ? (pipelineByLineId[fieldId] ?? "") : "";
+      const pid = fieldId
+        ? effectivePipelineIdForLine(pipelines, productTrimmed, storedId)
+        : "";
       if (productOk && q >= 1) {
         need += 1;
         if (!pid) missing += 1;
       }
     }
     return { totalQty: qty, missingPipelineCount: missing, pipelinesNeeded: need };
-  }, [linesWatch, fields, pipelineByLineId]);
+  }, [linesWatch, fields, pipelineByLineId, pipelines]);
 
   function onSubmit(values: CreateCustomerOrderFormValues) {
     mutate(values, {
@@ -75,50 +102,55 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
     <form
       id="customer-order-create-form"
       onSubmit={handleSubmit(onSubmit)}
-      className={styles.root}
+      className={prim.formRoot}
       noValidate
     >
-      <header className={styles.wizardHeader}>
-        <div className={styles.wizardHeaderLeft}>
-          <button type="button" className={styles.breadcrumb} onClick={onCancel}>
-            <ChevronLeft size={16} strokeWidth={2} aria-hidden />
-            Customer Orders
-          </button>
-          <h1 className={styles.pageTitle}>New Customer Order</h1>
-        </div>
-        <div className={styles.wizardActions}>
-          <button type="button" className={styles.cancelBtn} onClick={onCancel}>
-            Cancel
-          </button>
-          <button type="submit" className={styles.submitHeader} disabled={isPending}>
-            {isPending ? "Creating…" : "Create Order"}
-          </button>
-        </div>
-      </header>
+      <ScreenHeader
+        layout="inline"
+        backLabel="Customer Orders"
+        onBack={onCancel}
+        title="New Customer Order"
+        actions={
+          <>
+            <button type="button" className={formStyles.cancelButton} onClick={onCancel}>
+              Cancel
+            </button>
+            <button
+              type="submit"
+              form="customer-order-create-form"
+              className={formStyles.submitButton}
+              disabled={isPending}
+            >
+              {isPending ? "Creating…" : "Create Order"}
+            </button>
+          </>
+        }
+      />
 
-      <div className={styles.twoCol}>
-        <div className={styles.leftCard}>
-          <h2 className={styles.cardSectionTitle}>Order details</h2>
+      <div className={formStyles.grid}>
+        <div className={prim.formCardStatic}>
+          <h2 className={prim.formSectionTitle}>Order details</h2>
 
-          <div className={styles.fieldGroup}>
-            <label htmlFor="customerName" className={styles.label}>
+          <div className={prim.fieldGroup}>
+            <label htmlFor="customerName" className={prim.fieldLabel}>
               Customer name
             </label>
             <input
               id="customerName"
               {...register("customerName")}
-              className={`${styles.input} ${errors.customerName ? styles.inputError : ""}`}
+              className={`${prim.input} ${errors.customerName ? prim.inputError : ""}`}
               placeholder="e.g. Müller Ceramics GmbH"
               autoComplete="organization"
             />
             {errors.customerName && (
-              <p className={styles.fieldError}>{errors.customerName.message}</p>
+              <p className={prim.fieldError}>{errors.customerName.message}</p>
             )}
           </div>
 
-          <div className={styles.fieldGroup}>
-            <label htmlFor="dueDate" className={styles.label}>
-              Due date <span className={styles.optional}>(optional)</span>
+          <div className={prim.fieldGroup}>
+            <label htmlFor="dueDate" className={prim.fieldLabel}>
+              Due date{" "}
+              <span className={prim.fieldOptional}>(optional)</span>
             </label>
             <div className={styles.dateRow}>
               <Calendar size={16} strokeWidth={1.75} className={styles.dateIcon} aria-hidden />
@@ -126,20 +158,20 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
                 id="dueDate"
                 type="date"
                 {...register("dueDate")}
-                className={styles.input}
+                className={prim.input}
               />
             </div>
           </div>
 
-          <div className={styles.fieldGroup}>
-            <label htmlFor="notes" className={styles.label}>
-              Notes <span className={styles.optional}>(optional)</span>
+          <div className={prim.fieldGroup}>
+            <label htmlFor="notes" className={prim.fieldLabel}>
+              Notes <span className={prim.fieldOptional}>(optional)</span>
             </label>
             <textarea
               id="notes"
               {...register("notes")}
               rows={3}
-              className={styles.textarea}
+              className={prim.textarea}
               placeholder="Any special instructions…"
             />
           </div>
@@ -174,9 +206,9 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
           </div>
         </div>
 
-        <div className={styles.rightCard}>
+        <div className={prim.formCardStatic}>
           <div className={styles.linesHeader}>
-            <h2 className={styles.linesTitle}>Line items</h2>
+            <h2 className={prim.formSectionTitle}>Line items</h2>
             <p className={styles.linesHint}>
               Each line generates one Job. Select product type, quantity, and pipeline.
             </p>
@@ -186,7 +218,12 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
             const line = linesWatch?.[index];
             const product = (line?.productType ?? "").trim();
             const qty = typeof line?.quantity === "number" ? line.quantity : 0;
-            const pid = pipelineByLineId[field.id] ?? "";
+            const storedPipelineId = pipelineByLineId[field.id] ?? "";
+            const pid = effectivePipelineIdForLine(
+              pipelines,
+              product,
+              storedPipelineId,
+            );
             const productOk = product.length > 0 && qty >= 1;
             const pipelineOk = productOk && Boolean(pid);
 
@@ -197,26 +234,31 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
             return (
               <div key={field.id} className={styles.lineItemCard}>
                 <div className={styles.lineItemTop}>
-                  <span className={styles.lineIndex}>{index + 1}</span>
+                  <span className={styles.lineIndex}>
+                    <span className={styles.lineIndexLabelSpacer} aria-hidden="true">
+                      {"\u00a0"}
+                    </span>
+                    <span className={styles.lineIndexValue}>{index + 1}</span>
+                  </span>
                   <div className={styles.lineGrid}>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor={`product-${field.id}`}>
+                    <div className={`${prim.fieldGroup} ${styles.lineGridField}`}>
+                      <label className={prim.fieldLabel} htmlFor={`product-${field.id}`}>
                         Product type
                       </label>
                       <input
                         id={`product-${field.id}`}
                         {...register(`lines.${index}.productType`)}
-                        className={`${styles.input} ${errors.lines?.[index]?.productType ? styles.inputError : ""}`}
+                        className={`${prim.input} ${errors.lines?.[index]?.productType ? prim.inputError : ""}`}
                         placeholder="Type A – Hip Implant"
                       />
                       {errors.lines?.[index]?.productType && (
-                        <p className={styles.fieldError}>
+                        <p className={prim.fieldError}>
                           {errors.lines[index].productType?.message}
                         </p>
                       )}
                     </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor={`qty-${field.id}`}>
+                    <div className={`${prim.fieldGroup} ${styles.lineGridField}`}>
+                      <label className={prim.fieldLabel} htmlFor={`qty-${field.id}`}>
                         Qty
                       </label>
                       <input
@@ -224,21 +266,21 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
                         type="number"
                         min={1}
                         {...register(`lines.${index}.quantity`, { valueAsNumber: true })}
-                        className={`${styles.input} ${errors.lines?.[index]?.quantity ? styles.inputError : ""}`}
+                        className={`${prim.input} ${styles.qtyInput} ${errors.lines?.[index]?.quantity ? prim.inputError : ""}`}
                       />
                       {errors.lines?.[index]?.quantity && (
-                        <p className={styles.fieldError}>
+                        <p className={prim.fieldError}>
                           {errors.lines[index].quantity?.message}
                         </p>
                       )}
                     </div>
-                    <div className={styles.fieldGroup}>
-                      <label className={styles.label} htmlFor={`pipe-${field.id}`}>
+                    <div className={`${prim.fieldGroup} ${styles.lineGridField}`}>
+                      <label className={prim.fieldLabel} htmlFor={`pipe-${field.id}`}>
                         Pipeline
                       </label>
                       <select
                         id={`pipe-${field.id}`}
-                        className={`${styles.select} ${productOk && !pid ? styles.pipelineError : ""}`}
+                        className={`${prim.select} ${productOk && !pid ? styles.pipelineError : ""}`}
                         value={pid}
                         onChange={(e) =>
                           setPipelineByLineId((prev) => ({
@@ -256,47 +298,77 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
                       </select>
                     </div>
                     <div className={styles.lineStatusCol}>
-                      <span className={styles.label}>Status</span>
-                      {!productOk && (
-                        <span className={styles.statusMuted}>Enter product &amp; qty</span>
-                      )}
-                      {productOk && pipelineOk && (
-                        <span className={styles.statusOk}>
-                          <Check size={14} strokeWidth={2.5} aria-hidden />
-                          Pipeline selected
-                        </span>
-                      )}
-                      {productOk && !pid && (
-                        <span className={styles.statusBad}>
-                          <AlertCircle size={14} strokeWidth={2} aria-hidden />
-                          No pipeline selected
-                        </span>
-                      )}
+                      <span className={prim.fieldLabel} id={`status-label-${field.id}`}>
+                        Status
+                      </span>
+                      <div
+                        className={styles.lineStatusValue}
+                        role="status"
+                        aria-labelledby={`status-label-${field.id}`}
+                      >
+                        {!productOk && (
+                          <span className={styles.statusMuted}>Enter product &amp; qty</span>
+                        )}
+                        {productOk && pipelineOk && (
+                          <span className={`${styles.statusPill} ${styles.statusPillOk}`}>
+                            <Check size={14} strokeWidth={2.5} aria-hidden />
+                            Pipeline found
+                          </span>
+                        )}
+                        {productOk && !pid && (
+                          <span className={`${styles.statusPill} ${styles.statusPillBad}`}>
+                            <AlertCircle size={14} strokeWidth={2} aria-hidden />
+                            <span className={styles.statusPillBadText}>
+                              No pipeline —{" "}
+                              {onNavigateToPipelines ? (
+                                <button
+                                  type="button"
+                                  className={styles.statusLinkHint}
+                                  onClick={onNavigateToPipelines}
+                                  aria-label="Open Pipelines to create a pipeline"
+                                >
+                                  create one
+                                </button>
+                              ) : (
+                                <span className={styles.statusLinkFallback}>create one</span>
+                              )}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className={styles.removeCol}>
+                      <span className={styles.removeColLabel} aria-hidden="true">
+                        {"\u00a0"}
+                      </span>
+                      <div className={styles.removeColBody}>
+                        <button
+                          type="button"
+                          className={`${styles.removeBtn} ${fields.length <= 1 ? styles.removeBtnHidden : ""}`}
+                          tabIndex={fields.length <= 1 ? -1 : 0}
+                          aria-hidden={fields.length <= 1}
+                          onClick={() => {
+                            if (fields.length <= 1) return;
+                            remove(index);
+                            setPipelineByLineId((prev) => {
+                              const next = { ...prev };
+                              delete next[field.id];
+                              return next;
+                            });
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  {fields.length > 1 && (
-                    <button
-                      type="button"
-                      className={styles.removeBtn}
-                      onClick={() => {
-                        remove(index);
-                        setPipelineByLineId((prev) => {
-                          const next = { ...prev };
-                          delete next[field.id];
-                          return next;
-                        });
-                      }}
-                    >
-                      Remove
-                    </button>
-                  )}
                 </div>
               </div>
             );
           })}
 
           {errors.lines?.root && (
-            <p className={styles.fieldError}>{errors.lines.root.message}</p>
+            <p className={prim.fieldError}>{errors.lines.root.message}</p>
           )}
 
           <div className={styles.linesFooter}>
@@ -305,7 +377,7 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
               className={styles.addLine}
               onClick={() => append({ productType: "", quantity: 1 })}
             >
-              <Plus size={14} strokeWidth={2} aria-hidden />
+              <Plus size={13} strokeWidth={2} aria-hidden />
               Add line item
             </button>
             <span className={styles.totals}>
@@ -315,7 +387,7 @@ export function CustomerOrderForm({ onCreated, onCancel }: CustomerOrderFormProp
         </div>
       </div>
 
-      {error && <p className={styles.serverError}>Error: {error.message}</p>}
+      {error && <div className={prim.serverError}>Error: {error.message}</div>}
     </form>
   );
 }

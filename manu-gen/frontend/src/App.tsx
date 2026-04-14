@@ -13,7 +13,9 @@ export function App() {
   return (
     <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
       {currentPage === "dashboard" && <DashboardPage />}
-      {currentPage === "customer-orders" && <CustomerOrdersPage />}
+      {currentPage === "customer-orders" && (
+        <CustomerOrdersPage onNavigateToPipelines={() => setCurrentPage("pipelines")} />
+      )}
       {currentPage === "jobs" && <JobsPage />}
       {currentPage === "stations" && <StationsPage />}
       {currentPage === "pipelines" && <PipelinesPage />}

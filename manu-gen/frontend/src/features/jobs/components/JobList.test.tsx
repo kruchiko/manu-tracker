@@ -148,7 +148,7 @@ describe("JobList", () => {
     expect(screen.getByText("Pipeline A")).toBeInTheDocument();
   });
 
-  it("should call onViewJob when View is clicked", async () => {
+  it("should call onViewJob when the row is activated", async () => {
     const user = userEvent.setup();
     const onViewJob = vi.fn();
 
@@ -164,7 +164,8 @@ describe("JobList", () => {
       { wrapper: createWrapper() },
     );
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    const dataRow = screen.getByLabelText(/Open job JOB-0001/i);
+    await user.click(dataRow);
     expect(onViewJob).toHaveBeenCalledWith(sampleJob);
   });
 

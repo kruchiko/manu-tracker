@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { ChevronLeft } from "lucide-react";
 import { useCustomerOrder } from "../hooks/useCustomerOrder";
+import { ScreenHeader } from "../../../shared/components/ScreenHeader";
 import { useAddAllocation } from "../hooks/useAddAllocation";
 import { useRemoveAllocation } from "../hooks/useRemoveAllocation";
 import { useJobs } from "../../jobs/hooks/useJobs";
@@ -270,15 +270,34 @@ export function CustomerOrderDetail({
 
   return (
     <div className={styles.root}>
-      <div className={styles.hero}>
-        <button type="button" onClick={onBack} className={styles.heroBack}>
-          <ChevronLeft size={18} strokeWidth={2} aria-hidden />
-          Back
-        </button>
-        <p className={styles.heroMeta}>
-          {order.orderNumber} · CREATED {formatCreatedLabel(order.createdAt)}
-        </p>
-        <h1 className={styles.heroTitle}>{order.customerName}</h1>
+      <ScreenHeader
+        variant="hero"
+        backLabel="Back"
+        backAriaLabel="Back to customer orders"
+        onBack={onBack}
+        meta={
+          <>
+            {order.orderNumber} · CREATED {formatCreatedLabel(order.createdAt)}
+          </>
+        }
+        heroTopAside={
+          <div className={styles.heroKpiStrip}>
+            <div className={styles.heroKpiCell}>
+              <span className={styles.heroKpiValue}>{jobCount}</span>
+              <span className={styles.heroKpiLabel}>Jobs</span>
+            </div>
+            <div className={styles.heroKpiCell}>
+              <span className={styles.heroKpiValue}>{order.fulfillmentPct}%</span>
+              <span className={styles.heroKpiLabel}>Fulfilled</span>
+            </div>
+            <div className={styles.heroKpiCell}>
+              <span className={styles.heroKpiValue}>—</span>
+              <span className={styles.heroKpiLabel}>Delayed</span>
+            </div>
+          </div>
+        }
+        title={order.customerName}
+      >
         <div className={styles.heroMetaRow}>
           <CustomerOrderStatusBadge status={order.status} />
           {order.dueDate && (
@@ -290,21 +309,7 @@ export function CustomerOrderDetail({
             </span>
           )}
         </div>
-        <div className={styles.heroKpiStrip}>
-          <div className={styles.heroKpiCell}>
-            <span className={styles.heroKpiValue}>{jobCount}</span>
-            <span className={styles.heroKpiLabel}>Jobs</span>
-          </div>
-          <div className={styles.heroKpiCell}>
-            <span className={styles.heroKpiValue}>{order.fulfillmentPct}%</span>
-            <span className={styles.heroKpiLabel}>Fulfilled</span>
-          </div>
-          <div className={styles.heroKpiCell}>
-            <span className={styles.heroKpiValue}>—</span>
-            <span className={styles.heroKpiLabel}>Delayed</span>
-          </div>
-        </div>
-      </div>
+      </ScreenHeader>
 
       <div className={styles.section}>
         <div className={styles.sectionHead}>

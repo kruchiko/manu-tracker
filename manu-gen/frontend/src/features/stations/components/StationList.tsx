@@ -2,6 +2,7 @@ import { PackageOpen } from "lucide-react";
 import { useStations } from "../hooks/useStations";
 import { ListCard } from "../../../shared/components/ListCard";
 import { StationTable } from "./StationTable";
+import type { Station } from "../stations.types";
 import styles from "./StationList.module.css";
 
 function SkeletonRow({ hasBorder }: { hasBorder: boolean }): React.JSX.Element {
@@ -37,7 +38,11 @@ function LoadingSkeleton(): React.JSX.Element {
   );
 }
 
-export function StationList(): React.JSX.Element {
+interface StationListProps {
+  onSelectStation?: (station: Station) => void;
+}
+
+export function StationList({ onSelectStation }: StationListProps): React.JSX.Element {
   const { data, isLoading, error } = useStations();
 
   if (isLoading) {
@@ -73,7 +78,7 @@ export function StationList(): React.JSX.Element {
       count={stations.length}
       countLabel={stations.length === 1 ? "station" : "stations"}
     >
-      <StationTable stations={stations} />
+      <StationTable stations={stations} onSelectStation={onSelectStation} />
     </ListCard>
   );
 }

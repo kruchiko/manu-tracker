@@ -63,7 +63,10 @@ export function PipelineFlowPreview({
           <div className={styles.connector} />
           <button
             type="button"
-            onClick={onMore}
+            onClick={(e) => {
+              e.stopPropagation();
+              onMore?.();
+            }}
             className={styles.moreChip}
             title={`View all ${steps.length} steps`}
           >

@@ -115,12 +115,24 @@ export function JobList({
             <th className={styles.th}>Qty</th>
             <th className={styles.th}>Tray</th>
             <th className={styles.th}>Status</th>
-            <th className={`${styles.th} ${styles.thActions}`}>Actions</th>
+            <th className={`${styles.th} ${styles.thActions}`}>Print</th>
           </tr>
         </thead>
         <tbody>
           {jobs.map((job) => (
-            <tr key={job.id} className={styles.row}>
+            <tr
+              key={job.id}
+              className={`${styles.row} ${styles.rowClickable}`}
+              tabIndex={0}
+              aria-label={`Open job ${job.jobNumber}`}
+              onClick={() => onViewJob(job)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onViewJob(job);
+                }
+              }}
+            >
               <td className={`${styles.td} ${styles.mono} ${styles.jobNumber}`}>{job.jobNumber}</td>
               <td className={`${styles.td} ${styles.productCell}`}>
                 <strong className={styles.productStrong}>{job.productType}</strong>
@@ -139,17 +151,13 @@ export function JobList({
                   <button
                     type="button"
                     className={styles.printBtn}
-                    onClick={() => onPrintJob(job)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onPrintJob(job);
+                    }}
                   >
                     <Printer size={11} strokeWidth={1.5} aria-hidden />
                     Print Label
-                  </button>
-                  <button
-                    type="button"
-                    className={styles.viewBtn}
-                    onClick={() => onViewJob(job)}
-                  >
-                    View
                   </button>
                 </div>
               </td>

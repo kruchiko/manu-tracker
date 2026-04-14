@@ -15,8 +15,8 @@
 }
 
 .dot {
-  width: 18px;
-  height: 18px;
+  width: var(--pipeline-step-node-size);
+  height: var(--pipeline-step-node-size);
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;

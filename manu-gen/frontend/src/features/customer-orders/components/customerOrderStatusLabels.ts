@@ -24,3 +24,35 @@ export function orderMatchesFilter(
   if (filter === "all") return true;
   return status === filter;
 }
+
+/** Tab-aligned copy for filtered-empty body (bold segment name). */
+export function orderFilterSegmentLabel(filter: Exclude<OrderListFilter, "all">): string {
+  const tab = ORDER_FILTER_TABS.find((t) => t.id === filter);
+  return tab?.label ?? filter;
+}
+
+/** e.g. "No new orders", "No in-progress orders" — matches segment labels. */
+/** UI label for line count; `count` is the stored/API value (unchanged). */
+export function formatOrderLineCount(count: number): string {
+  const n = Number(count);
+  if (!Number.isFinite(n) || n < 0) {
+    return "0 lines";
+  }
+  const i = Math.floor(n);
+  return `${i} ${i === 1 ? "line" : "lines"}`;
+}
+
+export function orderFilteredEmptyHeadline(filter: Exclude<OrderListFilter, "all">): string {
+  switch (filter) {
+    case "open":
+      return "No new orders";
+    case "in_progress":
+      return "No in-progress orders";
+    case "fulfilled":
+      return "No completed orders";
+    default: {
+      const _exhaustive: never = filter;
+      return _exhaustive;
+    }
+  }
+}

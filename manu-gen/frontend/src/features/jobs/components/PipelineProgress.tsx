@@ -86,7 +86,7 @@ function StepNode({ resolved }: { resolved: ResolvedStep }) {
         }`}
       >
         {status === "completed" ? (
-          <Check className={styles.checkIcon} size={12} strokeWidth={3} aria-hidden />
+          <Check className={styles.checkIcon} size={10} strokeWidth={3} aria-hidden />
         ) : status === "current" ? (
           <span className={styles.pulse} />
         ) : null}

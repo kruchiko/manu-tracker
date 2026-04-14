@@ -74,6 +74,45 @@ describe("GET /stations", () => {
   });
 });
 
+describe("PUT /stations/:id", () => {
+  it("should update name and location", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Glazing", location: "A" });
+    const id = createRes.body.id;
+
+    const res = await request(app).put(`/stations/${id}`).send({ name: "Glazing Updated", location: "B" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.id).toBe(id);
+    expect(res.body.name).toBe("Glazing Updated");
+    expect(res.body.location).toBe("B");
+  });
+
+  it("should default location to empty string when omitted", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "Moulding", location: "X" });
+    const id = createRes.body.id;
+
+    const res = await request(app).put(`/stations/${id}`).send({ name: "Moulding" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.location).toBe("");
+  });
+
+  it("should return 404 when station does not exist", async () => {
+    const res = await request(app).put("/stations/nonexistent").send({ name: "Nope" });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("should return 400 when name is empty", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "OK" });
+    const id = createRes.body.id;
+
+    const res = await request(app).put(`/stations/${id}`).send({ name: "" });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("GET /stations/:id", () => {
   it("should return the station when it exists", async () => {
     const createRes = await request(app).post("/stations").send({ name: "Glazing" });

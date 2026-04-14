@@ -8,7 +8,12 @@ import styles from "./CustomerOrdersPage.module.css";
 
 type OrdersView = "list" | "create";
 
-export function CustomerOrdersPage() {
+interface CustomerOrdersPageProps {
+  /** Opens the Pipelines page (e.g. from “create one” on a line with no pipeline). */
+  onNavigateToPipelines?: () => void;
+}
+
+export function CustomerOrdersPage({ onNavigateToPipelines }: CustomerOrdersPageProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
 
@@ -29,6 +34,7 @@ export function CustomerOrdersPage() {
             setSelectedId(order.id);
           }}
           onCancel={() => setOrdersView("list")}
+          onNavigateToPipelines={onNavigateToPipelines}
         />
       </div>
     );
@@ -54,6 +60,7 @@ export function CustomerOrdersPage() {
       <CustomerOrderList
         selectedId={selectedId}
         onSelect={(order) => setSelectedId(order.id)}
+        onCreateOrder={() => setOrdersView("create")}
       />
     </div>
   );

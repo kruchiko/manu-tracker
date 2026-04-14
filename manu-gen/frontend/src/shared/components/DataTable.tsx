@@ -39,7 +39,18 @@ export function DataTable<T>({
         {rows.map((row, rowIndex) => (
           <tr
             key={getRowKey(row)}
+            tabIndex={onRowClick ? 0 : undefined}
             onClick={onRowClick ? () => onRowClick(row) : undefined}
+            onKeyDown={
+              onRowClick
+                ? (e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(row);
+                    }
+                  }
+                : undefined
+            }
             className={`${styles.row} ${onRowClick ? styles.rowClickable : ""} ${
               rowIndex < rows.length - 1 ? styles.rowBorder : ""
             }`}

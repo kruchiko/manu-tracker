@@ -5,6 +5,7 @@ import { useStations } from "../../stations/hooks/useStations";
 import { PipelineStepEditor } from "./PipelineStepEditor";
 import type { Pipeline } from "../pipelines.types";
 import type { StepFormValue } from "../pipelines.schema";
+import prim from "../../../shared/components/createFormPrimitives.module.css";
 import styles from "./NewPipelineView.module.css";
 
 interface EditPipelineViewProps {
@@ -49,24 +50,24 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
       submitLabel="Save changes"
       isSubmitting={updateSteps.isPending}
       left={
-        <div className={styles.formCard}>
-          <h2 className={styles.formTitle}>Pipeline details</h2>
+        <div className={prim.formCard}>
+          <h2 className={prim.formSectionTitle}>Pipeline details</h2>
           <div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Name</label>
-              <input className={styles.input} type="text" value={pipeline.name} readOnly />
+            <div className={prim.fieldGroup}>
+              <label className={prim.fieldLabel}>Name</label>
+              <input className={prim.input} type="text" value={pipeline.name} readOnly />
             </div>
-            <div className={styles.fieldGroup}>
-              <label className={styles.fieldLabel}>Product type</label>
-              <input className={styles.input} type="text" value={pipeline.productType} readOnly />
+            <div className={prim.fieldGroup}>
+              <label className={prim.fieldLabel}>Product type</label>
+              <input className={prim.input} type="text" value={pipeline.productType} readOnly />
             </div>
             {pipeline.description && (
-              <div className={styles.fieldGroup}>
-                <label className={styles.fieldLabel}>
-                  Description
-                  <span className={styles.fieldOptional}>optional</span>
+              <div className={prim.fieldGroup}>
+                <label className={prim.fieldLabel}>
+                  Description{" "}
+                  <span className={prim.fieldOptional}>(optional)</span>
                 </label>
-                <input className={styles.input} type="text" value={pipeline.description} readOnly />
+                <input className={prim.input} type="text" value={pipeline.description} readOnly />
               </div>
             )}
           </div>
@@ -92,7 +93,7 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
           </div>
 
           {updateSteps.error && (
-            <div className={styles.serverError}>{updateSteps.error.message}</div>
+            <div className={prim.serverError}>{updateSteps.error.message}</div>
           )}
         </div>
       }
