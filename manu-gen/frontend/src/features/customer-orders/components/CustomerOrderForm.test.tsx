@@ -8,6 +8,13 @@ vi.mock("../hooks/useCreateCustomerOrder", () => ({
   useCreateCustomerOrder: vi.fn(),
 }));
 
+vi.mock("../../pipelines/hooks/usePipelines", () => ({
+  usePipelines: () => ({
+    data: [],
+    isLoading: false,
+  }),
+}));
+
 import { useCreateCustomerOrder } from "../hooks/useCreateCustomerOrder";
 
 describe("CustomerOrderForm", () => {
@@ -22,12 +29,12 @@ describe("CustomerOrderForm", () => {
       error: null,
     } as unknown as ReturnType<typeof useCreateCustomerOrder>);
 
-    render(<CustomerOrderForm onCreated={vi.fn()} />, {
+    render(<CustomerOrderForm onCreated={vi.fn()} onCancel={vi.fn()} />, {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByLabelText("Customer Name")).toBeInTheDocument();
-    expect(screen.getByText("Line Items")).toBeInTheDocument();
+    expect(screen.getByLabelText("Customer name")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Line items" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Create Order" })).toBeInTheDocument();
   });
 
@@ -39,7 +46,7 @@ describe("CustomerOrderForm", () => {
     } as unknown as ReturnType<typeof useCreateCustomerOrder>);
 
     const user = userEvent.setup();
-    render(<CustomerOrderForm onCreated={vi.fn()} />, {
+    render(<CustomerOrderForm onCreated={vi.fn()} onCancel={vi.fn()} />, {
       wrapper: createWrapper(),
     });
 
@@ -57,7 +64,7 @@ describe("CustomerOrderForm", () => {
       error: new Error("Duplicate order"),
     } as unknown as ReturnType<typeof useCreateCustomerOrder>);
 
-    render(<CustomerOrderForm onCreated={vi.fn()} />, {
+    render(<CustomerOrderForm onCreated={vi.fn()} onCancel={vi.fn()} />, {
       wrapper: createWrapper(),
     });
 
@@ -71,7 +78,7 @@ describe("CustomerOrderForm", () => {
       error: null,
     } as unknown as ReturnType<typeof useCreateCustomerOrder>);
 
-    render(<CustomerOrderForm onCreated={vi.fn()} />, {
+    render(<CustomerOrderForm onCreated={vi.fn()} onCancel={vi.fn()} />, {
       wrapper: createWrapper(),
     });
 
@@ -86,13 +93,13 @@ describe("CustomerOrderForm", () => {
     } as unknown as ReturnType<typeof useCreateCustomerOrder>);
 
     const user = userEvent.setup();
-    render(<CustomerOrderForm onCreated={vi.fn()} />, {
+    render(<CustomerOrderForm onCreated={vi.fn()} onCancel={vi.fn()} />, {
       wrapper: createWrapper(),
     });
 
-    await user.click(screen.getByText("+ Add line"));
+    await user.click(screen.getByRole("button", { name: /Add line item/i }));
 
-    const productInputs = screen.getAllByPlaceholderText("Product type");
+    const productInputs = screen.getAllByLabelText(/^Product type$/i);
     expect(productInputs).toHaveLength(2);
   });
 });

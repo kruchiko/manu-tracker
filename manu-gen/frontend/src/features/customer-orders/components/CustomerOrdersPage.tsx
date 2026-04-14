@@ -6,43 +6,55 @@ import { CustomerOrderList } from "./CustomerOrderList";
 import { CustomerOrderDetail } from "./CustomerOrderDetail";
 import styles from "./CustomerOrdersPage.module.css";
 
+type OrdersView = "list" | "create";
+
 export function CustomerOrdersPage() {
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [ordersView, setOrdersView] = useState<OrdersView>("list");
 
-  function scrollToNewForm() {
-    document.getElementById("new-customer-order-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (selectedId !== null) {
+    return (
+      <div className={styles.page}>
+        <CustomerOrderDetail orderId={selectedId} onBack={() => setSelectedId(null)} />
+      </div>
+    );
+  }
+
+  if (ordersView === "create") {
+    return (
+      <div className={styles.page}>
+        <CustomerOrderForm
+          onCreated={(order) => {
+            setOrdersView("list");
+            setSelectedId(order.id);
+          }}
+          onCancel={() => setOrdersView("list")}
+        />
+      </div>
+    );
   }
 
   return (
     <div className={styles.page}>
-      {selectedId !== null ? (
-        <CustomerOrderDetail orderId={selectedId} onBack={() => setSelectedId(null)} />
-      ) : (
-        <>
-          <PageHeader
-            title="Customer Orders"
-            subtitle="Create and manage orders — jobs are auto-generated per line item on save"
-            action={
-              <button type="button" className={styles.newOrderBtn} onClick={scrollToNewForm}>
-                <Plus size={13} strokeWidth={2} aria-hidden />
-                New Order
-              </button>
-            }
-          />
+      <PageHeader
+        title="Customer Orders"
+        subtitle="Create and manage orders — jobs are auto-generated per line item on save"
+        action={
+          <button
+            type="button"
+            className={styles.newOrderBtn}
+            onClick={() => setOrdersView("create")}
+          >
+            <Plus size={13} strokeWidth={2} aria-hidden />
+            New Order
+          </button>
+        }
+      />
 
-          <div id="new-customer-order-form" className={styles.formSection}>
-            <div className={styles.formCard}>
-              <h2 className={styles.formTitle}>New Customer Order</h2>
-              <CustomerOrderForm onCreated={(order) => setSelectedId(order.id)} />
-            </div>
-          </div>
-
-          <CustomerOrderList
-            selectedId={selectedId}
-            onSelect={(order) => setSelectedId(order.id)}
-          />
-        </>
-      )}
+      <CustomerOrderList
+        selectedId={selectedId}
+        onSelect={(order) => setSelectedId(order.id)}
+      />
     </div>
   );
 }

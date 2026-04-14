@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { ChevronLeft } from "lucide-react";
 import { useCustomerOrder } from "../hooks/useCustomerOrder";
 import { useAddAllocation } from "../hooks/useAddAllocation";
@@ -12,6 +12,28 @@ interface CustomerOrderDetailProps {
   orderId: number;
   onBack: () => void;
   readonly?: boolean;
+}
+
+function formatCreatedLabel(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d
+    .toLocaleDateString(undefined, {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    })
+    .toUpperCase();
+}
+
+function dueIsPast(due: string | null): boolean {
+  if (!due) return false;
+  const end = new Date(due);
+  if (Number.isNaN(end.getTime())) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  return end < today;
 }
 
 function AllocationRow({
@@ -226,49 +248,71 @@ export function CustomerOrderDetail({
 }: CustomerOrderDetailProps) {
   const { data: order, isLoading, error } = useCustomerOrder(orderId);
 
+  const jobCount = useMemo(() => {
+    if (!order) return 0;
+    const ids = new Set<number>();
+    for (const line of order.lines) {
+      for (const a of line.allocations) ids.add(a.jobId);
+    }
+    return ids.size > 0 ? ids.size : order.lines.length;
+  }, [order]);
+
+  const totalPcs = useMemo(() => {
+    if (!order) return 0;
+    return order.lines.reduce((s, l) => s + l.quantity, 0);
+  }, [order]);
+
   if (isLoading) return <p className={styles.loading}>Loading...</p>;
   if (error) return <p className={styles.error}>Error: {error.message}</p>;
   if (!order) return null;
 
+  const overdue = dueIsPast(order.dueDate);
+
   return (
     <div className={styles.root}>
-      <div className={styles.header}>
-        <button type="button" onClick={onBack} className={styles.backBtn}>
-          <ChevronLeft size={16} strokeWidth={2} aria-hidden />
+      <div className={styles.hero}>
+        <button type="button" onClick={onBack} className={styles.heroBack}>
+          <ChevronLeft size={18} strokeWidth={2} aria-hidden />
           Back
         </button>
-        <h3 className={styles.title}>
-          {order.orderNumber} — {order.customerName}
-        </h3>
-      </div>
-
-      <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Status</p>
-          <div className={styles.kpiStatusSlot}>
-            <CustomerOrderStatusBadge status={order.status} />
+        <p className={styles.heroMeta}>
+          {order.orderNumber} · CREATED {formatCreatedLabel(order.createdAt)}
+        </p>
+        <h1 className={styles.heroTitle}>{order.customerName}</h1>
+        <div className={styles.heroMetaRow}>
+          <CustomerOrderStatusBadge status={order.status} />
+          {order.dueDate && (
+            <span
+              className={`${styles.heroDue} ${overdue ? styles.heroDueWarn : ""}`}
+            >
+              Due {order.dueDate}
+              {overdue ? " · overdue" : ""}
+            </span>
+          )}
+        </div>
+        <div className={styles.heroKpiStrip}>
+          <div className={styles.heroKpiCell}>
+            <span className={styles.heroKpiValue}>{jobCount}</span>
+            <span className={styles.heroKpiLabel}>Jobs</span>
           </div>
-        </div>
-        <div className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Allocated</p>
-          <p className={styles.kpiValue}>{order.allocationPct}%</p>
-        </div>
-        <div className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Fulfilled</p>
-          <p className={styles.kpiValue}>{order.fulfillmentPct}%</p>
-        </div>
-        <div className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Lines</p>
-          <p className={styles.kpiValue}>{order.lines.length}</p>
-        </div>
-        <div className={styles.kpiCard}>
-          <p className={styles.kpiLabel}>Due</p>
-          <p className={styles.kpiValue}>{order.dueDate ?? "—"}</p>
+          <div className={styles.heroKpiCell}>
+            <span className={styles.heroKpiValue}>{order.fulfillmentPct}%</span>
+            <span className={styles.heroKpiLabel}>Fulfilled</span>
+          </div>
+          <div className={styles.heroKpiCell}>
+            <span className={styles.heroKpiValue}>—</span>
+            <span className={styles.heroKpiLabel}>Delayed</span>
+          </div>
         </div>
       </div>
 
       <div className={styles.section}>
-        <h4 className={styles.sectionTitle}>Order Summary</h4>
+        <div className={styles.sectionHead}>
+          <h4 className={styles.sectionTitle}>Order summary</h4>
+          <span className={styles.sectionMeta}>
+            {order.lines.length} lines · {totalPcs} pcs total
+          </span>
+        </div>
         <table className={styles.table}>
           <thead>
             <tr className={styles.thRow}>
@@ -334,7 +378,7 @@ export function CustomerOrderDetail({
 
       {order.notes && (
         <div className={styles.section}>
-          <h4 className={styles.sectionTitle}>Notes</h4>
+          <h4 className={styles.linesHeading}>Notes</h4>
           <p className={styles.notesText}>{order.notes}</p>
         </div>
       )}
