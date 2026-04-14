@@ -8,9 +8,72 @@
   color: var(--status-late);
 }
 
-.empty {
-  font-size: var(--text-sm);
+/* Empty list — same visual pattern as PipelineList / StationList (icon + copy), inside All Jobs card. */
+.emptyState {
+  padding: var(--space-12) var(--space-6);
+  text-align: center;
+}
+
+.emptyIcon {
+  display: block;
+  margin: 0 auto var(--space-4);
   color: var(--text-muted);
+}
+
+.emptyHeading {
+  margin: 0 0 var(--space-2);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.emptyText {
+  margin: 0 auto;
+  max-width: 36em;
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.emptyStrong {
+  font-weight: var(--weight-semibold);
+  color: var(--text-secondary);
+}
+
+.emptyActions {
+  margin-top: var(--space-6);
+}
+
+.emptyCta {
+  display: inline-flex;
+  height: var(--btn-height);
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  padding: 0 var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-fast) var(--easing-default),
+    border-color var(--duration-fast) var(--easing-default),
+    color var(--duration-fast) var(--easing-default);
+}
+
+.emptyCta:hover {
+  background: var(--surface-hover);
+  border-color: var(--text-muted);
+  color: var(--text);
+}
+
+.emptyCta:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .scroll {
