@@ -46,4 +46,36 @@ describe("JobsListView", () => {
     expect(allBtn).toHaveAttribute("aria-pressed", "false");
     expect(pendingBtn).toHaveAttribute("aria-pressed", "true");
   });
+
+  it("shows an em dash instead of a count while data is loading", () => {
+    render(
+      <JobsListView
+        jobs={undefined}
+        jobsLoading
+        jobsError={null}
+        onCreateManual={vi.fn()}
+        onViewJob={vi.fn()}
+        onPrintJob={vi.fn()}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    expect(screen.getByText("— jobs")).toBeInTheDocument();
+  });
+
+  it("shows the numeric count once data is available", () => {
+    render(
+      <JobsListView
+        jobs={[sampleJob]}
+        jobsLoading={false}
+        jobsError={null}
+        onCreateManual={vi.fn()}
+        onViewJob={vi.fn()}
+        onPrintJob={vi.fn()}
+      />,
+      { wrapper: createWrapper() },
+    );
+
+    expect(screen.getByText("1 job")).toBeInTheDocument();
+  });
 });

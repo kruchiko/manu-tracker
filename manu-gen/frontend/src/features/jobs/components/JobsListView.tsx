@@ -5,13 +5,15 @@ import type { Job } from "../jobs.types";
 import { JobList, type JobsTableFilter } from "./JobList";
 import { JobsFallbackNote } from "./JobsFallbackNote";
 import { filterJobsByTab } from "./jobListFilters";
+import { JOB_STATUS_FILTER_ORDER, JOB_STATUS_LABEL } from "./jobStatusLabels";
 import styles from "./JobsListView.module.css";
 
 const TABS: { id: JobsTableFilter; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "pending", label: "Pending" },
-  { id: "in_progress", label: "In Progress" },
-  { id: "completed", label: "Completed" },
+  ...JOB_STATUS_FILTER_ORDER.map((id) => ({
+    id,
+    label: JOB_STATUS_LABEL[id],
+  })),
 ];
 
 interface JobsListViewProps {
@@ -33,9 +35,11 @@ export function JobsListView({
 }: JobsListViewProps) {
   const [filter, setFilter] = useState<JobsTableFilter>("all");
 
+  const hasData = jobs !== undefined;
+
   const filteredCount = useMemo(
-    () => filterJobsByTab(jobs ?? [], filter).length,
-    [jobs, filter],
+    () => (hasData ? filterJobsByTab(jobs, filter).length : null),
+    [hasData, jobs, filter],
   );
 
   return (
@@ -72,7 +76,9 @@ export function JobsListView({
                 ))}
               </div>
               <span className={styles.count}>
-                {filteredCount} {filteredCount === 1 ? "job" : "jobs"}
+                {filteredCount !== null
+                  ? `${filteredCount} ${filteredCount === 1 ? "job" : "jobs"}`
+                  : "— jobs"}
               </span>
             </div>
           </div>
@@ -84,6 +90,7 @@ export function JobsListView({
             filter={filter}
             onViewJob={onViewJob}
             onPrintJob={onPrintJob}
+            onShowAllJobs={() => setFilter("all")}
           />
         </div>
       </div>

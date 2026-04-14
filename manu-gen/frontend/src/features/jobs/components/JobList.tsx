@@ -1,6 +1,7 @@
-import { Printer } from "lucide-react";
-import type { Job } from "../jobs.types";
+import { PackageOpen, Printer } from "lucide-react";
+import type { Job, JobStatus } from "../jobs.types";
 import { filterJobsByTab, type JobsTableFilter } from "./jobListFilters";
+import { filteredEmptyHeadline, JOB_STATUS_LABEL } from "./jobStatusLabels";
 import { JobStatusBadge } from "./JobStatusBadge";
 import styles from "./JobList.module.css";
 
@@ -19,6 +20,8 @@ interface JobListProps {
   filter: JobsTableFilter;
   onViewJob: (job: Job) => void;
   onPrintJob: (job: Job) => void;
+  /** Resets the status filter to “All” when the tab hides every job. Jobs list page should pass this. */
+  onShowAllJobs?: () => void;
 }
 
 export function JobList({
@@ -28,26 +31,75 @@ export function JobList({
   filter,
   onViewJob,
   onPrintJob,
+  onShowAllJobs,
 }: JobListProps) {
-  if (jobsLoading) {
-    return <p className={styles.loading}>Loading jobs…</p>;
-  }
-
+  /**
+   * Error takes priority over loading so the user sees the failure, even during a refetch
+   * (TanStack Query can keep a stale error while `isFetching` is true). This is intentional:
+   * we prefer showing "Failed" + retry over masking errors behind a spinner.
+   */
   if (jobsError) {
     return (
       <p className={styles.error}>Failed to load jobs: {jobsErrorMessage(jobsError)}</p>
     );
   }
 
-  const jobs = filterJobsByTab(jobsData ?? [], filter);
-
-  if ((jobsData ?? []).length === 0) {
-    return <p className={styles.empty}>No jobs yet. Create one with Create Job manually.</p>;
+  if (jobsLoading || jobsData === undefined) {
+    return <p className={styles.loading}>Loading jobs…</p>;
   }
 
-  if (jobs.length === 0) {
+  const jobs = filterJobsByTab(jobsData, filter);
+
+  if (jobsData.length === 0) {
     return (
-      <p className={styles.empty}>No jobs match this filter. Try another tab or clear the filter.</p>
+      <div className={styles.emptyState} role="status" aria-live="polite">
+        <PackageOpen size={40} strokeWidth={1.5} className={styles.emptyIcon} aria-hidden />
+        <h2 className={styles.emptyHeading}>No jobs yet</h2>
+        <p className={styles.emptyText}>
+          Jobs are created when you save a customer order—one per line item. Use{" "}
+          <strong className={styles.emptyStrong}>Create Job manually</strong> in the page header only
+          if you need a job outside the order flow.
+        </p>
+      </div>
+    );
+  }
+
+  /** Jobs exist, but the status tab excludes every row (`filter` cannot be `"all"` here). */
+  if (jobs.length === 0) {
+    if (filter === "all") {
+      if (import.meta.env.DEV) {
+        console.error(
+          "[JobList] Invariant violated: empty filtered list with filter “all” while jobs exist.",
+        );
+      }
+      return (
+        <p className={styles.error} role="alert">
+          Unable to display the job list. Try refreshing the page.
+        </p>
+      );
+    }
+
+    const status: JobStatus = filter;
+    const totalJobs = jobsData.length;
+    const statusLabel = JOB_STATUS_LABEL[status];
+
+    return (
+      <div className={styles.emptyState} role="status" aria-live="polite">
+        <PackageOpen size={40} strokeWidth={1.5} className={styles.emptyIcon} aria-hidden />
+        <h2 className={styles.emptyHeading}>{filteredEmptyHeadline(status)}</h2>
+        <p className={styles.emptyText}>
+          You have {totalJobs} {totalJobs === 1 ? "job" : "jobs"}, but none are{" "}
+          <strong className={styles.emptyStrong}>{statusLabel}</strong> right now. Try another tab
+          {onShowAllJobs ? ", or view all jobs." : "."}
+        </p>
+        {onShowAllJobs && (
+          <div className={styles.emptyActions}>
+            <button type="button" className={styles.emptyCta} onClick={onShowAllJobs}>
+              View all jobs
+            </button>
+          </div>
+        )}
+      </div>
     );
   }
 
