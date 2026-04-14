@@ -1,0 +1,58 @@
+.page {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.formSection {
+  margin-bottom: var(--space-8);
+}
+
+.formCard {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--card-padding);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 1024px) {
+  .formSection {
+    max-width: min(100%, 720px);
+  }
+}
+
+.formTitle {
+  margin-bottom: var(--space-5);
+  font-family: var(--font-heading);
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--text);
+}
+
+/* Primary CTA — matches StationsPage `.newButton`. */
+.newOrderBtn {
+  display: inline-flex;
+  height: var(--btn-height);
+  align-items: center;
+  gap: var(--space-2);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  padding: 0 var(--space-4);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-on-dark);
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--easing-default);
+}
+
+.newOrderBtn:hover {
+  background: var(--accent-dark);
+}
+
+.newOrderBtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

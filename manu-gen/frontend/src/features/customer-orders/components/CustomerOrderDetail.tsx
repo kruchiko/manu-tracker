@@ -1,23 +1,12 @@
 import { useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import { useCustomerOrder } from "../hooks/useCustomerOrder";
 import { useAddAllocation } from "../hooks/useAddAllocation";
 import { useRemoveAllocation } from "../hooks/useRemoveAllocation";
 import { useJobs } from "../../jobs/hooks/useJobs";
 import type { OrderLine } from "../customer-orders.types";
-
-const STATUS_LABELS: Record<string, string> = {
-  open: "Open",
-  in_progress: "In Progress",
-  fulfilled: "Fulfilled",
-  cancelled: "Cancelled",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  open: "bg-blue-100 text-blue-800",
-  in_progress: "bg-yellow-100 text-yellow-800",
-  fulfilled: "bg-green-100 text-green-800",
-  cancelled: "bg-gray-100 text-gray-600",
-};
+import { CustomerOrderStatusBadge } from "./CustomerOrderStatusBadge";
+import styles from "./CustomerOrderDetail.module.css";
 
 interface CustomerOrderDetailProps {
   orderId: number;
@@ -35,16 +24,16 @@ function AllocationRow({
   removing: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between rounded border bg-gray-50 px-3 py-2">
-      <div className="flex items-center gap-3">
-        <span className="font-mono text-xs text-gray-700">{alloc.jobNumber}</span>
-        <span className="text-sm text-gray-500">{alloc.quantity} items</span>
+    <div className={styles.allocRow}>
+      <div>
+        <span className={styles.allocMono}>{alloc.jobNumber}</span>
+        <span className={styles.allocQty}> · {alloc.quantity} items</span>
       </div>
       <button
         type="button"
         onClick={onRemove}
         disabled={removing}
-        className="text-xs text-red-600 hover:text-red-800 disabled:opacity-50"
+        className={styles.removeLink}
       >
         Remove
       </button>
@@ -56,32 +45,28 @@ function LineHeader({ line }: { line: OrderLine }) {
   const pct =
     line.quantity > 0
       ? Math.round(
-          (Math.min(line.allocatedQuantity, line.quantity) / line.quantity) *
-            100,
+          (Math.min(line.allocatedQuantity, line.quantity) / line.quantity) * 100,
         )
       : 0;
 
   return (
-    <div className="mb-3 flex items-center justify-between">
+    <div className={styles.lineHeader}>
       <div>
-        <h5 className="font-medium text-gray-900">{line.productType}</h5>
-        <p className="text-xs text-gray-500">
+        <h5 className={styles.lineTitle}>{line.productType}</h5>
+        <p className={styles.lineMeta}>
           {line.allocatedQuantity} / {line.quantity} allocated
           {line.fulfilledQuantity > 0 && (
-            <span className="ml-2 text-green-700">
+            <span className={styles.fulfilled}>
               ({line.fulfilledQuantity} fulfilled)
             </span>
           )}
         </p>
       </div>
-      <div className="flex items-center gap-2">
-        <div className="h-2 w-20 rounded-full bg-gray-200">
-          <div
-            className="h-2 rounded-full bg-blue-600 transition-all"
-            style={{ width: `${pct}%` }}
-          />
+      <div className={styles.barRow}>
+        <div className={styles.barTrack}>
+          <div className={styles.barFill} style={{ width: `${pct}%` }} />
         </div>
-        <span className="text-xs font-medium text-gray-600">{pct}%</span>
+        <span className={styles.pct}>{pct}%</span>
       </div>
     </div>
   );
@@ -89,20 +74,20 @@ function LineHeader({ line }: { line: OrderLine }) {
 
 function ReadOnlyLineCard({ line }: { line: OrderLine }) {
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
+    <div className={styles.lineCard}>
       <LineHeader line={line} />
       {line.allocations.length > 0 ? (
-        <div className="flex flex-col gap-1.5">
-          <p className="text-xs font-medium uppercase text-gray-400">Linked Jobs</p>
+        <div>
+          <p className={styles.linkedLabel}>Linked Jobs</p>
           {line.allocations.map((alloc) => (
-            <div key={alloc.id} className="flex items-center gap-3 rounded border bg-gray-50 px-3 py-2">
-              <span className="font-mono text-xs text-gray-700">{alloc.jobNumber}</span>
-              <span className="text-sm text-gray-500">{alloc.quantity} items</span>
+            <div key={alloc.id} className={styles.allocRow}>
+              <span className={styles.allocMono}>{alloc.jobNumber}</span>
+              <span className={styles.allocQty}>{alloc.quantity} items</span>
             </div>
           ))}
         </div>
       ) : (
-        <p className="text-xs italic text-gray-400">No jobs allocated yet</p>
+        <p className={styles.emptyAlloc}>No jobs allocated yet</p>
       )}
     </div>
   );
@@ -119,12 +104,18 @@ function EditableLineCard({ line }: { line: OrderLine }) {
   const allocatedJobIds = new Set(line.allocations.map((a) => a.jobId));
   const availableJobs = (jobs ?? [])
     .map((j) => ({ ...j, available: j.quantity - j.allocatedQuantity }))
-    .filter((j) => j.productType === line.productType && !allocatedJobIds.has(j.id) && j.available > 0);
+    .filter(
+      (j) =>
+        j.productType === line.productType &&
+        !allocatedJobIds.has(j.id) &&
+        j.available > 0,
+    );
 
   const selectedJob = availableJobs.find((j) => j.id === Number(jobId));
   const maxQty = selectedJob?.available ?? 0;
   const remaining = Math.max(line.quantity - line.allocatedQuantity, 0);
-  const effectiveMax = maxQty > 0 ? Math.min(maxQty, remaining > 0 ? remaining : maxQty) : 0;
+  const effectiveMax =
+    maxQty > 0 ? Math.min(maxQty, remaining > 0 ? remaining : maxQty) : 0;
 
   function handleAdd() {
     setError(null);
@@ -141,38 +132,50 @@ function EditableLineCard({ line }: { line: OrderLine }) {
     addAlloc(
       { jobId: parsedJobId, orderLineId: line.id, quantity: parsedQty },
       {
-        onSuccess: () => { setJobId(""); setQty(""); },
+        onSuccess: () => {
+          setJobId("");
+          setQty("");
+        },
         onError: (err) => setError(err.message),
       },
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white p-4 shadow-sm">
+    <div className={styles.lineCard}>
       <LineHeader line={line} />
 
       {line.allocations.length > 0 && (
-        <div className="mb-3 flex flex-col gap-1.5">
-          <p className="text-xs font-medium uppercase text-gray-400">Linked Jobs</p>
+        <div>
+          <p className={styles.linkedLabel}>Linked Jobs</p>
           {line.allocations.map((alloc) => (
             <AllocationRow
               key={alloc.id}
               alloc={alloc}
               removing={removing}
-              onRemove={() => removeAlloc({ jobId: alloc.jobId, allocationId: alloc.id })}
+              onRemove={() =>
+                removeAlloc({ jobId: alloc.jobId, allocationId: alloc.id })
+              }
             />
           ))}
         </div>
       )}
 
-      <div className="mt-2">
-        <div className="flex items-end gap-2">
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-500">Job</label>
+      <div className={styles.allocForm}>
+        <div className={styles.allocFormRow}>
+          <div className={styles.fieldCol}>
+            <label className={styles.fieldLabel} htmlFor={`job-${line.id}`}>
+              Job
+            </label>
             <select
+              id={`job-${line.id}`}
               value={jobId}
-              onChange={(e) => { setJobId(e.target.value); setQty(""); setError(null); }}
-              className="rounded border px-2 py-1.5 text-sm"
+              onChange={(e) => {
+                setJobId(e.target.value);
+                setQty("");
+                setError(null);
+              }}
+              className={styles.select}
             >
               <option value="">Select job...</option>
               {availableJobs.map((j) => (
@@ -182,17 +185,21 @@ function EditableLineCard({ line }: { line: OrderLine }) {
               ))}
             </select>
           </div>
-          <div className="flex flex-col gap-1">
-            <label className="text-xs font-medium text-gray-500">
-              Qty {effectiveMax > 0 && <span className="text-gray-400">(max {effectiveMax})</span>}
+          <div className={styles.fieldCol}>
+            <label className={styles.fieldLabel} htmlFor={`qty-${line.id}`}>
+              Qty{" "}
+              {effectiveMax > 0 && (
+                <span className={styles.optional}>(max {effectiveMax})</span>
+              )}
             </label>
             <input
+              id={`qty-${line.id}`}
               type="number"
               min={1}
               max={effectiveMax}
               value={qty}
               onChange={(e) => setQty(e.target.value)}
-              className="w-20 rounded border px-2 py-1.5 text-sm"
+              className={styles.inputNum}
               placeholder="0"
               disabled={!selectedJob}
             />
@@ -201,12 +208,12 @@ function EditableLineCard({ line }: { line: OrderLine }) {
             type="button"
             onClick={handleAdd}
             disabled={adding || !selectedJob}
-            className="rounded bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className={styles.allocateBtn}
           >
             {adding ? "Adding..." : "Allocate"}
           </button>
         </div>
-        {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+        {error && <p className={styles.formError}>{error}</p>}
       </div>
     </div>
   );
@@ -219,103 +226,90 @@ export function CustomerOrderDetail({
 }: CustomerOrderDetailProps) {
   const { data: order, isLoading, error } = useCustomerOrder(orderId);
 
-  if (isLoading) return <p className="text-sm text-gray-500">Loading...</p>;
-  if (error)
-    return <p className="text-sm text-red-600">Error: {error.message}</p>;
+  if (isLoading) return <p className={styles.loading}>Loading...</p>;
+  if (error) return <p className={styles.error}>Error: {error.message}</p>;
   if (!order) return null;
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
-        <button
-          type="button"
-          onClick={onBack}
-          className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-        >
-          <svg
-            className="h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <button type="button" onClick={onBack} className={styles.backBtn}>
+          <ChevronLeft size={16} strokeWidth={2} aria-hidden />
           Back
         </button>
-        <h3 className="text-lg font-semibold">
-          {order.orderNumber} &mdash; {order.customerName}
+        <h3 className={styles.title}>
+          {order.orderNumber} — {order.customerName}
         </h3>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-gray-500">Status</p>
-          <p className="mt-1">
-            <span
-              className={`inline-block rounded-full px-2 py-0.5 text-sm font-semibold ${STATUS_COLORS[order.status] ?? ""}`}
-            >
-              {STATUS_LABELS[order.status] ?? order.status}
-            </span>
-          </p>
+      <div className={styles.kpiGrid}>
+        <div className={styles.kpiCard}>
+          <p className={styles.kpiLabel}>Status</p>
+          <div className={styles.kpiStatusSlot}>
+            <CustomerOrderStatusBadge status={order.status} />
+          </div>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-gray-500">
-            Allocated
-          </p>
-          <p className="mt-1 text-lg font-semibold">{order.allocationPct}%</p>
+        <div className={styles.kpiCard}>
+          <p className={styles.kpiLabel}>Allocated</p>
+          <p className={styles.kpiValue}>{order.allocationPct}%</p>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-gray-500">
-            Fulfilled
-          </p>
-          <p className="mt-1 text-lg font-semibold">{order.fulfillmentPct}%</p>
+        <div className={styles.kpiCard}>
+          <p className={styles.kpiLabel}>Fulfilled</p>
+          <p className={styles.kpiValue}>{order.fulfillmentPct}%</p>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-gray-500">Lines</p>
-          <p className="mt-1 text-lg font-semibold">{order.lines.length}</p>
+        <div className={styles.kpiCard}>
+          <p className={styles.kpiLabel}>Lines</p>
+          <p className={styles.kpiValue}>{order.lines.length}</p>
         </div>
-        <div className="rounded-lg border bg-white p-4 shadow-sm">
-          <p className="text-xs font-medium uppercase text-gray-500">Due</p>
-          <p className="mt-1 text-lg font-semibold">
-            {order.dueDate ?? "---"}
-          </p>
+        <div className={styles.kpiCard}>
+          <p className={styles.kpiLabel}>Due</p>
+          <p className={styles.kpiValue}>{order.dueDate ?? "—"}</p>
         </div>
       </div>
 
-      <div className="rounded-lg border bg-white p-6 shadow-sm">
-        <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">
-          Order Summary
-        </h4>
-        <table className="w-full text-sm">
+      <div className={styles.section}>
+        <h4 className={styles.sectionTitle}>Order Summary</h4>
+        <table className={styles.table}>
           <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="py-2 pr-4 font-medium">Product Type</th>
-              <th className="py-2 pr-4 font-medium text-right">Requested</th>
-              <th className="py-2 pr-4 font-medium text-right">Allocated</th>
-              <th className="py-2 pr-4 font-medium text-right">Fulfilled</th>
-              <th className="py-2 font-medium text-right">Progress</th>
+            <tr className={styles.thRow}>
+              <th className={styles.th}>Product Type</th>
+              <th className={`${styles.th} ${styles.thRight}`}>Requested</th>
+              <th className={`${styles.th} ${styles.thRight}`}>Allocated</th>
+              <th className={`${styles.th} ${styles.thRight}`}>Fulfilled</th>
+              <th className={`${styles.th} ${styles.thRight}`}>Progress</th>
             </tr>
           </thead>
           <tbody>
             {order.lines.map((line) => {
-              const pct = line.quantity > 0 ? Math.round((Math.min(line.fulfilledQuantity, line.quantity) / line.quantity) * 100) : 0;
+              const pct =
+                line.quantity > 0
+                  ? Math.round(
+                      (Math.min(line.fulfilledQuantity, line.quantity) /
+                        line.quantity) *
+                        100,
+                    )
+                  : 0;
               return (
-                <tr key={line.id} className="border-b last:border-0">
-                  <td className="py-2 pr-4 font-medium text-gray-900">{line.productType}</td>
-                  <td className="py-2 pr-4 text-right">{line.quantity}</td>
-                  <td className="py-2 pr-4 text-right">{line.allocatedQuantity}</td>
-                  <td className="py-2 pr-4 text-right">{line.fulfilledQuantity}</td>
-                  <td className="py-2 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <div className="h-2 w-16 overflow-hidden rounded-full bg-gray-200">
-                        <div className="h-2 rounded-full bg-green-500 transition-all" style={{ width: `${pct}%` }} />
+                <tr key={line.id} className={styles.tr}>
+                  <td className={`${styles.td} ${styles.tdStrong}`}>
+                    {line.productType}
+                  </td>
+                  <td className={`${styles.td} ${styles.tdRight}`}>{line.quantity}</td>
+                  <td className={`${styles.td} ${styles.tdRight}`}>
+                    {line.allocatedQuantity}
+                  </td>
+                  <td className={`${styles.td} ${styles.tdRight}`}>
+                    {line.fulfilledQuantity}
+                  </td>
+                  <td className={`${styles.td} ${styles.progressCell}`}>
+                    <div className={styles.progressWrap}>
+                      <div className={styles.barTrack}>
+                        <div
+                          className={styles.barFill}
+                          style={{ width: `${pct}%` }}
+                        />
                       </div>
-                      <span className="w-10 text-xs text-gray-500">{pct}%</span>
+                      <span className={styles.pct}>{pct}%</span>
                     </div>
                   </td>
                 </tr>
@@ -326,10 +320,8 @@ export function CustomerOrderDetail({
       </div>
 
       <div>
-        <h4 className="mb-3 text-sm font-semibold uppercase text-gray-500">
-          Line Items &amp; Job Allocations
-        </h4>
-        <div className="flex flex-col gap-4">
+        <h4 className={styles.linesHeading}>Line Items &amp; Job Allocations</h4>
+        <div className={styles.linesStack}>
           {order.lines.map((line) =>
             isReadonly ? (
               <ReadOnlyLineCard key={line.id} line={line} />
@@ -341,11 +333,9 @@ export function CustomerOrderDetail({
       </div>
 
       {order.notes && (
-        <div className="rounded-lg border bg-white p-6 shadow-sm">
-          <h4 className="mb-2 text-sm font-semibold uppercase text-gray-500">
-            Notes
-          </h4>
-          <p className="text-sm text-gray-700">{order.notes}</p>
+        <div className={styles.section}>
+          <h4 className={styles.sectionTitle}>Notes</h4>
+          <p className={styles.notesText}>{order.notes}</p>
         </div>
       )}
     </div>

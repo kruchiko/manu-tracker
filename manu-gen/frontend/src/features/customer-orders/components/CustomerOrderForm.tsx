@@ -6,6 +6,7 @@ import {
 } from "../customer-orders.schema";
 import { useCreateCustomerOrder } from "../hooks/useCreateCustomerOrder";
 import type { CustomerOrder } from "../customer-orders.types";
+import styles from "./CustomerOrderForm.module.css";
 
 interface CustomerOrderFormProps {
   onCreated: (order: CustomerOrder) => void;
@@ -41,69 +42,74 @@ export function CustomerOrderForm({ onCreated }: CustomerOrderFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <label htmlFor="customerName" className="text-sm font-medium">
+    <form onSubmit={handleSubmit(onSubmit)} className={styles.form} noValidate>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="customerName" className={styles.label}>
           Customer Name
         </label>
         <input
           id="customerName"
           {...register("customerName")}
-          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={`${styles.input} ${errors.customerName ? styles.inputError : ""}`}
           placeholder="Acme Corp"
+          autoComplete="organization"
         />
         {errors.customerName && (
-          <p className="text-xs text-red-600">{errors.customerName.message}</p>
+          <p className={styles.fieldError}>{errors.customerName.message}</p>
         )}
       </div>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="dueDate" className="text-sm font-medium">
-          Due Date <span className="text-gray-400">(optional)</span>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="dueDate" className={styles.label}>
+          Due Date <span className={styles.optional}>(optional)</span>
         </label>
         <input
           id="dueDate"
           type="date"
           {...register("dueDate")}
-          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={styles.input}
         />
       </div>
 
-      <fieldset className="flex flex-col gap-3">
-        <legend className="text-sm font-medium">Line Items</legend>
+      <fieldset className={styles.fieldset}>
+        <legend className={styles.legend}>Line Items</legend>
         {fields.map((field, index) => (
-          <div key={field.id} className="flex items-start gap-2">
-            <div className="flex flex-1 flex-col gap-1">
-              <input
-                {...register(`lines.${index}.productType`)}
-                className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Product type"
-              />
-              {errors.lines?.[index]?.productType && (
-                <p className="text-xs text-red-600">
-                  {errors.lines[index].productType?.message}
-                </p>
-              )}
-            </div>
-            <div className="flex w-24 flex-col gap-1">
-              <input
-                type="number"
-                min={1}
-                {...register(`lines.${index}.quantity`, { valueAsNumber: true })}
-                className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Qty"
-              />
-              {errors.lines?.[index]?.quantity && (
-                <p className="text-xs text-red-600">
-                  {errors.lines[index].quantity?.message}
-                </p>
-              )}
+          <div key={field.id} className={styles.lineRow}>
+            <div className={styles.lineFields}>
+              <div className={styles.lineField}>
+                <input
+                  {...register(`lines.${index}.productType`)}
+                  className={`${styles.input} ${errors.lines?.[index]?.productType ? styles.inputError : ""}`}
+                  placeholder="Product type"
+                  aria-label={`Line ${index + 1} product type`}
+                />
+                {errors.lines?.[index]?.productType && (
+                  <p className={styles.fieldError}>
+                    {errors.lines[index].productType?.message}
+                  </p>
+                )}
+              </div>
+              <div className={styles.qtyField}>
+                <input
+                  type="number"
+                  min={1}
+                  {...register(`lines.${index}.quantity`, { valueAsNumber: true })}
+                  className={`${styles.input} ${errors.lines?.[index]?.quantity ? styles.inputError : ""}`}
+                  placeholder="Qty"
+                  aria-label={`Line ${index + 1} quantity`}
+                />
+                {errors.lines?.[index]?.quantity && (
+                  <p className={styles.fieldError}>
+                    {errors.lines[index].quantity?.message}
+                  </p>
+                )}
+              </div>
             </div>
             {fields.length > 1 && (
               <button
                 type="button"
                 onClick={() => remove(index)}
-                className="mt-1 rounded px-2 py-1.5 text-sm text-red-600 hover:bg-red-50"
+                className={styles.removeBtn}
               >
                 Remove
               </button>
@@ -111,39 +117,33 @@ export function CustomerOrderForm({ onCreated }: CustomerOrderFormProps) {
           </div>
         ))}
         {errors.lines?.root && (
-          <p className="text-xs text-red-600">{errors.lines.root.message}</p>
+          <p className={styles.fieldError}>{errors.lines.root.message}</p>
         )}
         <button
           type="button"
           onClick={() => append({ productType: "", quantity: 1 })}
-          className="self-start rounded border border-dashed border-gray-300 px-3 py-1.5 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-800"
+          className={styles.addLine}
         >
           + Add line
         </button>
       </fieldset>
 
-      <div className="flex flex-col gap-1">
-        <label htmlFor="notes" className="text-sm font-medium">
-          Notes <span className="text-gray-400">(optional)</span>
+      <div className={styles.fieldGroup}>
+        <label htmlFor="notes" className={styles.label}>
+          Notes <span className={styles.optional}>(optional)</span>
         </label>
         <textarea
           id="notes"
           {...register("notes")}
           rows={2}
-          className="rounded border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className={styles.textarea}
           placeholder="Any special instructions..."
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600">Error: {error.message}</p>
-      )}
+      {error && <p className={styles.serverError}>Error: {error.message}</p>}
 
-      <button
-        type="submit"
-        disabled={isPending}
-        className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
-      >
+      <button type="submit" disabled={isPending} className={styles.submit}>
         {isPending ? "Creating..." : "Create Order"}
       </button>
     </form>
