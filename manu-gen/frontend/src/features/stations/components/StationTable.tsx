@@ -6,6 +6,7 @@ import styles from "./StationTable.module.css";
 
 interface StationTableProps {
   stations: Station[];
+  onSelectStation?: (station: Station) => void;
 }
 
 function SlotCapacityCell({ count }: { count: number }): React.JSX.Element {
@@ -98,13 +99,6 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
     <div className={styles.actionsRow}>
       <button
         type="button"
-        onClick={(e) => e.stopPropagation()}
-        className={`${styles.btnGhost} ${styles.btnMuted}`}
-      >
-        Edit
-      </button>
-      <button
-        type="button"
         onClick={(e) => {
           e.stopPropagation();
           handleDelete();
@@ -118,7 +112,7 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
   );
 }
 
-export function StationTable({ stations }: StationTableProps): React.JSX.Element {
+export function StationTable({ stations, onSelectStation }: StationTableProps): React.JSX.Element {
   const columns: Column<Station>[] = [
     {
       key: "name",
@@ -159,6 +153,7 @@ export function StationTable({ stations }: StationTableProps): React.JSX.Element
       columns={columns}
       rows={stations}
       getRowKey={(station) => station.id}
+      onRowClick={onSelectStation}
     />
   );
 }

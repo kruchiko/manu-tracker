@@ -79,9 +79,10 @@
 }
 
 .ring {
+  box-sizing: border-box;
   display: flex;
-  height: 24px;
-  width: 24px;
+  width: var(--pipeline-step-node-size);
+  height: var(--pipeline-step-node-size);
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
@@ -103,8 +104,8 @@
 
 .pulse {
   display: block;
-  height: 8px;
-  width: 8px;
+  height: 6px;
+  width: 6px;
   border-radius: 9999px;
   background: var(--text-on-dark);
   animation: pulse 1.5s ease-in-out infinite;
@@ -144,7 +145,8 @@
 }
 
 .connector {
-  margin-top: 12px;
+  /* Align with PipelineFlowPreview connector vs 18px nodes */
+  margin-top: 8px;
   height: 2px;
   flex: 1;
   border-radius: 1px;

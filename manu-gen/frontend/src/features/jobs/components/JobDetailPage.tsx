@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronLeft, Printer } from "lucide-react";
+import { Printer } from "lucide-react";
 import { ConfirmDialog } from "../../../shared/components/ConfirmDialog";
+import { ScreenHeader } from "../../../shared/components/ScreenHeader";
+import screenHeaderStyles from "../../../shared/components/ScreenHeader.module.css";
 import { usePipeline } from "../../pipelines/hooks/usePipeline";
 import { JobJourneyChart } from "./JobJourneyChart";
 import { JobHistory } from "./JobHistory";
@@ -77,26 +79,31 @@ export function JobDetailPage({
         onCancel={() => setConfirmDeleteOpen(false)}
       />
 
-      <header className={`${styles.header} ${styles.hideOnPrint}`}>
-        <button type="button" onClick={onBack} className={styles.backBtn}>
-          <ChevronLeft size={14} strokeWidth={1.5} aria-hidden />
-          Jobs
-        </button>
-        <div className={styles.headerCenter}>
-          <p className={styles.identity}>
-            {job.jobNumber}
-            <span className={styles.identitySep}> · </span>
-            {job.trayCode}
-          </p>
-          <h1 className={styles.title}>{job.productType}</h1>
-        </div>
-        <div className={styles.headerActions}>
-          <button type="button" className={styles.printHeaderBtn} onClick={() => window.print()}>
+      <ScreenHeader
+        className={styles.hideOnPrint}
+        layout="detailToolbar"
+        variant="detailBand"
+        backLabel="Jobs"
+        onBack={onBack}
+        title={
+          <div className={styles.toolbarIdentity}>
+            <p className={styles.toolbarEyebrow}>
+              {job.jobNumber} · {job.trayCode}
+            </p>
+            <h1 className={styles.toolbarProductTitle}>{job.productType}</h1>
+          </div>
+        }
+        actions={
+          <button
+            type="button"
+            className={`${screenHeaderStyles.ghostToolbarBtn} ${styles.toolbarPrintBtn}`}
+            onClick={() => window.print()}
+          >
             <Printer size={11} strokeWidth={1.5} aria-hidden />
             Print Label
           </button>
-        </div>
-      </header>
+        }
+      />
 
       <div className={styles.grid}>
         <div className={styles.leftCol}>
@@ -133,7 +140,7 @@ export function JobDetailPage({
             </div>
             <div className={styles.metaCell}>
               <div className={styles.metaLabel}>Tray code</div>
-              <div className={`${styles.metaValue} ${styles.metaMono}`}>{job.trayCode}</div>
+              <div className={styles.metaValueMono}>{job.trayCode}</div>
             </div>
           </div>
 
@@ -148,11 +155,7 @@ export function JobDetailPage({
             <div className={`${styles.qrCardBody} ${styles.qrCardBodyPrint}`}>
               <QrPreview job={job} variant="inline" onReady={handleQrReady} />
               <p className={`${styles.qrMeta} ${styles.hideOnPrint}`}>
-                {job.jobNumber} · {job.productType}
-                <br />
-                Pipeline: {job.pipelineName}
-                <br />
-                Order: None — manual job
+                Attach this label to the physical tray before the first station scan.
               </p>
             </div>
           </div>

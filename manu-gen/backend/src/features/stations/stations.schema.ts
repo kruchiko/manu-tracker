@@ -13,6 +13,13 @@ export const assignEyeSchema = z.object({
 
 export type AssignEyeInput = z.infer<typeof assignEyeSchema>;
 
+export const updateStationSchema = z.object({
+  name: z.string().min(1, "name is required"),
+  location: z.string().optional().default(""),
+});
+
+export type UpdateStationInput = z.infer<typeof updateStationSchema>;
+
 export interface StationRow {
   id: string;
   name: string;

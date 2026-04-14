@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { createWrapper } from "../../../test-utils";
 import { CustomerOrderList } from "./CustomerOrderList";
@@ -39,7 +40,7 @@ describe("CustomerOrderList", () => {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByText(/Loading/)).toBeInTheDocument();
+    expect(screen.getByText(/Loading orders/)).toBeInTheDocument();
   });
 
   it("should show error state", () => {
@@ -53,12 +54,45 @@ describe("CustomerOrderList", () => {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByText(/Error:/)).toBeInTheDocument();
+    expect(screen.getByText(/Failed to load customer orders/)).toBeInTheDocument();
   });
 
-  it("should show empty state", () => {
+  it("should show empty state with icon, heading, and optional create CTA", async () => {
     vi.mocked(useCustomerOrders).mockReturnValue({
       data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useCustomerOrders>);
+
+    const onCreate = vi.fn();
+    render(
+      <CustomerOrderList selectedId={null} onSelect={vi.fn()} onCreateOrder={onCreate} />,
+      {
+        wrapper: createWrapper(),
+      },
+    );
+
+    expect(screen.getByRole("heading", { name: /No customer orders yet/i })).toBeInTheDocument();
+    expect(screen.getByRole("status")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "New Order" }));
+    expect(onCreate).toHaveBeenCalledTimes(1);
+  });
+
+  it("should show filtered empty state and reset filter from CTA", async () => {
+    vi.mocked(useCustomerOrders).mockReturnValue({
+      data: [
+        {
+          id: 1,
+          orderNumber: "CO-0001",
+          customerName: "Acme Corp",
+          status: "fulfilled",
+          dueDate: "2026-06-15",
+          createdAt: "2026-01-01T00:00:00.000Z",
+          lineCount: 1,
+          allocationPct: 100,
+          fulfillmentPct: 100,
+        },
+      ],
       isLoading: false,
       error: null,
     } as unknown as ReturnType<typeof useCustomerOrders>);
@@ -67,7 +101,11 @@ describe("CustomerOrderList", () => {
       wrapper: createWrapper(),
     });
 
-    expect(screen.getByText(/No customer orders/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "New" }));
+    expect(screen.getByRole("heading", { name: /No new orders/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "View all orders" }));
+    expect(screen.getByText("CO-0001")).toBeInTheDocument();
   });
 
   it("should render order rows", () => {
@@ -83,6 +121,7 @@ describe("CustomerOrderList", () => {
 
     expect(screen.getByText("CO-0001")).toBeInTheDocument();
     expect(screen.getByText("Acme Corp")).toBeInTheDocument();
+    expect(screen.getByText("2 lines")).toBeInTheDocument();
     expect(screen.getByText("Open")).toBeInTheDocument();
     expect(screen.getByText("50%")).toBeInTheDocument();
   });

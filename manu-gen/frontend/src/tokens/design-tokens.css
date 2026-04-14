@@ -144,6 +144,9 @@
   --modal-width:         460px;
   --min-viewport-width:  1024px;
 
+  /* Pipeline step nodes — same outer diameter on Pipeline list preview and job progress */
+  --pipeline-step-node-size: 18px;
+
   /* ── 12. Border Radius ── */
   --radius-sm:   4px;
   --radius-md:   6px;

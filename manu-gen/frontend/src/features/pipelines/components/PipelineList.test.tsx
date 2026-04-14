@@ -114,7 +114,7 @@ describe("PipelineList", () => {
     expect(screen.getByText("Actions")).toBeInTheDocument();
   });
 
-  it("should call onEdit when Edit is clicked", async () => {
+  it("should call onEdit when a data row is activated", async () => {
     const user = userEvent.setup();
     const onEdit = vi.fn();
     vi.mocked(usePipelines).mockReturnValue({
@@ -125,7 +125,7 @@ describe("PipelineList", () => {
 
     render(<PipelineList onEdit={onEdit} />, { wrapper: createWrapper() });
 
-    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.click(screen.getAllByRole("row")[1]);
     expect(onEdit).toHaveBeenCalledWith(samplePipeline);
   });
 

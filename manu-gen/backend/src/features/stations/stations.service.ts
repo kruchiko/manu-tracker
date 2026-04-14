@@ -1,7 +1,13 @@
 import crypto from "node:crypto";
 import db from "../../db.js";
 import { AppError } from "../../shared/errors/app-error.js";
-import type { CreateStationInput, AssignEyeInput, Station, StationRow } from "./stations.schema.js";
+import type {
+  CreateStationInput,
+  AssignEyeInput,
+  UpdateStationInput,
+  Station,
+  StationRow,
+} from "./stations.schema.js";
 import { toStation } from "./stations.schema.js";
 
 const STATION_COLUMNS = "id, name, location, eye_id";
@@ -25,6 +31,10 @@ const stmtClearEyeById = db.prepare(`UPDATE stations SET eye_id = NULL WHERE id 
 const stmtAssignEye = db.prepare(`UPDATE stations SET eye_id = @eye_id WHERE id = @id`);
 
 const stmtDeleteStation = db.prepare(`DELETE FROM stations WHERE id = ?`);
+
+const stmtUpdateStation = db.prepare(
+  `UPDATE stations SET name = @name, location = @location WHERE id = @id`,
+);
 
 function generateId(): string {
   return `station-${crypto.randomUUID().slice(0, 8)}`;
@@ -52,6 +62,19 @@ export function getStationByEyeId(eyeId: string): Station | null {
 export function listStations({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}): Station[] {
   const rows = stmtList.all(limit, offset) as StationRow[];
   return rows.map(toStation);
+}
+
+export function updateStation(stationId: string, input: UpdateStationInput): Station {
+  const row = stmtGetById.get(stationId) as StationRow | undefined;
+  if (!row) {
+    throw new AppError(404, `Station with id ${stationId} not found`);
+  }
+  stmtUpdateStation.run({
+    id: stationId,
+    name: input.name,
+    location: input.location ?? "",
+  });
+  return getStationById(stationId);
 }
 
 const assignEyeTx = db.transaction((stationId: string, input: AssignEyeInput): void => {

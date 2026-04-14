@@ -154,7 +154,7 @@ describe("JobsPage", () => {
     expect(screen.getByRole("heading", { name: "Jobs" })).toBeInTheDocument();
   });
 
-  it("navigates to job detail when View is clicked and back to the list", async () => {
+  it("navigates to job detail when the list row is activated and back to the list", async () => {
     const user = userEvent.setup();
     vi.mocked(useJobs).mockReturnValue({
       data: [listJob],
@@ -164,11 +164,11 @@ describe("JobsPage", () => {
 
     render(<JobsPage />, { wrapper: createWrapper() });
 
-    await user.click(screen.getByRole("button", { name: "View" }));
+    await user.click(screen.getByLabelText(/Open job JOB-0007/i));
 
     expect(screen.getByRole("heading", { name: "Gadget" })).toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Jobs" }));
+    await user.click(screen.getByRole("button", { name: /Back to Jobs/i }));
 
     expect(screen.getByRole("heading", { name: "Jobs" })).toBeInTheDocument();
   });

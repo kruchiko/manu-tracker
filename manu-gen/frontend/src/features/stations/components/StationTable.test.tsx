@@ -115,6 +115,21 @@ describe("StationTable", () => {
     expect(screen.getByRole("button", { name: "OK" })).toBeInTheDocument();
   });
 
+  it("should call onSelectStation when a row is clicked", async () => {
+    const onSelectStation = vi.fn();
+    mockDeleteHook();
+
+    const user = userEvent.setup();
+    render(
+      <StationTable stations={stations} onSelectStation={onSelectStation} />,
+      { wrapper: createWrapper() },
+    );
+
+    await user.click(screen.getByText("Polishing"));
+
+    expect(onSelectStation).toHaveBeenCalledWith(stations[0]);
+  });
+
   it("should dismiss error when OK is clicked", async () => {
     const mutate = vi.fn().mockImplementation((_id, options) => {
       options.onError(new Error("Cannot delete"));
