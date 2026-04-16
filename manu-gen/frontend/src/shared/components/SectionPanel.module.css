@@ -1,14 +1,22 @@
-.boardCard {
+/* Bordered surface for dashboard-style sections (charts, job board, KPI tiles). */
+.surface {
   display: flex;
   flex-direction: column;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--surface);
-  padding: var(--space-6);
   box-shadow: var(--shadow-sm);
 }
 
-.boardTitle {
+.paddingSection {
+  padding: var(--space-6);
+}
+
+.paddingCompact {
+  padding: var(--space-4);
+}
+
+.sectionTitle {
   margin: 0 0 var(--space-4);
   font-family: var(--font-heading);
   font-size: var(--text-md);

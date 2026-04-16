@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { PageHeader } from "../../../shared/components/PageHeader";
+import pageShell from "../../../shared/components/PageShell.module.css";
 import { JobDetailView } from "./JobDetailView";
 import { LiveOperationsOverview } from "./LiveOperationsOverview";
 import { useJobBoard } from "../hooks/useJobBoard";
@@ -18,7 +19,7 @@ export function LiveOperationsPage() {
   }, [selectedJobId]);
 
   return (
-    <div ref={containerRef} className={styles.root}>
+    <div ref={containerRef} className={`${pageShell.column} ${pageShell.overflowHidden}`}>
       <PageHeader
         title="Live Operations"
         subtitle="Floor KPIs, live job board, and job drill-in"

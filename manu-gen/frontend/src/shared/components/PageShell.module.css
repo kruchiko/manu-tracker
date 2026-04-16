@@ -1,0 +1,10 @@
+/* Shared vertical page column used under Layout main. */
+.column {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+}
+
+.overflowHidden {
+  overflow: hidden;
+}

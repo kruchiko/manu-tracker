@@ -1,8 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
+import sectionPanel from "../../../shared/components/SectionPanel.module.css";
 import { JobBoard } from "./JobBoard";
 import { KpiCards } from "./KpiCards";
 import type { BoardJob } from "../dashboard.types";
-import styles from "./LiveOperationsOverview.module.css";
 
 interface LiveOperationsOverviewProps {
   selectedJobId: number | null;
@@ -19,8 +19,13 @@ export function LiveOperationsOverview({
     <>
       <KpiCards />
 
-      <div className={styles.boardCard}>
-        <h3 className={styles.boardTitle}>Live Job Board</h3>
+      <div
+        className={`${sectionPanel.surface} ${sectionPanel.paddingSection}`}
+        aria-labelledby="live-job-board-heading"
+      >
+        <h2 id="live-job-board-heading" className={sectionPanel.sectionTitle}>
+          Live Job Board
+        </h2>
         <JobBoard
           selectedJobId={selectedJobId}
           onSelectJob={onSelectJob}
