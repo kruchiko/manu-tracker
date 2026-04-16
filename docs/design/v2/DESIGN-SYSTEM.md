@@ -483,7 +483,7 @@ ManuTracker •
 | Context | Pattern | Details |
 |---------|---------|---------|
 | Initial page load | Skeleton screen | Sidebar renders immediately. Content area shows skeleton placeholders matching the page layout (KPI cards, table rows). |
-| Open job from Live Operations board | Navigate to Jobs | Opens **Job Detail**; **Back** label **Live Operations** returns to the floor view. From **Jobs** list, **Back** label **Jobs** returns to the list. |
+| Open job from Live Operations board | Navigate to Jobs | Opens **Job Detail** on the Jobs route; sidebar highlights **Live Operations** until back. **Back** label **Live Operations** returns to the floor. From **Jobs** list, sidebar highlights **Jobs**; **Back** label **Jobs** returns to the list. |
 | Navigation between pages | Instant route change | Sidebar active state updates immediately. Content area shows skeleton until data loads. |
 
 ### Data Loading

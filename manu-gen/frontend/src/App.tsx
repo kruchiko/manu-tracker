@@ -34,8 +34,17 @@ export function App() {
     navigateToPage("live-operations");
   }, [navigateToPage]);
 
+  const sidebarActivePage =
+    currentPage === "jobs" && jobDetailReturnTo === "live-operations"
+      ? ("live-operations" as const)
+      : undefined;
+
   return (
-    <Layout currentPage={currentPage} onNavigate={navigateToPage}>
+    <Layout
+      currentPage={currentPage}
+      sidebarActivePage={sidebarActivePage}
+      onNavigate={navigateToPage}
+    >
       {currentPage === "customer-orders" && (
         <CustomerOrdersPage onNavigateToPipelines={() => navigateToPage("pipelines")} />
       )}
