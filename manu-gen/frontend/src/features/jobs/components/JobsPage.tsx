@@ -13,11 +13,20 @@ export interface JobsPageProps {
   initialDetailJobId?: number | null;
   /** Called after opening detail from `initialDetailJobId` so the parent can clear pending state. */
   onInitialDetailConsumed?: () => void;
+  /**
+   * When `'live-operations'`, Job Detail back exits to Live Operations instead of the Jobs list.
+   * Omit or `null` when the user opened detail from within Jobs (list / create / print).
+   */
+  jobDetailReturnTo?: "live-operations" | null;
+  /** Invoked when leaving detail back to Live Operations (sidebar + return target are updated in App). */
+  onExitJobDetailToLiveOperations?: () => void;
 }
 
 export function JobsPage({
   initialDetailJobId = null,
   onInitialDetailConsumed,
+  jobDetailReturnTo = null,
+  onExitJobDetailToLiveOperations,
 }: JobsPageProps = {}) {
   const [view, setView] = useState<JobsView>("list");
   const [detailJob, setDetailJob] = useState<Job | null>(null);
@@ -71,11 +80,19 @@ export function JobsPage({
   }
 
   if (view === "detail" && detailJob !== null) {
+    const backToLiveOps = jobDetailReturnTo === "live-operations";
+
     return (
       <JobDetailPage
         key={`${detailJob.id}-${printAfterDetailLoad}`}
         job={detailJob}
+        backLabel={backToLiveOps ? "Live Operations" : "Jobs"}
+        backAriaLabel={backToLiveOps ? "Back to Live Operations" : undefined}
         onBack={() => {
+          if (backToLiveOps) {
+            onExitJobDetailToLiveOperations?.();
+            return;
+          }
           setDetailJob(null);
           setPrintAfterDetailLoad(false);
           setView("list");

@@ -10,21 +10,36 @@ import { PipelinesPage } from "./features/pipelines/components/PipelinesPage";
 export function App() {
   const [currentPage, setCurrentPage] = useState<PageId>("stations");
   const [jobsBootstrapJobId, setJobsBootstrapJobId] = useState<number | null>(null);
+  /** When opening a job from Live Operations, detail back returns there instead of the Jobs list. */
+  const [jobDetailReturnTo, setJobDetailReturnTo] = useState<"live-operations" | null>(null);
+
+  const navigateToPage = useCallback((page: PageId) => {
+    if (page !== "jobs") {
+      setJobsBootstrapJobId(null);
+      setJobDetailReturnTo(null);
+    }
+    setCurrentPage(page);
+  }, []);
 
   const handleJobsBootstrapConsumed = useCallback(() => {
     setJobsBootstrapJobId(null);
   }, []);
 
+  const handleExitJobDetailToLiveOperations = useCallback(() => {
+    navigateToPage("live-operations");
+  }, [navigateToPage]);
+
   return (
-    <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
+    <Layout currentPage={currentPage} onNavigate={navigateToPage}>
       {currentPage === "customer-orders" && (
-        <CustomerOrdersPage onNavigateToPipelines={() => setCurrentPage("pipelines")} />
+        <CustomerOrdersPage onNavigateToPipelines={() => navigateToPage("pipelines")} />
       )}
       {currentPage === "live-operations" && (
         <LiveOperationsPage
           onOpenJobDetail={(jobId) => {
             setJobsBootstrapJobId(jobId);
-            setCurrentPage("jobs");
+            setJobDetailReturnTo("live-operations");
+            navigateToPage("jobs");
           }}
         />
       )}
@@ -32,6 +47,8 @@ export function App() {
         <JobsPage
           initialDetailJobId={jobsBootstrapJobId}
           onInitialDetailConsumed={handleJobsBootstrapConsumed}
+          jobDetailReturnTo={jobDetailReturnTo}
+          onExitJobDetailToLiveOperations={handleExitJobDetailToLiveOperations}
         />
       )}
       {currentPage === "stations" && <StationsPage />}

@@ -19,6 +19,10 @@ import styles from "./JobDetailPage.module.css";
 interface JobDetailPageProps {
   job: Job;
   onBack: () => void;
+  /** Visible label after the chevron (e.g. "Jobs" or "Live Operations"). */
+  backLabel?: string;
+  /** Overrides default `aria-label` ("Back to {backLabel}"). */
+  backAriaLabel?: string;
   /** When true, open the print dialog after the QR preview is ready (e.g. Print Label from list). */
   printAfterMount?: boolean;
   onConsumedPrintIntent?: () => void;
@@ -27,6 +31,8 @@ interface JobDetailPageProps {
 export function JobDetailPage({
   job,
   onBack,
+  backLabel = "Jobs",
+  backAriaLabel,
   printAfterMount = false,
   onConsumedPrintIntent,
 }: JobDetailPageProps) {
@@ -83,7 +89,8 @@ export function JobDetailPage({
         className={styles.hideOnPrint}
         layout="detailToolbar"
         variant="detailBand"
-        backLabel="Jobs"
+        backLabel={backLabel}
+        backAriaLabel={backAriaLabel}
         onBack={onBack}
         title={
           <div className={styles.toolbarIdentity}>
