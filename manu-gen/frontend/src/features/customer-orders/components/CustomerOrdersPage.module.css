@@ -52,6 +52,29 @@
   color: var(--status-ok);
 }
 
+.metricsError {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-strong);
+  background: var(--status-late-bg);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--status-late);
+}
+
+.metricSkeleton {
+  min-height: 4.5rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  animation: overviewPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes overviewPulse {
+  50% {
+    opacity: 0.65;
+  }
+}
+
 .formSection {
   margin-bottom: var(--space-8);
 }

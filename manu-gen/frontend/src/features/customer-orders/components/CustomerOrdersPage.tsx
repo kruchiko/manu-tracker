@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { PageHeader } from "../../../shared/components/PageHeader";
+import { useOrderMetrics } from "../../../shared/hooks/useOrderMetrics";
 import { CustomerOrderForm } from "./CustomerOrderForm";
 import { CustomerOrderList } from "./CustomerOrderList";
 import { CustomerOrderDetail } from "./CustomerOrderDetail";
-import { useOrderMetrics } from "../../dashboard/hooks/useOrderMetrics";
 import styles from "./CustomerOrdersPage.module.css";
 
 type OrdersView = "list" | "create";
@@ -17,7 +17,14 @@ interface CustomerOrdersPageProps {
 export function CustomerOrdersPage({ onNavigateToPipelines }: CustomerOrdersPageProps) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
-  const { data: orderMetrics } = useOrderMetrics();
+
+  const orderMetricsEnabled = selectedId === null && ordersView === "list";
+  const {
+    data: orderMetrics,
+    isLoading: orderMetricsLoading,
+    isError: orderMetricsIsError,
+    error: orderMetricsError,
+  } = useOrderMetrics({ enabled: orderMetricsEnabled });
 
   if (selectedId !== null) {
     return (
@@ -60,7 +67,21 @@ export function CustomerOrdersPage({ onNavigateToPipelines }: CustomerOrdersPage
       />
 
       <div className={styles.overview}>
-        {orderMetrics && (
+        {orderMetricsIsError && (
+          <div className={styles.metricsError} role="alert">
+            Could not load order metrics: {orderMetricsError?.message ?? "Unknown error"}
+          </div>
+        )}
+
+        {!orderMetricsIsError && orderMetricsLoading && (
+          <div className={styles.metricsGrid} aria-busy="true" aria-label="Loading order metrics">
+            <div className={styles.metricSkeleton} />
+            <div className={styles.metricSkeleton} />
+            <div className={styles.metricSkeleton} />
+          </div>
+        )}
+
+        {!orderMetricsIsError && !orderMetricsLoading && orderMetrics && (
           <div className={styles.metricsGrid}>
             <div className={styles.metricCard}>
               <p className={styles.metricLabel}>Total Orders</p>
