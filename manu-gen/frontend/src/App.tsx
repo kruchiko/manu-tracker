@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Layout } from "./shared/components/Layout";
 import type { PageId } from "./shared/components/Sidebar";
 import { DashboardPage } from "./features/dashboard/components/DashboardPage";
+import { LiveOperationsPage } from "./features/dashboard/components/LiveOperationsPage";
 import { JobsPage } from "./features/jobs/components/JobsPage";
 import { CustomerOrdersPage } from "./features/customer-orders/components/CustomerOrdersPage";
 import { StationsPage } from "./features/stations/components/StationsPage";
@@ -16,6 +17,7 @@ export function App() {
       {currentPage === "customer-orders" && (
         <CustomerOrdersPage onNavigateToPipelines={() => setCurrentPage("pipelines")} />
       )}
+      {currentPage === "live-operations" && <LiveOperationsPage />}
       {currentPage === "jobs" && <JobsPage />}
       {currentPage === "stations" && <StationsPage />}
       {currentPage === "pipelines" && <PipelinesPage />}

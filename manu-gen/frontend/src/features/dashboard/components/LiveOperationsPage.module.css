@@ -1,0 +1,21 @@
+.root {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.drillShell {
+  position: relative;
+}
+
+.carousel {
+  display: flex;
+  width: 200%;
+  transition: transform 300ms ease-in-out;
+}
+
+.pane {
+  width: 50%;
+  flex-shrink: 0;
+}

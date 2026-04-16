@@ -28,6 +28,9 @@ test-results/
 .vscode/
 .idea/
 
+# Local planning docs (keep out of version control)
+docs/plans/
+
 # OS
 .DS_Store
 Thumbs.db

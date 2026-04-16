@@ -3,6 +3,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutDashboard,
   ClipboardList,
+  Activity,
   Layers,
   GitBranch,
   Radio,
@@ -14,6 +15,7 @@ import styles from "./Sidebar.module.css";
 export type PageId =
   | "dashboard"
   | "customer-orders"
+  | "live-operations"
   | "jobs"
   | "stations"
   | "pipelines";
@@ -35,6 +37,7 @@ const NAV_SECTIONS: NavSection[] = [
     items: [
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
       { id: "customer-orders", label: "Customer Orders", icon: ClipboardList },
+      { id: "live-operations", label: "Live Operations", icon: Activity },
       { id: "jobs", label: "Jobs", icon: Layers },
     ],
   },

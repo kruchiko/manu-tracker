@@ -402,6 +402,7 @@ MANUTRACKER (logo + dot row)
 OPERATIONS
   Dashboard
   Customer Orders
+  Live Operations
   Jobs
 
 CONFIGURATION
@@ -448,7 +449,8 @@ ManuTracker •
 
 | Screen ID | Description | Status |
 |-----------|-------------|--------|
-| `dashboard` | KPI cards + Customer Orders tab + Internal Operations tab | Designed |
+| `dashboard` | Stage duration analytics + station activity charts | Designed |
+| `live-operations` | Floor KPIs + live job board + job drill-in | Designed |
 | `order` | Order Detail — header, summary, job pipeline flows, timeline | Designed |
 | `orders` | Customer Orders list — CRUD, filter tabs | Designed |
 | `new-order` | New Order builder — line items with pipeline validation | Designed |
@@ -483,7 +485,7 @@ ManuTracker •
 | Context | Pattern | Details |
 |---------|---------|---------|
 | Initial page load | Skeleton screen | Sidebar renders immediately. Content area shows skeleton placeholders matching the page layout (KPI cards, table rows). |
-| Tab switch (Dashboard) | Instant swap | Tab content switches immediately. If new tab data is not yet loaded, show skeleton inside the tab body only. |
+| In-page drill (e.g. Live Operations job detail) | Slide panel | Overview hides or slides; load skeleton in the drill panel until data is ready. |
 | Navigation between pages | Instant route change | Sidebar active state updates immediately. Content area shows skeleton until data loads. |
 
 ### Data Loading
@@ -531,6 +533,7 @@ ManuTracker •
 |---------|------|-------------|
 | Dashboard | `LayoutDashboard` | `layout-dashboard` |
 | Customer Orders | `ClipboardList` | `clipboard-list` |
+| Live Operations | `Activity` | `activity` |
 | Jobs | `Layers` | `layers` |
 | Pipelines | `GitBranch` | `git-branch` |
 | Stations | `Radio` | `radio` |
