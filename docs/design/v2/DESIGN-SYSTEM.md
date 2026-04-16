@@ -400,8 +400,8 @@ MANUTRACKER (logo + dot row)
 ─────────────────────────────
 
 OPERATIONS
-  Customer Orders
   Live Operations
+  Customer Orders
   Jobs
 
 CONFIGURATION

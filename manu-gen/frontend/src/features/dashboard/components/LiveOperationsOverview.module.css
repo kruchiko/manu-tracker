@@ -1,0 +1,6 @@
+/* Vertical rhythm between KPI row, job board, and chart sections */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}

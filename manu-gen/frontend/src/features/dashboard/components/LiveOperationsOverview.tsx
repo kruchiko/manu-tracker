@@ -4,6 +4,7 @@ import { DashboardCharts } from "./DashboardCharts";
 import { JobBoard } from "./JobBoard";
 import { KpiCards } from "./KpiCards";
 import type { BoardJob } from "../dashboard.types";
+import styles from "./LiveOperationsOverview.module.css";
 
 interface LiveOperationsOverviewProps {
   selectedJobId: number | null;
@@ -17,7 +18,7 @@ export function LiveOperationsOverview({
   boardQuery,
 }: LiveOperationsOverviewProps) {
   return (
-    <>
+    <div className={styles.stack}>
       <KpiCards />
 
       <div
@@ -35,6 +36,6 @@ export function LiveOperationsOverview({
       </div>
 
       <DashboardCharts />
-    </>
+    </div>
   );
 }

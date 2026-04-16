@@ -33,8 +33,8 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "Operations",
     items: [
-      { id: "customer-orders", label: "Customer Orders", icon: ClipboardList },
       { id: "live-operations", label: "Live Operations", icon: Activity },
+      { id: "customer-orders", label: "Customer Orders", icon: ClipboardList },
       { id: "jobs", label: "Jobs", icon: Layers },
     ],
   },
