@@ -12,9 +12,11 @@ import styles from "./JobDetailView.module.css";
 interface JobDetailViewProps {
   job: BoardJob;
   onBack: () => void;
+  /** When the parent supplies a back control (e.g. page header), hide the inline link. */
+  hideBackButton?: boolean;
 }
 
-export function JobDetailView({ job, onBack }: JobDetailViewProps) {
+export function JobDetailView({ job, onBack, hideBackButton = false }: JobDetailViewProps) {
   const { data, isLoading, error } = useJobHistory(job.id);
   const { data: pipelineData } = usePipeline(job.pipeline.id);
   const entries = data ?? [];
@@ -22,10 +24,12 @@ export function JobDetailView({ job, onBack }: JobDetailViewProps) {
 
   return (
     <div className={styles.root}>
-      <button type="button" onClick={onBack} className={styles.backButton}>
-        <ChevronLeft size={16} strokeWidth={2} aria-hidden />
-        Back to overview
-      </button>
+      {!hideBackButton && (
+        <button type="button" onClick={onBack} className={styles.backButton}>
+          <ChevronLeft size={16} strokeWidth={2} aria-hidden />
+          Back to overview
+        </button>
+      )}
 
       <div className={styles.header}>
         <h2 className={styles.title}>

@@ -483,7 +483,7 @@ ManuTracker •
 | Context | Pattern | Details |
 |---------|---------|---------|
 | Initial page load | Skeleton screen | Sidebar renders immediately. Content area shows skeleton placeholders matching the page layout (KPI cards, table rows). |
-| In-page drill (e.g. Live Operations job detail) | Slide panel | Overview hides or slides; load skeleton in the drill panel until data is ready. |
+| In-page drill (e.g. Live Operations job detail) | Header back + swap | Overview swaps to job detail; **Back to overview** in the page header returns to the floor view; load skeleton in the detail body until data is ready. |
 | Navigation between pages | Instant route change | Sidebar active state updates immediately. Content area shows skeleton until data loads. |
 
 ### Data Loading

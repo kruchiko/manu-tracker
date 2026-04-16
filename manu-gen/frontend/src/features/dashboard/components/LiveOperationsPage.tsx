@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { ChevronLeft } from "lucide-react";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import { JobDetailView } from "./JobDetailView";
@@ -19,37 +20,44 @@ export function LiveOperationsPage() {
   }, [selectedJobId]);
 
   return (
-    <div ref={containerRef} className={`${pageShell.column} ${pageShell.overflowHidden}`}>
+    <div ref={containerRef} className={pageShell.column}>
       <PageHeader
         title="Live Operations"
         subtitle="Floor KPIs, analytics charts, live job board, and job drill-in"
+        action={
+          drilled ? (
+            <button
+              type="button"
+              className={styles.headerBack}
+              onClick={() => setSelectedJobId(null)}
+            >
+              <ChevronLeft size={16} strokeWidth={2} aria-hidden />
+              Back to overview
+            </button>
+          ) : undefined
+        }
       />
 
       <div
-        className={styles.drillShell}
+        className={styles.content}
         role="region"
-        aria-label="Live operations overview and job detail"
+        aria-label={drilled ? "Job detail" : "Live operations overview"}
       >
-        <div
-          className={styles.carousel}
-          style={{ transform: drilled ? "translateX(-100%)" : "translateX(0)" }}
-        >
-          <div className={styles.pane} aria-hidden={drilled}>
-            <OverviewVisibleContext.Provider value={!drilled}>
-              <LiveOperationsOverview
-                selectedJobId={selectedJobId}
-                onSelectJob={(job) => setSelectedJobId(job.id)}
-                boardQuery={boardQuery}
-              />
-            </OverviewVisibleContext.Provider>
-          </div>
-
-          <div className={styles.pane} aria-hidden={!drilled}>
-            {selectedJob && (
-              <JobDetailView job={selectedJob} onBack={() => setSelectedJobId(null)} />
-            )}
-          </div>
-        </div>
+        {drilled && selectedJob ? (
+          <JobDetailView
+            job={selectedJob}
+            onBack={() => setSelectedJobId(null)}
+            hideBackButton
+          />
+        ) : (
+          <OverviewVisibleContext.Provider value={true}>
+            <LiveOperationsOverview
+              selectedJobId={selectedJobId}
+              onSelectJob={(job) => setSelectedJobId(job.id)}
+              boardQuery={boardQuery}
+            />
+          </OverviewVisibleContext.Provider>
+        )}
       </div>
     </div>
   );
