@@ -448,7 +448,7 @@ ManuTracker •
 
 | Screen ID | Description | Status |
 |-----------|-------------|--------|
-| `live-operations` | Floor KPIs + stage duration & station activity charts + live job board + job drill-in | Designed |
+| `live-operations` | Floor KPIs + stage duration & station activity charts + live job board; row opens job in **Jobs** detail | Designed |
 | `order` | Order Detail — header, summary, job pipeline flows, timeline | Designed |
 | `orders` | Customer Orders list — CRUD, filter tabs | Designed |
 | `new-order` | New Order builder — line items with pipeline validation | Designed |
@@ -483,7 +483,7 @@ ManuTracker •
 | Context | Pattern | Details |
 |---------|---------|---------|
 | Initial page load | Skeleton screen | Sidebar renders immediately. Content area shows skeleton placeholders matching the page layout (KPI cards, table rows). |
-| In-page drill (e.g. Live Operations job detail) | Header back + swap | Overview swaps to job detail; **Back to overview** in the page header returns to the floor view; load skeleton in the detail body until data is ready. |
+| Open job from Live Operations board | Navigate to Jobs | Switches to **Jobs** and opens the same job’s **Job Detail** (`ScreenHeader` back to Jobs list). |
 | Navigation between pages | Instant route change | Sidebar active state updates immediately. Content area shows skeleton until data loads. |
 
 ### Data Loading

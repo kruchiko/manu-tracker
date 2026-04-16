@@ -1,5 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { Job } from "../jobs.types";
+import { useJob } from "../hooks/useJob";
 import { useJobs } from "../hooks/useJobs";
 import { JobDetailPage } from "./JobDetailPage";
 import { JobsListView } from "./JobsListView";
@@ -7,12 +8,50 @@ import { NewJobManualView } from "./NewJobManualView";
 
 type JobsView = "list" | "new" | "detail";
 
-export function JobsPage() {
+export interface JobsPageProps {
+  /** When set (e.g. from Live Operations), fetch and open this job in detail view once. */
+  initialDetailJobId?: number | null;
+  /** Called after opening detail from `initialDetailJobId` so the parent can clear pending state. */
+  onInitialDetailConsumed?: () => void;
+}
+
+export function JobsPage({
+  initialDetailJobId = null,
+  onInitialDetailConsumed,
+}: JobsPageProps = {}) {
   const [view, setView] = useState<JobsView>("list");
   const [detailJob, setDetailJob] = useState<Job | null>(null);
   const [printAfterDetailLoad, setPrintAfterDetailLoad] = useState(false);
 
   const jobsQuery = useJobs({ enabled: view === "list" });
+
+  const bootstrapDetail = initialDetailJobId != null && view === "list";
+  const bootstrapJobQuery = useJob(initialDetailJobId, {
+    enabled: bootstrapDetail,
+  });
+
+  useEffect(() => {
+    if (initialDetailJobId == null) return;
+    if (view !== "list") return;
+    if (bootstrapJobQuery.isError) {
+      onInitialDetailConsumed?.();
+      return;
+    }
+    const data = bootstrapJobQuery.data;
+    if (!data || data.id !== initialDetailJobId) return;
+    queueMicrotask(() => {
+      setDetailJob(data);
+      setPrintAfterDetailLoad(false);
+      setView("detail");
+      onInitialDetailConsumed?.();
+    });
+  }, [
+    initialDetailJobId,
+    view,
+    bootstrapJobQuery.data,
+    bootstrapJobQuery.isError,
+    onInitialDetailConsumed,
+  ]);
 
   const handleConsumedPrintIntent = useCallback(() => {
     setPrintAfterDetailLoad(false);

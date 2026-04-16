@@ -3,31 +3,3 @@
   flex-direction: column;
   min-width: 0;
 }
-
-/* Mirrors JobDetailView back control; lives in the page header row for discoverability */
-.headerBack {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 6px;
-  border-radius: var(--radius-md);
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--text-secondary);
-  background: none;
-  border: 1px solid var(--border);
-  cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing-default),
-    color var(--duration-fast) var(--easing-default);
-}
-
-.headerBack:hover {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.headerBack:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}

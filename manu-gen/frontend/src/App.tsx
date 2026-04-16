@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Layout } from "./shared/components/Layout";
 import type { PageId } from "./shared/components/Sidebar";
 import { LiveOperationsPage } from "./features/dashboard/components/LiveOperationsPage";
@@ -9,14 +9,31 @@ import { PipelinesPage } from "./features/pipelines/components/PipelinesPage";
 
 export function App() {
   const [currentPage, setCurrentPage] = useState<PageId>("stations");
+  const [jobsBootstrapJobId, setJobsBootstrapJobId] = useState<number | null>(null);
+
+  const handleJobsBootstrapConsumed = useCallback(() => {
+    setJobsBootstrapJobId(null);
+  }, []);
 
   return (
     <Layout currentPage={currentPage} onNavigate={setCurrentPage}>
       {currentPage === "customer-orders" && (
         <CustomerOrdersPage onNavigateToPipelines={() => setCurrentPage("pipelines")} />
       )}
-      {currentPage === "live-operations" && <LiveOperationsPage />}
-      {currentPage === "jobs" && <JobsPage />}
+      {currentPage === "live-operations" && (
+        <LiveOperationsPage
+          onOpenJobDetail={(jobId) => {
+            setJobsBootstrapJobId(jobId);
+            setCurrentPage("jobs");
+          }}
+        />
+      )}
+      {currentPage === "jobs" && (
+        <JobsPage
+          initialDetailJobId={jobsBootstrapJobId}
+          onInitialDetailConsumed={handleJobsBootstrapConsumed}
+        />
+      )}
       {currentPage === "stations" && <StationsPage />}
       {currentPage === "pipelines" && <PipelinesPage />}
     </Layout>

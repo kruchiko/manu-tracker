@@ -4,13 +4,11 @@ import { JobBoardRow } from "./JobBoardRow";
 import type { BoardJob } from "../dashboard.types";
 
 interface JobBoardProps {
-  selectedJobId: number | null;
   onSelectJob: (job: BoardJob) => void;
-  /** Shared `useJobBoard()` result from parent so the tree does not subscribe twice. */
   boardQuery: UseQueryResult<BoardJob[], Error>;
 }
 
-export function JobBoard({ selectedJobId, onSelectJob, boardQuery }: JobBoardProps) {
+export function JobBoard({ onSelectJob, boardQuery }: JobBoardProps) {
   const { data, isLoading, error } = boardQuery;
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -51,12 +49,7 @@ export function JobBoard({ selectedJobId, onSelectJob, boardQuery }: JobBoardPro
         </thead>
         <tbody>
           {jobs.map((job) => (
-            <JobBoardRow
-              key={job.id}
-              job={job}
-              isSelected={selectedJobId === job.id}
-              onSelect={onSelectJob}
-            />
+            <JobBoardRow key={job.id} job={job} onSelect={onSelectJob} />
           ))}
         </tbody>
       </table>

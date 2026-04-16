@@ -7,16 +7,11 @@ import type { BoardJob } from "../dashboard.types";
 import styles from "./LiveOperationsOverview.module.css";
 
 interface LiveOperationsOverviewProps {
-  selectedJobId: number | null;
   onSelectJob: (job: BoardJob) => void;
   boardQuery: UseQueryResult<BoardJob[], Error>;
 }
 
-export function LiveOperationsOverview({
-  selectedJobId,
-  onSelectJob,
-  boardQuery,
-}: LiveOperationsOverviewProps) {
+export function LiveOperationsOverview({ onSelectJob, boardQuery }: LiveOperationsOverviewProps) {
   return (
     <div className={styles.stack}>
       <KpiCards />
@@ -28,11 +23,7 @@ export function LiveOperationsOverview({
         <h2 id="live-job-board-heading" className={sectionPanel.sectionTitle}>
           Live Job Board
         </h2>
-        <JobBoard
-          selectedJobId={selectedJobId}
-          onSelectJob={onSelectJob}
-          boardQuery={boardQuery}
-        />
+        <JobBoard onSelectJob={onSelectJob} boardQuery={boardQuery} />
       </div>
 
       <DashboardCharts />
