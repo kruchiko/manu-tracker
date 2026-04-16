@@ -25,6 +25,11 @@ export function App() {
     setJobsBootstrapJobId(null);
   }, []);
 
+  const handleJobBootstrapFailed = useCallback(() => {
+    setJobsBootstrapJobId(null);
+    setJobDetailReturnTo(null);
+  }, []);
+
   const handleExitJobDetailToLiveOperations = useCallback(() => {
     navigateToPage("live-operations");
   }, [navigateToPage]);
@@ -47,6 +52,7 @@ export function App() {
         <JobsPage
           initialDetailJobId={jobsBootstrapJobId}
           onInitialDetailConsumed={handleJobsBootstrapConsumed}
+          onJobBootstrapFailed={handleJobBootstrapFailed}
           jobDetailReturnTo={jobDetailReturnTo}
           onExitJobDetailToLiveOperations={handleExitJobDetailToLiveOperations}
         />

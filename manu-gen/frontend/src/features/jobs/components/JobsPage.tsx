@@ -11,8 +11,10 @@ type JobsView = "list" | "new" | "detail";
 export interface JobsPageProps {
   /** When set (e.g. from Live Operations), fetch and open this job in detail view once. */
   initialDetailJobId?: number | null;
-  /** Called after opening detail from `initialDetailJobId` so the parent can clear pending state. */
+  /** Called after opening detail from `initialDetailJobId` so the parent can clear the pending id. */
   onInitialDetailConsumed?: () => void;
+  /** If bootstrap fetch fails, parent must clear return-target state (e.g. Live Operations) so list opens stay correct. */
+  onJobBootstrapFailed?: () => void;
   /**
    * When `'live-operations'`, Job Detail back exits to Live Operations instead of the Jobs list.
    * Omit or `null` when the user opened detail from within Jobs (list / create / print).
@@ -25,6 +27,7 @@ export interface JobsPageProps {
 export function JobsPage({
   initialDetailJobId = null,
   onInitialDetailConsumed,
+  onJobBootstrapFailed,
   jobDetailReturnTo = null,
   onExitJobDetailToLiveOperations,
 }: JobsPageProps = {}) {
@@ -43,7 +46,7 @@ export function JobsPage({
     if (initialDetailJobId == null) return;
     if (view !== "list") return;
     if (bootstrapJobQuery.isError) {
-      onInitialDetailConsumed?.();
+      onJobBootstrapFailed?.();
       return;
     }
     const data = bootstrapJobQuery.data;
@@ -60,6 +63,7 @@ export function JobsPage({
     bootstrapJobQuery.data,
     bootstrapJobQuery.isError,
     onInitialDetailConsumed,
+    onJobBootstrapFailed,
   ]);
 
   const handleConsumedPrintIntent = useCallback(() => {
