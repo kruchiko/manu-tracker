@@ -400,7 +400,6 @@ MANUTRACKER (logo + dot row)
 ─────────────────────────────
 
 OPERATIONS
-  Dashboard
   Customer Orders
   Live Operations
   Jobs
@@ -449,8 +448,7 @@ ManuTracker •
 
 | Screen ID | Description | Status |
 |-----------|-------------|--------|
-| `dashboard` | Stage duration analytics + station activity charts | Designed |
-| `live-operations` | Floor KPIs + live job board + job drill-in | Designed |
+| `live-operations` | Floor KPIs + stage duration & station activity charts + live job board + job drill-in | Designed |
 | `order` | Order Detail — header, summary, job pipeline flows, timeline | Designed |
 | `orders` | Customer Orders list — CRUD, filter tabs | Designed |
 | `new-order` | New Order builder — line items with pipeline validation | Designed |
@@ -531,7 +529,6 @@ ManuTracker •
 
 | Context | Icon | Lucide Name |
 |---------|------|-------------|
-| Dashboard | `LayoutDashboard` | `layout-dashboard` |
 | Customer Orders | `ClipboardList` | `clipboard-list` |
 | Live Operations | `Activity` | `activity` |
 | Jobs | `Layers` | `layers` |

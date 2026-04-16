@@ -1,5 +1,6 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import sectionPanel from "../../../shared/components/SectionPanel.module.css";
+import { DashboardCharts } from "./DashboardCharts";
 import { JobBoard } from "./JobBoard";
 import { KpiCards } from "./KpiCards";
 import type { BoardJob } from "../dashboard.types";
@@ -32,6 +33,8 @@ export function LiveOperationsOverview({
           boardQuery={boardQuery}
         />
       </div>
+
+      <DashboardCharts />
     </>
   );
 }

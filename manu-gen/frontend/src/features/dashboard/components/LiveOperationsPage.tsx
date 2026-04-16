@@ -22,7 +22,7 @@ export function LiveOperationsPage() {
     <div ref={containerRef} className={`${pageShell.column} ${pageShell.overflowHidden}`}>
       <PageHeader
         title="Live Operations"
-        subtitle="Floor KPIs, live job board, and job drill-in"
+        subtitle="Floor KPIs, analytics charts, live job board, and job drill-in"
       />
 
       <div

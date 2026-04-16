@@ -1,7 +1,6 @@
 import { useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import {
-  LayoutDashboard,
   ClipboardList,
   Activity,
   Layers,
@@ -13,7 +12,6 @@ import {
 import styles from "./Sidebar.module.css";
 
 export type PageId =
-  | "dashboard"
   | "customer-orders"
   | "live-operations"
   | "jobs"
@@ -35,7 +33,6 @@ const NAV_SECTIONS: NavSection[] = [
   {
     label: "Operations",
     items: [
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
       { id: "customer-orders", label: "Customer Orders", icon: ClipboardList },
       { id: "live-operations", label: "Live Operations", icon: Activity },
       { id: "jobs", label: "Jobs", icon: Layers },
