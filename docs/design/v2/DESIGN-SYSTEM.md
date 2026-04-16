@@ -400,7 +400,7 @@ MANUTRACKER (logo + dot row)
 ─────────────────────────────
 
 OPERATIONS
-  Dashboard
+  Live Operations
   Customer Orders
   Jobs
 
@@ -448,7 +448,7 @@ ManuTracker •
 
 | Screen ID | Description | Status |
 |-----------|-------------|--------|
-| `dashboard` | KPI cards + Customer Orders tab + Internal Operations tab | Designed |
+| `live-operations` | Floor KPIs + stage duration & station activity charts + live job board; row opens job in **Jobs** detail | Designed |
 | `order` | Order Detail — header, summary, job pipeline flows, timeline | Designed |
 | `orders` | Customer Orders list — CRUD, filter tabs | Designed |
 | `new-order` | New Order builder — line items with pipeline validation | Designed |
@@ -483,7 +483,7 @@ ManuTracker •
 | Context | Pattern | Details |
 |---------|---------|---------|
 | Initial page load | Skeleton screen | Sidebar renders immediately. Content area shows skeleton placeholders matching the page layout (KPI cards, table rows). |
-| Tab switch (Dashboard) | Instant swap | Tab content switches immediately. If new tab data is not yet loaded, show skeleton inside the tab body only. |
+| Open job from Live Operations board | Navigate to Jobs | Opens **Job Detail** on the Jobs route; sidebar highlights **Live Operations** until back. **Back** label **Live Operations** returns to the floor. From **Jobs** list, sidebar highlights **Jobs**; **Back** label **Jobs** returns to the list. |
 | Navigation between pages | Instant route change | Sidebar active state updates immediately. Content area shows skeleton until data loads. |
 
 ### Data Loading
@@ -529,8 +529,8 @@ ManuTracker •
 
 | Context | Icon | Lucide Name |
 |---------|------|-------------|
-| Dashboard | `LayoutDashboard` | `layout-dashboard` |
 | Customer Orders | `ClipboardList` | `clipboard-list` |
+| Live Operations | `Activity` | `activity` |
 | Jobs | `Layers` | `layers` |
 | Pipelines | `GitBranch` | `git-branch` |
 | Stations | `Radio` | `radio` |

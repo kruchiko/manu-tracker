@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
-import { useJobBoard } from "../hooks/useJobBoard";
+import type { UseQueryResult } from "@tanstack/react-query";
 import { JobBoardRow } from "./JobBoardRow";
 import type { BoardJob } from "../dashboard.types";
 
 interface JobBoardProps {
-  selectedJobId: number | null;
   onSelectJob: (job: BoardJob) => void;
+  boardQuery: UseQueryResult<BoardJob[], Error>;
 }
 
-export function JobBoard({ selectedJobId, onSelectJob }: JobBoardProps) {
-  const { data, isLoading, error } = useJobBoard();
+export function JobBoard({ onSelectJob, boardQuery }: JobBoardProps) {
+  const { data, isLoading, error } = boardQuery;
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -49,12 +49,7 @@ export function JobBoard({ selectedJobId, onSelectJob }: JobBoardProps) {
         </thead>
         <tbody>
           {jobs.map((job) => (
-            <JobBoardRow
-              key={job.id}
-              job={job}
-              isSelected={selectedJobId === job.id}
-              onSelect={onSelectJob}
-            />
+            <JobBoardRow key={job.id} job={job} onSelect={onSelectJob} />
           ))}
         </tbody>
       </table>

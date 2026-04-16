@@ -16,7 +16,6 @@ const STATUS_COLOR: Record<JobStatus, string> = {
 
 interface JobBoardRowProps {
   job: BoardJob;
-  isSelected: boolean;
   onSelect: (job: BoardJob) => void;
 }
 
@@ -85,7 +84,7 @@ function PipelineProgressBar({ pipeline }: { pipeline: BoardJobPipeline }) {
   );
 }
 
-export function JobBoardRow({ job, isSelected, onSelect }: JobBoardRowProps) {
+export function JobBoardRow({ job, onSelect }: JobBoardRowProps) {
   const durationSeconds = useLiveDuration(job.stationArrivedAt, job.currentStation !== null);
   const colorClass = durationColorClass(durationSeconds, job.maxDurationSeconds);
 
@@ -99,10 +98,7 @@ export function JobBoardRow({ job, isSelected, onSelect }: JobBoardRowProps) {
         }
       }}
       tabIndex={0}
-      aria-selected={isSelected}
-      className={`cursor-pointer border-b transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
-        isSelected ? "bg-blue-50" : ""
-      }`}
+      className="cursor-pointer border-b transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
     >
       <td className="py-3 pr-4 font-mono text-sm">{job.jobNumber}</td>
       <td className="py-3 pr-4 text-sm">{job.productType}</td>
