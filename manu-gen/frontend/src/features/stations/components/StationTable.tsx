@@ -6,6 +6,8 @@ import styles from "./StationTable.module.css";
 
 interface StationTableProps {
   stations: Station[];
+  /** Called when delete fails (e.g. 409 — station in use). Parent should show a banner, not inline in the row. */
+  onDeleteError: (message: string) => void;
   onSelectStation?: (station: Station) => void;
 }
 
@@ -37,20 +39,24 @@ function CameraBadge({ eyeId }: { eyeId: string | null }): React.JSX.Element {
   return <span className={styles.badgeNone}>No camera</span>;
 }
 
-function ActionsCell({ station }: { station: Station }): React.JSX.Element {
+function ActionsCell({
+  station,
+  onDeleteError,
+}: {
+  station: Station;
+  onDeleteError: (message: string) => void;
+}): React.JSX.Element {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
   const deleteStation = useDeleteStation();
 
   function handleDelete(): void {
     if (!confirmDelete) {
-      setDeleteError(null);
       setConfirmDelete(true);
       return;
     }
     deleteStation.mutate(station.id, {
       onError: (err) => {
-        setDeleteError(err instanceof Error ? err.message : "Delete failed");
+        onDeleteError(err instanceof Error ? err.message : "Delete failed");
         setConfirmDelete(false);
       },
     });
@@ -69,27 +75,13 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); setDeleteError(null); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmDelete(false);
+          }}
           className={`${styles.btnGhost} ${styles.btnMuted}`}
         >
           Cancel
-        </button>
-      </div>
-    );
-  }
-
-  if (deleteError) {
-    return (
-      <div className={styles.actionsRow}>
-        <span className={styles.errorTruncate} title={deleteError}>
-          {deleteError}
-        </span>
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); setDeleteError(null); }}
-          className={`${styles.btnGhost} ${styles.btnMuted}`}
-        >
-          OK
         </button>
       </div>
     );
@@ -112,7 +104,11 @@ function ActionsCell({ station }: { station: Station }): React.JSX.Element {
   );
 }
 
-export function StationTable({ stations, onSelectStation }: StationTableProps): React.JSX.Element {
+export function StationTable({
+  stations,
+  onDeleteError,
+  onSelectStation,
+}: StationTableProps): React.JSX.Element {
   const columns: Column<Station>[] = [
     {
       key: "name",
@@ -144,7 +140,7 @@ export function StationTable({ stations, onSelectStation }: StationTableProps): 
       key: "actions",
       header: "Actions",
       align: "right",
-      render: (station) => <ActionsCell station={station} />,
+      render: (station) => <ActionsCell station={station} onDeleteError={onDeleteError} />,
     },
   ];
 

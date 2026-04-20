@@ -85,14 +85,11 @@ describe("NewStationView", () => {
     await user.click(screen.getByRole("button", { name: "Create Station" }));
 
     await waitFor(() => {
-      expect(createAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: "Polishing",
-          location: "Floor 2",
-          slotCapacity: 1,
-          cameraId: "",
-        }),
-      );
+      expect(createAsync).toHaveBeenCalledWith({
+        name: "Polishing",
+        location: "Floor 2",
+        slotCapacity: 1,
+      });
     });
   });
 

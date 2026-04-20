@@ -1,4 +1,5 @@
-import { PackageOpen } from "lucide-react";
+import { useState } from "react";
+import { PackageOpen, X } from "lucide-react";
 import { useStations } from "../hooks/useStations";
 import { ListCard } from "../../../shared/components/ListCard";
 import { StationTable } from "./StationTable";
@@ -44,6 +45,7 @@ interface StationListProps {
 
 export function StationList({ onSelectStation }: StationListProps): React.JSX.Element {
   const { data, isLoading, error } = useStations();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   if (isLoading) {
     return <LoadingSkeleton />;
@@ -73,12 +75,33 @@ export function StationList({ onSelectStation }: StationListProps): React.JSX.El
   }
 
   return (
-    <ListCard
-      title="All Stations"
-      count={stations.length}
-      countLabel={stations.length === 1 ? "station" : "stations"}
-    >
-      <StationTable stations={stations} onSelectStation={onSelectStation} />
-    </ListCard>
+    <>
+      {deleteError !== null && deleteError !== "" && (
+        <div className={styles.deleteAlert} role="alert">
+          <p className={styles.deleteAlertMessage}>{deleteError}</p>
+          <button
+            type="button"
+            className={styles.deleteAlertClose}
+            aria-label="Dismiss notification"
+            onClick={() => {
+              setDeleteError(null);
+            }}
+          >
+            <X size={12} strokeWidth={1.5} aria-hidden />
+          </button>
+        </div>
+      )}
+      <ListCard
+        title="All Stations"
+        count={stations.length}
+        countLabel={stations.length === 1 ? "station" : "stations"}
+      >
+        <StationTable
+          stations={stations}
+          onDeleteError={setDeleteError}
+          onSelectStation={onSelectStation}
+        />
+      </ListCard>
+    </>
   );
 }

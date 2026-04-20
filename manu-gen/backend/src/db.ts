@@ -94,13 +94,18 @@ db.transaction(() => {
   }
 })();
 
-const stationColumnNames = db
-  .prepare(`PRAGMA table_info(stations)`)
-  .all() as { name: string }[];
-if (!stationColumnNames.some((c) => c.name === "slot_capacity")) {
-  db.exec(
-    `ALTER TABLE stations ADD COLUMN slot_capacity INTEGER NOT NULL DEFAULT 1 CHECK (slot_capacity >= 1 AND slot_capacity <= 15)`,
-  );
+try {
+  const stationColumnNames = db
+    .prepare(`PRAGMA table_info(stations)`)
+    .all() as { name: string }[];
+  if (!stationColumnNames.some((c) => c.name === "slot_capacity")) {
+    db.exec(
+      `ALTER TABLE stations ADD COLUMN slot_capacity INTEGER NOT NULL DEFAULT 1 CHECK (slot_capacity >= 1 AND slot_capacity <= 15)`,
+    );
+  }
+} catch (err) {
+  const detail = err instanceof Error ? err.message : String(err);
+  throw new Error(`stations table migration (slot_capacity) failed: ${detail}`, { cause: err });
 }
 
 export default db;

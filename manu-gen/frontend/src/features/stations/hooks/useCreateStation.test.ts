@@ -39,7 +39,41 @@ describe("useCreateStation", () => {
 
     expect(apiClient.post).toHaveBeenCalledWith(
       "/stations",
-      expect.objectContaining({ name: "Polishing", location: "Floor 2" }),
+      { name: "Polishing", location: "Floor 2" },
+      expect.anything(),
+    );
+    expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty("cameraId");
+  });
+
+  it("should POST only station fields without slotCapacity when omitted", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(sampleStation);
+
+    const { result } = renderHook(() => useCreateStation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ name: "Polishing" });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(apiClient.post).toHaveBeenCalledWith("/stations", { name: "Polishing" }, expect.anything());
+    expect(vi.mocked(apiClient.post).mock.calls[0][1]).not.toHaveProperty("cameraId");
+  });
+
+  it("should include slotCapacity in the JSON body when provided", async () => {
+    vi.mocked(apiClient.post).mockResolvedValue(sampleStation);
+
+    const { result } = renderHook(() => useCreateStation(), {
+      wrapper: createWrapper(),
+    });
+
+    result.current.mutate({ name: "Press", location: "North", slotCapacity: 8 });
+
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+    expect(apiClient.post).toHaveBeenCalledWith(
+      "/stations",
+      { name: "Press", location: "North", slotCapacity: 8 },
       expect.anything(),
     );
   });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { StationForm } from "./StationForm";
 import { useCreateStation } from "../hooks/useCreateStation";
 import { useAssignEye } from "../hooks/useAssignEye";
-import type { CreateStationFormValues } from "../stations.schema";
+import type { CreateStationFormValues, CreateStationRequestBody } from "../stations.schema";
 import { clampSlotCapacityForApi } from "../slotCapacity.utils";
 
 interface NewStationViewProps {
@@ -19,13 +19,14 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
     setSubmitError(null);
     setIsSaving(true);
     const camera = (values.cameraId ?? "").trim();
-    const payload: CreateStationFormValues = {
-      ...values,
+    const createBody: CreateStationRequestBody = {
+      name: values.name,
+      location: values.location,
       slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
     };
     let createdId: string | null = null;
     try {
-      const created = await createStation(payload);
+      const created = await createStation(createBody);
       createdId = created.id;
       if (camera) {
         await assignEye({ stationId: created.id, eyeId: camera });

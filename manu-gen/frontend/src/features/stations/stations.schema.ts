@@ -14,3 +14,6 @@ export const createStationSchema = z.object({
 });
 
 export type CreateStationFormValues = z.infer<typeof createStationSchema>;
+
+/** Payload for POST /stations — excludes `cameraId` (assign via PUT /stations/:id/eye). */
+export type CreateStationRequestBody = Pick<CreateStationFormValues, "name" | "location" | "slotCapacity">;

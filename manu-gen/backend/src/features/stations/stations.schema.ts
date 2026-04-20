@@ -8,7 +8,8 @@ export const createStationSchema = z.object({
   slotCapacity: slotCapacitySchema.optional(),
 });
 
-export type CreateStationInput = z.infer<typeof createStationSchema>;
+/** Pre-parse shape: callers may omit fields that Zod defaults (e.g. tests, service without controller). */
+export type CreateStationInput = z.input<typeof createStationSchema>;
 
 export const assignEyeSchema = z.object({
   eyeId: z.string().min(1, "eyeId is required"),
@@ -22,7 +23,7 @@ export const updateStationSchema = z.object({
   slotCapacity: slotCapacitySchema.optional(),
 });
 
-export type UpdateStationInput = z.infer<typeof updateStationSchema>;
+export type UpdateStationInput = z.input<typeof updateStationSchema>;
 
 export interface StationRow {
   id: string;

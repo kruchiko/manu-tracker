@@ -56,32 +56,34 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
     const newEye = (values.cameraId ?? "").trim();
 
     try {
-      await updateStation({
-        id: station.id,
-        name: values.name,
-        location: values.location ?? "",
-        slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
-      });
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Save failed");
-      return;
-    }
-
-    try {
-      if (oldEye !== newEye) {
-        if (oldEye && !newEye) {
-          await unassignEye(station.id);
-        } else if (newEye) {
-          await assignEye({ stationId: station.id, eyeId: newEye });
-        }
+      try {
+        await updateStation({
+          id: station.id,
+          name: values.name,
+          location: values.location ?? "",
+          slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
+        });
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Save failed");
+        return;
       }
 
-      onBack();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Save failed";
-      setSubmitError(
-        `${msg} Station details were saved. Return to the list and edit this station to fix the camera assignment.`,
-      );
+      try {
+        if (oldEye !== newEye) {
+          if (oldEye && !newEye) {
+            await unassignEye(station.id);
+          } else if (newEye) {
+            await assignEye({ stationId: station.id, eyeId: newEye });
+          }
+        }
+
+        onBack();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Save failed";
+        setSubmitError(
+          `${msg} Station details were saved. Return to the list and edit this station to fix the camera assignment.`,
+        );
+      }
     } finally {
       setIsSaving(false);
     }

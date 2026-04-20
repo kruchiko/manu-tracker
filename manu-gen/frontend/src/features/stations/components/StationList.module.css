@@ -80,3 +80,57 @@
   font-size: var(--text-sm);
   color: var(--text-muted);
 }
+
+/* Inline alert: same dismiss pattern as HintBanner (X), palette uses --alert (signal) per design tokens */
+.deleteAlert {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--alert) 28%, var(--border));
+  background: var(--alert-light);
+  /* Equal vertical padding; extra horizontal end space for the absolute close control */
+  padding: var(--space-3) calc(var(--space-4) + var(--space-6)) var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.deleteAlertMessage {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+  color: var(--alert-dark);
+}
+
+.deleteAlertClose {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  margin-top: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: none;
+  padding: 0;
+  color: var(--text-muted);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: color var(--duration-fast) var(--easing-default),
+    background-color var(--duration-fast) var(--easing-default);
+}
+
+.deleteAlertClose:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.deleteAlertClose:focus-visible {
+  outline: 2px solid var(--alert);
+  outline-offset: 2px;
+}

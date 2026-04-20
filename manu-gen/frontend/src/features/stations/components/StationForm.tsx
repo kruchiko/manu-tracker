@@ -103,7 +103,6 @@ function StationPreview({
                 </div>
                 <span className={styles.previewSlotLabel}>
                   {slots} {slots === 1 ? "slot" : "slots"}
-                  {slotCapacity === 0 && " (default)"}
                 </span>
               </div>
             </div>

@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { createWrapper } from "../../../test-utils";
 import { StationList } from "./StationList";
@@ -14,6 +15,7 @@ vi.mock("../hooks/useDeleteStation", () => ({
 }));
 
 import { useStations } from "../hooks/useStations";
+import { useDeleteStation } from "../hooks/useDeleteStation";
 
 const sampleStations: Station[] = [
   { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1", slotCapacity: 1 },
@@ -99,5 +101,39 @@ describe("StationList", () => {
     expect(screen.getByText("Slot capacity")).toBeInTheDocument();
     expect(screen.getByText("Camera")).toBeInTheDocument();
     expect(screen.getByText("Actions")).toBeInTheDocument();
+  });
+
+  it("should show delete failure in a top alert with Dismiss, not in the table row", async () => {
+    const mutate = vi.fn().mockImplementation((_id, options) => {
+      options.onError(new Error("Cannot delete station: used in pipeline step(s)"));
+    });
+    vi.mocked(useDeleteStation).mockReturnValue({
+      mutate,
+      isPending: false,
+      error: null,
+    } as unknown as ReturnType<typeof useDeleteStation>);
+
+    vi.mocked(useStations).mockReturnValue({
+      isLoading: false,
+      error: null,
+      data: [sampleStations[0]],
+    } as unknown as ReturnType<typeof useStations>);
+
+    const user = userEvent.setup();
+    render(<StationList />, { wrapper: createWrapper() });
+
+    await user.click(screen.getByRole("button", { name: "Delete station Polishing" }));
+    await user.click(screen.getByRole("button", { name: "Confirm" }));
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toHaveTextContent("Cannot delete station: used in pipeline step(s)");
+
+    expect(screen.getByRole("button", { name: "Delete station Polishing" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Dismiss notification" }));
+
+    await waitFor(() => {
+      expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+    });
   });
 });

@@ -57,6 +57,14 @@ describe("POST /stations", () => {
     expect(tooHigh.status).toBe(400);
   });
 
+  it("should return 400 when slotCapacity is not coercible to a valid integer", async () => {
+    const notANumber = await request(app).post("/stations").send({ name: "A", slotCapacity: "nope" });
+    expect(notANumber.status).toBe(400);
+
+    const nullCap = await request(app).post("/stations").send({ name: "B", slotCapacity: null });
+    expect(nullCap.status).toBe(400);
+  });
+
   it("should return 400 when name is missing", async () => {
     const res = await request(app).post("/stations").send({});
 
