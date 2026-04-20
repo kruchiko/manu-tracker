@@ -23,6 +23,7 @@ function apiProxy(): ProxyOptions {
       }
     },
     configure: (proxy) => {
+      if (process.env.NODE_ENV !== "development") return;
       proxy.on("proxyReq", (_proxyReq, req) => {
         console.log(`[proxy] → ${req.method} ${req.url}`);
       });

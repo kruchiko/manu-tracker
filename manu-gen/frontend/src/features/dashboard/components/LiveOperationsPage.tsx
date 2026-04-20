@@ -14,7 +14,10 @@ export function LiveOperationsPage() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    containerRef.current?.scrollTo({ top: 0 });
+    const el = containerRef.current;
+    if (el && typeof el.scrollTo === "function") {
+      el.scrollTo({ top: 0 });
+    }
   }, []);
 
   return (

@@ -1,9 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { vi } from "vitest";
-import { createWrapper } from "../../../test-utils";
+import { createWrapper, renderJobsPageAtPath } from "../../../test-utils";
+import { jobNewPath } from "../../../shared/navigation/pageRoutes";
 import type { Job } from "../jobs.types";
 import { JobsPage } from "./JobsPage";
 
@@ -99,6 +98,10 @@ const createdJob: Job = {
   status: "pending",
 };
 
+/**
+ * `createWrapper` with these options: MemoryRouter, for tests that only assert UI.
+ * `renderJobsPageAtPath` from test-utils: use when asserting `router.state` (pathname/search).
+ */
 const jobsPageWrapperOptions = {
   initialEntries: ["/jobs"],
   jobsOutlet: true,
@@ -179,9 +182,13 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs");
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(jobNewPath());
+    });
 
     await waitFor(() => {
       expect(useJobs).toHaveBeenLastCalledWith({ enabled: false });
@@ -190,6 +197,10 @@ describe("JobsPage", () => {
     expect(screen.getByRole("heading", { name: "Create Job manually" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/jobs");
+    });
 
     await waitFor(() => {
       expect(useJobs).toHaveBeenLastCalledWith({ enabled: true });
@@ -251,20 +262,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    const queryClient = new QueryClient({
-      defaultOptions: { queries: { retry: false, staleTime: 0 } },
-    });
-
-    const router = createMemoryRouter(
-      [{ path: "/jobs/:jobId?", element: <JobsPage /> }],
-      { initialEntries: ["/jobs/not-a-number"] },
-    );
-
-    render(
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>,
-    );
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs/not-a-number");
 
     await waitFor(() => expect(router.state.location.pathname).toBe("/jobs"));
   });
@@ -277,14 +275,33 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs");
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(jobNewPath());
+    });
     await user.selectOptions(screen.getByLabelText(/^Pipeline/i), "pl-1");
     await user.click(screen.getByRole("button", { name: /^Create Job$/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Widget" })).toBeInTheDocument();
     });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/jobs/8");
+    });
+  });
+
+  it("shows create form when opened at /jobs/new", () => {
+    vi.mocked(useJobs).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJobs>);
+
+    renderJobsPageAtPath(<JobsPage />, jobNewPath());
+
+    expect(screen.getByRole("heading", { name: "Create Job manually" })).toBeInTheDocument();
+    expect(useJobs).toHaveBeenLastCalledWith({ enabled: false });
   });
 });

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { pagePath } from "../../../shared/navigation/pageRoutes";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import sectionPanel from "../../../shared/components/SectionPanel.module.css";
@@ -48,7 +49,7 @@ export function CustomerOrdersPage() {
             setSelectedId(order.id);
           }}
           onCancel={() => setOrdersView("list")}
-          onNavigateToPipelines={() => navigate("/pipelines")}
+          onNavigateToPipelines={() => navigate(pagePath("pipelines"))}
         />
       </div>
     );

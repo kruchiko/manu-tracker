@@ -6,14 +6,41 @@ export type PageId =
   | "stations"
   | "pipelines";
 
-/** Query key on `/jobs/:id` when opening a job from Live Operations (sidebar stays on Live Ops). */
+const ALL_PAGE_IDS: readonly PageId[] = [
+  "customer-orders",
+  "live-operations",
+  "jobs",
+  "stations",
+  "pipelines",
+] as const;
+
+export const DEFAULT_PAGE: PageId = "stations";
+
+/** Query param on `/jobs/:id` when opening a job from Live Operations (sidebar stays on Live Ops). */
 export const JOB_DETAIL_RETURN_FROM_PARAM = "from" as const;
 
 /** Query value paired with {@link JOB_DETAIL_RETURN_FROM_PARAM} for the Live Ops → Jobs handoff. */
 export const JOB_DETAIL_RETURN_FROM_LIVE_OPS = "live-operations" as const;
 
+/** Reserved `jobId` segment for the manual-create screen (`/jobs/new`). */
+export const JOB_NEW_SEGMENT = "new" as const;
+
+/** Browser path for a top-level app screen (leading slash, no trailing slash). */
+export function pagePath(page: PageId): string {
+  return `/${page}`;
+}
+
+/** Path for creating a job manually (not a numeric job id). */
+export function jobNewPath(): string {
+  return `${pagePath("jobs")}/${JOB_NEW_SEGMENT}`;
+}
+
+export function jobDetailPath(jobId: number): string {
+  return `${pagePath("jobs")}/${String(jobId)}`;
+}
+
 export function jobDetailUrlFromLiveOperations(jobId: number): string {
-  return `/jobs/${jobId}?${JOB_DETAIL_RETURN_FROM_PARAM}=${JOB_DETAIL_RETURN_FROM_LIVE_OPS}`;
+  return `${jobDetailPath(jobId)}?${JOB_DETAIL_RETURN_FROM_PARAM}=${JOB_DETAIL_RETURN_FROM_LIVE_OPS}`;
 }
 
 function normalizePathname(pathname: string): string {
@@ -22,7 +49,10 @@ function normalizePathname(pathname: string): string {
     : pathname;
 }
 
-/** Parses a `react-router` `:jobId` param for `/jobs/:jobId`. Returns null if missing or not a positive integer. */
+/**
+ * Parses a react-router `:jobId` param for `/jobs/:jobId`.
+ * Returns null if missing or not a positive integer (job IDs are auto-increment starting from 1).
+ */
 export function parseJobsJobIdParam(jobIdParam: string | undefined): number | null {
   if (!jobIdParam || !/^\d+$/.test(jobIdParam)) return null;
   const n = Number(jobIdParam);
@@ -41,11 +71,6 @@ export function parseJobsDetailJobIdFromPathname(pathname: string): number | nul
   return parseJobsJobIdParam(m[1]);
 }
 
-/** Browser path for a top-level app screen (leading slash, no trailing slash). */
-export function pagePath(page: PageId): string {
-  return `/${page}`;
-}
-
 /**
  * Which sidebar item should appear selected for a given URL.
  * When opening a job from Live Operations, `/jobs/:id?from=live-operations` keeps Live Ops highlighted.
@@ -61,20 +86,13 @@ export function pathnameToActivePageId(pathname: string, search: string): PageId
   ) {
     return "live-operations";
   }
-  if (path === "/jobs" || path.startsWith("/jobs/")) {
-    return "jobs";
+
+  for (const id of ALL_PAGE_IDS) {
+    const prefix = pagePath(id);
+    if (path === prefix || path.startsWith(`${prefix}/`)) {
+      return id;
+    }
   }
-  if (path === "/live-operations" || path.startsWith("/live-operations/")) {
-    return "live-operations";
-  }
-  if (path === "/customer-orders" || path.startsWith("/customer-orders/")) {
-    return "customer-orders";
-  }
-  if (path === "/stations" || path.startsWith("/stations/")) {
-    return "stations";
-  }
-  if (path === "/pipelines" || path.startsWith("/pipelines/")) {
-    return "pipelines";
-  }
-  return "stations";
+
+  return DEFAULT_PAGE;
 }
