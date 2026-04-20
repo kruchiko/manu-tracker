@@ -100,6 +100,7 @@ function NavItemLink({
     <NavLink
       to={pagePath(item.id)}
       onClick={onNavigate}
+      aria-current={isActive ? "page" : undefined}
       className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
     >
       <Icon

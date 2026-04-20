@@ -1,5 +1,7 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { vi } from "vitest";
 import { createWrapper } from "../../../test-utils";
 import type { Job } from "../jobs.types";
@@ -240,6 +242,31 @@ describe("JobsPage", () => {
     } finally {
       printSpy.mockRestore();
     }
+  });
+
+  it("replaces invalid job id segment in the URL with /jobs", async () => {
+    vi.mocked(useJobs).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJobs>);
+
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 0 } },
+    });
+
+    const router = createMemoryRouter(
+      [{ path: "/jobs/:jobId?", element: <JobsPage /> }],
+      { initialEntries: ["/jobs/not-a-number"] },
+    );
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+      </QueryClientProvider>,
+    );
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/jobs"));
   });
 
   it("navigates to detail after creating a job", async () => {

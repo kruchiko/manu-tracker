@@ -1,5 +1,30 @@
 import type { PageId } from "../components/Sidebar";
 
+function normalizePathname(pathname: string): string {
+  return pathname.length > 1 && pathname.endsWith("/")
+    ? pathname.slice(0, -1)
+    : pathname;
+}
+
+/** Parses a `react-router` `:jobId` param for `/jobs/:jobId`. Returns null if missing or not a positive integer. */
+export function parseJobsJobIdParam(jobIdParam: string | undefined): number | null {
+  if (!jobIdParam || !/^\d+$/.test(jobIdParam)) return null;
+  const n = Number(jobIdParam);
+  if (!Number.isSafeInteger(n) || n < 1) return null;
+  return n;
+}
+
+/**
+ * Numeric job id when the pathname is exactly `/jobs/:id` (single segment after jobs).
+ * Used to decide Live Ops sidebar highlight (requires a real job path, not `/jobs` alone).
+ */
+export function parseJobsDetailJobIdFromPathname(pathname: string): number | null {
+  const path = normalizePathname(pathname);
+  const m = path.match(/^\/jobs\/([^/]+)$/);
+  if (!m) return null;
+  return parseJobsJobIdParam(m[1]);
+}
+
 /** Browser path for a top-level app screen (leading slash, no trailing slash). */
 export function pagePath(page: PageId): string {
   return `/${page}`;
@@ -10,11 +35,11 @@ export function pagePath(page: PageId): string {
  * When opening a job from Live Operations, `/jobs/:id?from=live-operations` keeps Live Ops highlighted.
  */
 export function pathnameToActivePageId(pathname: string, search: string): PageId {
-  const path =
-    pathname.length > 1 && pathname.endsWith("/") ? pathname.slice(0, -1) : pathname;
+  const path = normalizePathname(pathname);
   const q = new URLSearchParams(search);
 
-  if (path.startsWith("/jobs") && q.get("from") === "live-operations") {
+  const jobsDetailId = parseJobsDetailJobIdFromPathname(path);
+  if (jobsDetailId != null && q.get("from") === "live-operations") {
     return "live-operations";
   }
   if (path === "/jobs" || path.startsWith("/jobs/")) {
