@@ -3,7 +3,11 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Job } from "../jobs.types";
 import { useJob } from "../hooks/useJob";
 import { useJobs } from "../hooks/useJobs";
-import { parseJobsJobIdParam } from "../../../shared/navigation/pageRoutes";
+import {
+  JOB_DETAIL_RETURN_FROM_LIVE_OPS,
+  JOB_DETAIL_RETURN_FROM_PARAM,
+  parseJobsJobIdParam,
+} from "../../../shared/navigation/pageRoutes";
 import { JobDetailPage } from "./JobDetailPage";
 import { JobsListView } from "./JobsListView";
 import { NewJobManualView } from "./NewJobManualView";
@@ -17,7 +21,9 @@ export function JobsPage() {
 
   const numericJobId = parseJobsJobIdParam(jobIdParam);
   const jobDetailReturnTo =
-    searchParams.get("from") === "live-operations" ? "live-operations" : null;
+    searchParams.get(JOB_DETAIL_RETURN_FROM_PARAM) === JOB_DETAIL_RETURN_FROM_LIVE_OPS
+      ? "live-operations"
+      : null;
 
   const [view, setView] = useState<JobsView>("list");
   const [detailJob, setDetailJob] = useState<Job | null>(null);

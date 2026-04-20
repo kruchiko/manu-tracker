@@ -1,4 +1,20 @@
-import type { PageId } from "../components/Sidebar";
+/** Top-level app sections (URL segment after `/`, sidebar order is defined in Sidebar). */
+export type PageId =
+  | "customer-orders"
+  | "live-operations"
+  | "jobs"
+  | "stations"
+  | "pipelines";
+
+/** Query key on `/jobs/:id` when opening a job from Live Operations (sidebar stays on Live Ops). */
+export const JOB_DETAIL_RETURN_FROM_PARAM = "from" as const;
+
+/** Query value paired with {@link JOB_DETAIL_RETURN_FROM_PARAM} for the Live Ops → Jobs handoff. */
+export const JOB_DETAIL_RETURN_FROM_LIVE_OPS = "live-operations" as const;
+
+export function jobDetailUrlFromLiveOperations(jobId: number): string {
+  return `/jobs/${jobId}?${JOB_DETAIL_RETURN_FROM_PARAM}=${JOB_DETAIL_RETURN_FROM_LIVE_OPS}`;
+}
 
 function normalizePathname(pathname: string): string {
   return pathname.length > 1 && pathname.endsWith("/")
@@ -39,7 +55,10 @@ export function pathnameToActivePageId(pathname: string, search: string): PageId
   const q = new URLSearchParams(search);
 
   const jobsDetailId = parseJobsDetailJobIdFromPathname(path);
-  if (jobsDetailId != null && q.get("from") === "live-operations") {
+  if (
+    jobsDetailId != null &&
+    q.get(JOB_DETAIL_RETURN_FROM_PARAM) === JOB_DETAIL_RETURN_FROM_LIVE_OPS
+  ) {
     return "live-operations";
   }
   if (path === "/jobs" || path.startsWith("/jobs/")) {

@@ -10,15 +10,10 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import { pagePath } from "../navigation/pageRoutes";
+import { pagePath, type PageId } from "../navigation/pageRoutes";
 import styles from "./Sidebar.module.css";
 
-export type PageId =
-  | "customer-orders"
-  | "live-operations"
-  | "jobs"
-  | "stations"
-  | "pipelines";
+export type { PageId };
 
 interface NavItem {
   id: PageId;

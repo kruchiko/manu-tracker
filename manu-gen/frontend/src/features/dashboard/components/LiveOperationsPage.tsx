@@ -1,5 +1,6 @@
 import { useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { jobDetailUrlFromLiveOperations } from "../../../shared/navigation/pageRoutes";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import { LiveOperationsOverview } from "./LiveOperationsOverview";
@@ -26,9 +27,7 @@ export function LiveOperationsPage() {
       <div className={styles.content} role="region" aria-label="Live operations overview">
         <OverviewVisibleContext.Provider value={true}>
           <LiveOperationsOverview
-            onSelectJob={(job) =>
-              navigate(`/jobs/${job.id}?from=live-operations`)
-            }
+            onSelectJob={(job) => navigate(jobDetailUrlFromLiveOperations(job.id))}
             boardQuery={boardQuery}
           />
         </OverviewVisibleContext.Provider>
