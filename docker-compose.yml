@@ -31,9 +31,14 @@ services:
       - "5173:5173"
     environment:
       API_TARGET: http://backend:3000
+    # Mount lockfiles from the host so new deps resolve in the container; run install on
+    # each start (avoids stale anonymous node_modules volumes missing packages like react-router-dom).
+    command: ["sh", "-c", "yarn install && exec yarn dev --host"]
     volumes:
       - ./manu-gen/frontend/src:/app/src
-      - /app/node_modules
+      - ./manu-gen/frontend/package.json:/app/package.json:ro
+      - ./manu-gen/frontend/yarn.lock:/app/yarn.lock:ro
+      - ./manu-gen/frontend/.yarnrc.yml:/app/.yarnrc.yml:ro
     depends_on:
       backend:
         condition: service_healthy
@@ -42,7 +47,7 @@ services:
       interval: 10s
       timeout: 3s
       retries: 3
-      start_period: 20s
+      start_period: 45s
 
 volumes:
   backend-data:
