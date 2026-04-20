@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { PackageOpen, X } from "lucide-react";
+import { PackageOpen } from "lucide-react";
 import { useStations } from "../hooks/useStations";
+import { DismissibleNoticeBanner } from "../../../shared/components/DismissibleNoticeBanner";
 import { ListCard } from "../../../shared/components/ListCard";
 import { StationTable } from "./StationTable";
 import type { Station } from "../stations.types";
@@ -77,19 +78,14 @@ export function StationList({ onSelectStation }: StationListProps): React.JSX.El
   return (
     <>
       {deleteError !== null && deleteError !== "" && (
-        <div className={styles.deleteAlert} role="alert">
-          <p className={styles.deleteAlertMessage}>{deleteError}</p>
-          <button
-            type="button"
-            className={styles.deleteAlertClose}
-            aria-label="Dismiss notification"
-            onClick={() => {
-              setDeleteError(null);
-            }}
-          >
-            <X size={12} strokeWidth={1.5} aria-hidden />
-          </button>
-        </div>
+        <DismissibleNoticeBanner
+          className={styles.noticeAboveList}
+          message={deleteError}
+          variant="alert"
+          onDismiss={() => {
+            setDeleteError(null);
+          }}
+        />
       )}
       <ListCard
         title="All Stations"
