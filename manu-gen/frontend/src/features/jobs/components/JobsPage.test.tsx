@@ -1,12 +1,17 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import { createWrapper } from "../../../test-utils";
+import { createWrapper, renderJobsPageAtPath } from "../../../test-utils";
+import { jobNewPath } from "../../../shared/navigation/pageRoutes";
 import type { Job } from "../jobs.types";
 import { JobsPage } from "./JobsPage";
 
 vi.mock("../hooks/useJobs", () => ({
   useJobs: vi.fn(),
+}));
+
+vi.mock("../hooks/useJob", () => ({
+  useJob: vi.fn(),
 }));
 
 vi.mock("./QrPreview", async () => {
@@ -63,6 +68,7 @@ vi.mock("../hooks/useCreateJob", () => ({
 }));
 
 import { useJobs } from "../hooks/useJobs";
+import { useJob } from "../hooks/useJob";
 
 const listJob: Job = {
   id: 7,
@@ -92,6 +98,15 @@ const createdJob: Job = {
   status: "pending",
 };
 
+/**
+ * `createWrapper` with these options: MemoryRouter, for tests that only assert UI.
+ * `renderJobsPageAtPath` from test-utils: use when asserting `router.state` (pathname/search).
+ */
+const jobsPageWrapperOptions = {
+  initialEntries: ["/jobs"],
+  jobsOutlet: true,
+} as const;
+
 describe("JobsPage", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -100,6 +115,38 @@ describe("JobsPage", () => {
         opts?.onSuccess?.(createdJob);
       },
     );
+    vi.mocked(useJob).mockImplementation((jobId) => {
+      if (jobId == null) {
+        return {
+          data: undefined,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      if (jobId === 7) {
+        return {
+          data: listJob,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      if (jobId === 8) {
+        return {
+          data: createdJob,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      return {
+        data: undefined,
+        isLoading: jobId != null,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useJob>;
+    });
   });
 
   it("renders the jobs list view with header when list is the active view", () => {
@@ -109,7 +156,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     expect(screen.getByRole("heading", { name: "Jobs" })).toBeInTheDocument();
     expect(screen.getByText("All Jobs")).toBeInTheDocument();
@@ -122,7 +169,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     expect(useJobs).toHaveBeenCalledWith({ enabled: true });
   });
@@ -135,9 +182,13 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs");
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(jobNewPath());
+    });
 
     await waitFor(() => {
       expect(useJobs).toHaveBeenLastCalledWith({ enabled: false });
@@ -146,6 +197,10 @@ describe("JobsPage", () => {
     expect(screen.getByRole("heading", { name: "Create Job manually" })).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/jobs");
+    });
 
     await waitFor(() => {
       expect(useJobs).toHaveBeenLastCalledWith({ enabled: true });
@@ -162,7 +217,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     await user.click(screen.getByLabelText(/Open job JOB-0007/i));
 
@@ -184,7 +239,7 @@ describe("JobsPage", () => {
         error: null,
       } as unknown as ReturnType<typeof useJobs>);
 
-      render(<JobsPage />, { wrapper: createWrapper() });
+      render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
       await user.click(screen.getByRole("button", { name: /Print Label/i }));
 
@@ -200,6 +255,18 @@ describe("JobsPage", () => {
     }
   });
 
+  it("replaces invalid job id segment in the URL with /jobs", async () => {
+    vi.mocked(useJobs).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJobs>);
+
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs/not-a-number");
+
+    await waitFor(() => expect(router.state.location.pathname).toBe("/jobs"));
+  });
+
   it("navigates to detail after creating a job", async () => {
     const user = userEvent.setup();
     vi.mocked(useJobs).mockReturnValue({
@@ -208,14 +275,33 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    const { router } = renderJobsPageAtPath(<JobsPage />, "/jobs");
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe(jobNewPath());
+    });
     await user.selectOptions(screen.getByLabelText(/^Pipeline/i), "pl-1");
     await user.click(screen.getByRole("button", { name: /^Create Job$/i }));
 
     await waitFor(() => {
       expect(screen.getByRole("heading", { name: "Widget" })).toBeInTheDocument();
     });
+    await waitFor(() => {
+      expect(router.state.location.pathname).toBe("/jobs/8");
+    });
+  });
+
+  it("shows create form when opened at /jobs/new", () => {
+    vi.mocked(useJobs).mockReturnValue({
+      data: [],
+      isLoading: false,
+      error: null,
+    } as unknown as ReturnType<typeof useJobs>);
+
+    renderJobsPageAtPath(<JobsPage />, jobNewPath());
+
+    expect(screen.getByRole("heading", { name: "Create Job manually" })).toBeInTheDocument();
+    expect(useJobs).toHaveBeenLastCalledWith({ enabled: false });
   });
 });

@@ -31,9 +31,12 @@ services:
       - "5173:5173"
     environment:
       API_TARGET: http://backend:3000
+    # Dependencies are installed in the image (Dockerfile). Only ./src is bind-mounted;
+    # vite.config.ts, index.html, package.json, etc. come from the image — change them and
+    # run: docker compose build frontend
+    command: ["yarn", "dev", "--host"]
     volumes:
       - ./manu-gen/frontend/src:/app/src
-      - /app/node_modules
     depends_on:
       backend:
         condition: service_healthy

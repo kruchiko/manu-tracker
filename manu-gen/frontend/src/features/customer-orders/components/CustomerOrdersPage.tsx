@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { pagePath } from "../../../shared/navigation/pageRoutes";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import sectionPanel from "../../../shared/components/SectionPanel.module.css";
@@ -11,12 +13,8 @@ import styles from "./CustomerOrdersPage.module.css";
 
 type OrdersView = "list" | "create";
 
-interface CustomerOrdersPageProps {
-  /** Opens the Pipelines page (e.g. from “create one” on a line with no pipeline). */
-  onNavigateToPipelines?: () => void;
-}
-
-export function CustomerOrdersPage({ onNavigateToPipelines }: CustomerOrdersPageProps) {
+export function CustomerOrdersPage() {
+  const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
 
@@ -51,7 +49,7 @@ export function CustomerOrdersPage({ onNavigateToPipelines }: CustomerOrdersPage
             setSelectedId(order.id);
           }}
           onCancel={() => setOrdersView("list")}
-          onNavigateToPipelines={onNavigateToPipelines}
+          onNavigateToPipelines={() => navigate(pagePath("pipelines"))}
         />
       </div>
     );
