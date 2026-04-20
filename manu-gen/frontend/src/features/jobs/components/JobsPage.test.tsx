@@ -9,6 +9,10 @@ vi.mock("../hooks/useJobs", () => ({
   useJobs: vi.fn(),
 }));
 
+vi.mock("../hooks/useJob", () => ({
+  useJob: vi.fn(),
+}));
+
 vi.mock("./QrPreview", async () => {
   const React = await import("react");
   return {
@@ -63,6 +67,7 @@ vi.mock("../hooks/useCreateJob", () => ({
 }));
 
 import { useJobs } from "../hooks/useJobs";
+import { useJob } from "../hooks/useJob";
 
 const listJob: Job = {
   id: 7,
@@ -92,6 +97,11 @@ const createdJob: Job = {
   status: "pending",
 };
 
+const jobsPageWrapperOptions = {
+  initialEntries: ["/jobs"],
+  jobsOutlet: true,
+} as const;
+
 describe("JobsPage", () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -100,6 +110,38 @@ describe("JobsPage", () => {
         opts?.onSuccess?.(createdJob);
       },
     );
+    vi.mocked(useJob).mockImplementation((jobId) => {
+      if (jobId == null) {
+        return {
+          data: undefined,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      if (jobId === 7) {
+        return {
+          data: listJob,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      if (jobId === 8) {
+        return {
+          data: createdJob,
+          isLoading: false,
+          isError: false,
+          error: null,
+        } as unknown as ReturnType<typeof useJob>;
+      }
+      return {
+        data: undefined,
+        isLoading: jobId != null,
+        isError: false,
+        error: null,
+      } as unknown as ReturnType<typeof useJob>;
+    });
   });
 
   it("renders the jobs list view with header when list is the active view", () => {
@@ -109,7 +151,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     expect(screen.getByRole("heading", { name: "Jobs" })).toBeInTheDocument();
     expect(screen.getByText("All Jobs")).toBeInTheDocument();
@@ -122,7 +164,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     expect(useJobs).toHaveBeenCalledWith({ enabled: true });
   });
@@ -135,7 +177,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
 
@@ -162,7 +204,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     await user.click(screen.getByLabelText(/Open job JOB-0007/i));
 
@@ -184,7 +226,7 @@ describe("JobsPage", () => {
         error: null,
       } as unknown as ReturnType<typeof useJobs>);
 
-      render(<JobsPage />, { wrapper: createWrapper() });
+      render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
       await user.click(screen.getByRole("button", { name: /Print Label/i }));
 
@@ -208,7 +250,7 @@ describe("JobsPage", () => {
       error: null,
     } as unknown as ReturnType<typeof useJobs>);
 
-    render(<JobsPage />, { wrapper: createWrapper() });
+    render(<JobsPage />, { wrapper: createWrapper(undefined, jobsPageWrapperOptions) });
 
     await user.click(screen.getByRole("button", { name: /Create Job manually/i }));
     await user.selectOptions(screen.getByLabelText(/^Pipeline/i), "pl-1");

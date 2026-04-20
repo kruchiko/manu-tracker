@@ -2,27 +2,14 @@ import { Sidebar, type PageId } from "./Sidebar";
 import styles from "./Layout.module.css";
 
 interface LayoutProps {
-  currentPage: PageId;
-  /**
-   * When set, the sidebar highlights this item instead of `currentPage`.
-   * Use when the main route is one page but the user’s entry context is another (e.g. job detail opened from Live Operations).
-   */
-  sidebarActivePage?: PageId;
-  onNavigate: (page: PageId) => void;
+  activePageId: PageId;
   children: React.ReactNode;
 }
 
-export function Layout({
-  currentPage,
-  sidebarActivePage,
-  onNavigate,
-  children,
-}: LayoutProps): React.JSX.Element {
-  const sidebarHighlight = sidebarActivePage ?? currentPage;
-
+export function Layout({ activePageId, children }: LayoutProps): React.JSX.Element {
   return (
     <div className={styles.layout}>
-      <Sidebar currentPage={sidebarHighlight} onNavigate={onNavigate} />
+      <Sidebar activePageId={activePageId} />
       <main className={styles.main}>
         {children}
       </main>

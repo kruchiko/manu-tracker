@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
   ClipboardList,
@@ -9,6 +10,7 @@ import {
   Menu,
   X,
 } from "lucide-react";
+import { pagePath } from "../navigation/pageRoutes";
 import styles from "./Sidebar.module.css";
 
 export type PageId =
@@ -48,8 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 interface SidebarProps {
-  currentPage: PageId;
-  onNavigate: (page: PageId) => void;
+  activePageId: PageId;
 }
 
 function LogoDots(): React.JSX.Element {
@@ -84,21 +85,21 @@ function SectionLabel({ children }: { children: string }): React.JSX.Element {
   return <div className={styles.sectionLabel}>{children}</div>;
 }
 
-function NavItemButton({
+function NavItemLink({
   item,
   isActive,
-  onClick,
+  onNavigate,
 }: {
   item: NavItem;
   isActive: boolean;
-  onClick: () => void;
+  onNavigate: () => void;
 }): React.JSX.Element {
   const Icon = item.icon;
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
+    <NavLink
+      to={pagePath(item.id)}
+      onClick={onNavigate}
       className={`${styles.navItem} ${isActive ? styles.navItemActive : ""}`}
     >
       <Icon
@@ -107,15 +108,14 @@ function NavItemButton({
         className={isActive ? undefined : styles.iconDim}
       />
       {item.label}
-    </button>
+    </NavLink>
   );
 }
 
-export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.Element {
+export function Sidebar({ activePageId }: SidebarProps): React.JSX.Element {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  function handleNavigate(page: PageId): void {
-    onNavigate(page);
+  function closeMobile(): void {
     setMobileOpen(false);
   }
 
@@ -129,11 +129,11 @@ export function Sidebar({ currentPage, onNavigate }: SidebarProps): React.JSX.El
           <div className={styles.section}>
             <SectionLabel>{section.label}</SectionLabel>
             {section.items.map((item) => (
-              <NavItemButton
+              <NavItemLink
                 key={item.id}
                 item={item}
-                isActive={currentPage === item.id}
-                onClick={() => handleNavigate(item.id)}
+                isActive={activePageId === item.id}
+                onNavigate={closeMobile}
               />
             ))}
           </div>

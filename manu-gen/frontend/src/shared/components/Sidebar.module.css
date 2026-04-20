@@ -110,6 +110,8 @@
   color: var(--sidebar-text);
   background: none;
   cursor: pointer;
+  text-decoration: none;
+  box-sizing: border-box;
   transition: color var(--duration-fast) var(--easing-default),
               background-color var(--duration-fast) var(--easing-default);
 }

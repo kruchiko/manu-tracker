@@ -1,4 +1,5 @@
 import { useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import { LiveOperationsOverview } from "./LiveOperationsOverview";
@@ -6,12 +7,8 @@ import { useJobBoard } from "../hooks/useJobBoard";
 import { OverviewVisibleContext } from "../OverviewVisibleContext";
 import styles from "./LiveOperationsPage.module.css";
 
-interface LiveOperationsPageProps {
-  /** Opens the Jobs app page with full job detail (same as Jobs list → row). */
-  onOpenJobDetail: (jobId: number) => void;
-}
-
-export function LiveOperationsPage({ onOpenJobDetail }: LiveOperationsPageProps) {
+export function LiveOperationsPage() {
+  const navigate = useNavigate();
   const boardQuery = useJobBoard();
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -29,7 +26,9 @@ export function LiveOperationsPage({ onOpenJobDetail }: LiveOperationsPageProps)
       <div className={styles.content} role="region" aria-label="Live operations overview">
         <OverviewVisibleContext.Provider value={true}>
           <LiveOperationsOverview
-            onSelectJob={(job) => onOpenJobDetail(job.id)}
+            onSelectJob={(job) =>
+              navigate(`/jobs/${job.id}?from=live-operations`)
+            }
             boardQuery={boardQuery}
           />
         </OverviewVisibleContext.Provider>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { Job } from "../jobs.types";
 import { useJob } from "../hooks/useJob";
 import { useJobs } from "../hooks/useJobs";
@@ -8,63 +9,79 @@ import { NewJobManualView } from "./NewJobManualView";
 
 type JobsView = "list" | "new" | "detail";
 
-export interface JobsPageProps {
-  /** When set (e.g. from Live Operations), fetch and open this job in detail view once. */
-  initialDetailJobId?: number | null;
-  /** Called after opening detail from `initialDetailJobId` so the parent can clear the pending id. */
-  onInitialDetailConsumed?: () => void;
-  /** If bootstrap fetch fails, parent must clear return-target state (e.g. Live Operations) so list opens stay correct. */
-  onJobBootstrapFailed?: () => void;
-  /**
-   * When `'live-operations'`, Job Detail back exits to Live Operations instead of the Jobs list.
-   * Omit or `null` when the user opened detail from within Jobs (list / create / print).
-   */
-  jobDetailReturnTo?: "live-operations" | null;
-  /** Invoked when leaving detail back to Live Operations (sidebar + return target are updated in App). */
-  onExitJobDetailToLiveOperations?: () => void;
+function parseJobIdParam(jobIdParam: string | undefined): number | null {
+  if (!jobIdParam || !/^\d+$/.test(jobIdParam)) return null;
+  return Number(jobIdParam);
 }
 
-export function JobsPage({
-  initialDetailJobId = null,
-  onInitialDetailConsumed,
-  onJobBootstrapFailed,
-  jobDetailReturnTo = null,
-  onExitJobDetailToLiveOperations,
-}: JobsPageProps = {}) {
+export function JobsPage() {
+  const { jobId: jobIdParam } = useParams();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  const numericJobId = parseJobIdParam(jobIdParam);
+  const jobDetailReturnTo =
+    searchParams.get("from") === "live-operations" ? "live-operations" : null;
+
   const [view, setView] = useState<JobsView>("list");
   const [detailJob, setDetailJob] = useState<Job | null>(null);
   const [printAfterDetailLoad, setPrintAfterDetailLoad] = useState(false);
+  const [pendingPrintJobId, setPendingPrintJobId] = useState<number | null>(null);
 
   const jobsQuery = useJobs({ enabled: view === "list" });
 
-  const bootstrapDetail = initialDetailJobId != null && view === "list";
-  const bootstrapJobQuery = useJob(initialDetailJobId, {
+  const jobFromList =
+    numericJobId != null ? jobsQuery.data?.find((j) => j.id === numericJobId) : undefined;
+
+  const bootstrapDetail = numericJobId != null && view === "list";
+  const bootstrapJobQuery = useJob(numericJobId, {
     enabled: bootstrapDetail,
+    placeholderData: jobFromList,
   });
 
   useEffect(() => {
-    if (initialDetailJobId == null) return;
+    if (numericJobId != null) return;
+    if (view !== "detail") return;
+    queueMicrotask(() => {
+      setDetailJob(null);
+      setView("list");
+      setPrintAfterDetailLoad(false);
+    });
+  }, [numericJobId, view]);
+
+  useEffect(() => {
+    if (numericJobId == null) return;
     if (view !== "list") return;
     if (bootstrapJobQuery.isError) {
-      onJobBootstrapFailed?.();
+      navigate("/jobs", { replace: true });
       return;
     }
     const data = bootstrapJobQuery.data;
-    if (!data || data.id !== initialDetailJobId) return;
+    if (!data || data.id !== numericJobId) return;
     queueMicrotask(() => {
       setDetailJob(data);
-      setPrintAfterDetailLoad(false);
+      setPrintAfterDetailLoad(pendingPrintJobId === data.id);
+      setPendingPrintJobId(null);
       setView("detail");
-      onInitialDetailConsumed?.();
     });
   }, [
-    initialDetailJobId,
+    numericJobId,
     view,
     bootstrapJobQuery.data,
     bootstrapJobQuery.isError,
-    onInitialDetailConsumed,
-    onJobBootstrapFailed,
+    navigate,
+    pendingPrintJobId,
   ]);
+
+  useEffect(() => {
+    if (numericJobId == null || detailJob === null) return;
+    if (detailJob.id === numericJobId) return;
+    queueMicrotask(() => {
+      setDetailJob(null);
+      setView("list");
+      setPrintAfterDetailLoad(false);
+    });
+  }, [numericJobId, detailJob]);
 
   const handleConsumedPrintIntent = useCallback(() => {
     setPrintAfterDetailLoad(false);
@@ -78,6 +95,7 @@ export function JobsPage({
           setDetailJob(job);
           setPrintAfterDetailLoad(false);
           setView("detail");
+          navigate(`/jobs/${job.id}`, { replace: true });
         }}
       />
     );
@@ -94,12 +112,10 @@ export function JobsPage({
         backAriaLabel={backToLiveOps ? "Back to Live Operations" : undefined}
         onBack={() => {
           if (backToLiveOps) {
-            onExitJobDetailToLiveOperations?.();
+            navigate("/live-operations");
             return;
           }
-          setDetailJob(null);
-          setPrintAfterDetailLoad(false);
-          setView("list");
+          navigate("/jobs");
         }}
         printAfterMount={printAfterDetailLoad}
         onConsumedPrintIntent={handleConsumedPrintIntent}
@@ -114,14 +130,12 @@ export function JobsPage({
       jobsError={jobsQuery.error}
       onCreateManual={() => setView("new")}
       onViewJob={(job) => {
-        setDetailJob(job);
-        setPrintAfterDetailLoad(false);
-        setView("detail");
+        setPendingPrintJobId(null);
+        navigate(`/jobs/${job.id}`);
       }}
       onPrintJob={(job) => {
-        setDetailJob(job);
-        setPrintAfterDetailLoad(true);
-        setView("detail");
+        setPendingPrintJobId(job.id);
+        navigate(`/jobs/${job.id}`);
       }}
     />
   );

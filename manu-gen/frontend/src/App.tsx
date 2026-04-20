@@ -1,6 +1,6 @@
-import { useCallback, useState } from "react";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Layout } from "./shared/components/Layout";
-import type { PageId } from "./shared/components/Sidebar";
+import { pathnameToActivePageId } from "./shared/navigation/pageRoutes";
 import { LiveOperationsPage } from "./features/dashboard/components/LiveOperationsPage";
 import { JobsPage } from "./features/jobs/components/JobsPage";
 import { CustomerOrdersPage } from "./features/customer-orders/components/CustomerOrdersPage";
@@ -8,66 +8,20 @@ import { StationsPage } from "./features/stations/components/StationsPage";
 import { PipelinesPage } from "./features/pipelines/components/PipelinesPage";
 
 export function App() {
-  const [currentPage, setCurrentPage] = useState<PageId>("stations");
-  const [jobsBootstrapJobId, setJobsBootstrapJobId] = useState<number | null>(null);
-  /** When opening a job from Live Operations, detail back returns there instead of the Jobs list. */
-  const [jobDetailReturnTo, setJobDetailReturnTo] = useState<"live-operations" | null>(null);
-
-  const navigateToPage = useCallback((page: PageId) => {
-    if (page !== "jobs") {
-      setJobsBootstrapJobId(null);
-      setJobDetailReturnTo(null);
-    }
-    setCurrentPage(page);
-  }, []);
-
-  const handleJobsBootstrapConsumed = useCallback(() => {
-    setJobsBootstrapJobId(null);
-  }, []);
-
-  const handleJobBootstrapFailed = useCallback(() => {
-    setJobsBootstrapJobId(null);
-    setJobDetailReturnTo(null);
-  }, []);
-
-  const handleExitJobDetailToLiveOperations = useCallback(() => {
-    navigateToPage("live-operations");
-  }, [navigateToPage]);
-
-  const sidebarActivePage =
-    currentPage === "jobs" && jobDetailReturnTo === "live-operations"
-      ? ("live-operations" as const)
-      : undefined;
+  const location = useLocation();
+  const activePageId = pathnameToActivePageId(location.pathname, location.search);
 
   return (
-    <Layout
-      currentPage={currentPage}
-      sidebarActivePage={sidebarActivePage}
-      onNavigate={navigateToPage}
-    >
-      {currentPage === "customer-orders" && (
-        <CustomerOrdersPage onNavigateToPipelines={() => navigateToPage("pipelines")} />
-      )}
-      {currentPage === "live-operations" && (
-        <LiveOperationsPage
-          onOpenJobDetail={(jobId) => {
-            setJobsBootstrapJobId(jobId);
-            setJobDetailReturnTo("live-operations");
-            navigateToPage("jobs");
-          }}
-        />
-      )}
-      {currentPage === "jobs" && (
-        <JobsPage
-          initialDetailJobId={jobsBootstrapJobId}
-          onInitialDetailConsumed={handleJobsBootstrapConsumed}
-          onJobBootstrapFailed={handleJobBootstrapFailed}
-          jobDetailReturnTo={jobDetailReturnTo}
-          onExitJobDetailToLiveOperations={handleExitJobDetailToLiveOperations}
-        />
-      )}
-      {currentPage === "stations" && <StationsPage />}
-      {currentPage === "pipelines" && <PipelinesPage />}
+    <Layout activePageId={activePageId}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/stations" replace />} />
+        <Route path="/live-operations" element={<LiveOperationsPage />} />
+        <Route path="/customer-orders" element={<CustomerOrdersPage />} />
+        <Route path="/jobs/:jobId?" element={<JobsPage />} />
+        <Route path="/stations" element={<StationsPage />} />
+        <Route path="/pipelines" element={<PipelinesPage />} />
+        <Route path="*" element={<Navigate to="/stations" replace />} />
+      </Routes>
     </Layout>
   );
 }
