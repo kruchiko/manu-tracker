@@ -36,9 +36,10 @@ services:
     command: ["sh", "-c", "yarn install && exec yarn dev --host"]
     volumes:
       - ./manu-gen/frontend/src:/app/src
-      - ./manu-gen/frontend/package.json:/app/package.json:ro
-      - ./manu-gen/frontend/yarn.lock:/app/yarn.lock:ro
-      - ./manu-gen/frontend/.yarnrc.yml:/app/.yarnrc.yml:ro
+      # Writable: Yarn 4 may open yarn.lock for update during install even when unchanged.
+      - ./manu-gen/frontend/package.json:/app/package.json
+      - ./manu-gen/frontend/yarn.lock:/app/yarn.lock
+      - ./manu-gen/frontend/.yarnrc.yml:/app/.yarnrc.yml
     depends_on:
       backend:
         condition: service_healthy
