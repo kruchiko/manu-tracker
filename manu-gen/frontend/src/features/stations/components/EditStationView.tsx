@@ -26,7 +26,7 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
     () => ({
       name: station.name,
       location: station.location,
-      slotCapacity: station.slotCapacity ?? 1,
+      slotCapacity: station.slotCapacity,
       cameraId: station.eyeId ?? "",
     }),
     [station],
@@ -59,6 +59,7 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
         id: station.id,
         name: values.name,
         location: values.location ?? "",
+        slotCapacity: values.slotCapacity,
       });
 
       if (oldEye !== newEye) {
@@ -88,7 +89,6 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
       onBack={onBack}
       onSubmit={handleSubmit}
       backLabel={station.name}
-      capacityPreview="utilized"
       pipelineRefs={pipelineRefs}
       dangerZone={<StationEditDangerZone station={station} onDeleted={onBack} />}
     />

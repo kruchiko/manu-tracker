@@ -16,8 +16,8 @@ vi.mock("../hooks/useDeleteStation", () => ({
 import { useStations } from "../hooks/useStations";
 
 const sampleStations: Station[] = [
-  { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1" },
-  { id: "station-bbb", name: "Casting", location: "", eyeId: null },
+  { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1", slotCapacity: 1 },
+  { id: "station-bbb", name: "Casting", location: "", eyeId: null, slotCapacity: 1 },
 ];
 
 describe("StationList", () => {

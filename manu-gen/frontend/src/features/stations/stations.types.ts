@@ -3,5 +3,5 @@ export interface Station {
   name: string;
   location: string;
   eyeId: string | null;
-  slotCapacity?: number;
+  slotCapacity: number;
 }

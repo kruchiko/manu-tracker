@@ -22,12 +22,43 @@ describe("createStation", () => {
     expect(station.name).toBe("Polishing");
     expect(station.location).toBe("Floor 2");
     expect(station.eyeId).toBeNull();
+    expect(station.slotCapacity).toBe(1);
   });
 
   it("should default location to empty string", () => {
     const station = stationsService.createStation({ name: "Casting" });
 
     expect(station.location).toBe("");
+    expect(station.slotCapacity).toBe(1);
+  });
+
+  it("should persist slotCapacity", () => {
+    const station = stationsService.createStation({ name: "Line 2", slotCapacity: 15 });
+
+    expect(station.slotCapacity).toBe(15);
+  });
+});
+
+describe("updateStation", () => {
+  it("should update slotCapacity", () => {
+    const created = stationsService.createStation({ name: "A", slotCapacity: 2 });
+    const updated = stationsService.updateStation(created.id, {
+      name: "A",
+      location: "",
+      slotCapacity: 10,
+    });
+
+    expect(updated.slotCapacity).toBe(10);
+  });
+
+  it("should preserve slotCapacity when not in input", () => {
+    const created = stationsService.createStation({ name: "B", slotCapacity: 7 });
+    const updated = stationsService.updateStation(created.id, {
+      name: "B Renamed",
+      location: "X",
+    });
+
+    expect(updated.slotCapacity).toBe(7);
   });
 });
 

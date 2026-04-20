@@ -5,7 +5,7 @@ export const stationSchema = z.object({
   name: z.string(),
   location: z.string(),
   eyeId: z.string().nullable(),
-  slotCapacity: z.number().int().optional(),
+  slotCapacity: z.number().int().min(1).max(15),
 });
 
 export const stationListSchema = z.array(stationSchema);

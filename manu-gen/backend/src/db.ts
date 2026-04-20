@@ -10,10 +10,11 @@ db.pragma("foreign_keys = ON");
 
 const SCHEMA: string[] = [
   `CREATE TABLE IF NOT EXISTS stations (
-    id       TEXT PRIMARY KEY,
-    name     TEXT NOT NULL,
-    location TEXT NOT NULL DEFAULT '',
-    eye_id   TEXT UNIQUE
+    id             TEXT PRIMARY KEY,
+    name           TEXT NOT NULL,
+    location       TEXT NOT NULL DEFAULT '',
+    eye_id         TEXT UNIQUE,
+    slot_capacity  INTEGER NOT NULL DEFAULT 1 CHECK (slot_capacity >= 1 AND slot_capacity <= 15)
   )`,
 
   `CREATE TABLE IF NOT EXISTS tracking_events (
@@ -92,5 +93,14 @@ db.transaction(() => {
     db.prepare(sql).run();
   }
 })();
+
+const stationColumnNames = db
+  .prepare(`PRAGMA table_info(stations)`)
+  .all() as { name: string }[];
+if (!stationColumnNames.some((c) => c.name === "slot_capacity")) {
+  db.exec(
+    `ALTER TABLE stations ADD COLUMN slot_capacity INTEGER NOT NULL DEFAULT 1 CHECK (slot_capacity >= 1 AND slot_capacity <= 15)`,
+  );
+}
 
 export default db;

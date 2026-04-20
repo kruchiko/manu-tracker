@@ -18,6 +18,7 @@ const sampleStation: Station = {
   name: "Polishing",
   location: "Floor 2",
   eyeId: null,
+  slotCapacity: 1,
 };
 
 describe("useCreateStation", () => {
@@ -38,7 +39,7 @@ describe("useCreateStation", () => {
 
     expect(apiClient.post).toHaveBeenCalledWith(
       "/stations",
-      { name: "Polishing", location: "Floor 2" },
+      expect.objectContaining({ name: "Polishing", location: "Floor 2" }),
       expect.anything(),
     );
   });

@@ -11,7 +11,7 @@ import { useDeleteStation } from "../hooks/useDeleteStation";
 
 const stations: Station[] = [
   { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1", slotCapacity: 3 },
-  { id: "station-bbb", name: "Casting", location: "", eyeId: null },
+  { id: "station-bbb", name: "Casting", location: "", eyeId: null, slotCapacity: 1 },
 ];
 
 function mockDeleteHook(overrides?: Partial<ReturnType<typeof useDeleteStation>>) {

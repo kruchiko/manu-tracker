@@ -10,10 +10,10 @@ import type {
 } from "./stations.schema.js";
 import { toStation } from "./stations.schema.js";
 
-const STATION_COLUMNS = "id, name, location, eye_id";
+const STATION_COLUMNS = "id, name, location, eye_id, slot_capacity";
 
 const stmtInsert = db.prepare(
-  `INSERT INTO stations (id, name, location) VALUES (@id, @name, @location)`,
+  `INSERT INTO stations (id, name, location, slot_capacity) VALUES (@id, @name, @location, @slot_capacity)`,
 );
 
 const stmtGetById = db.prepare(`SELECT ${STATION_COLUMNS} FROM stations WHERE id = ?`);
@@ -33,7 +33,7 @@ const stmtAssignEye = db.prepare(`UPDATE stations SET eye_id = @eye_id WHERE id 
 const stmtDeleteStation = db.prepare(`DELETE FROM stations WHERE id = ?`);
 
 const stmtUpdateStation = db.prepare(
-  `UPDATE stations SET name = @name, location = @location WHERE id = @id`,
+  `UPDATE stations SET name = @name, location = @location, slot_capacity = @slot_capacity WHERE id = @id`,
 );
 
 function generateId(): string {
@@ -42,7 +42,13 @@ function generateId(): string {
 
 export function createStation(input: CreateStationInput): Station {
   const id = generateId();
-  stmtInsert.run({ id, name: input.name, location: input.location ?? "" });
+  const slotCapacity = input.slotCapacity ?? 1;
+  stmtInsert.run({
+    id,
+    name: input.name,
+    location: input.location ?? "",
+    slot_capacity: slotCapacity,
+  });
   return getStationById(id);
 }
 
@@ -69,10 +75,12 @@ export function updateStation(stationId: string, input: UpdateStationInput): Sta
   if (!row) {
     throw new AppError(404, `Station with id ${stationId} not found`);
   }
+  const slotCapacity = input.slotCapacity !== undefined ? input.slotCapacity : row.slot_capacity;
   stmtUpdateStation.run({
     id: stationId,
     name: input.name,
     location: input.location ?? "",
+    slot_capacity: slotCapacity,
   });
   return getStationById(stationId);
 }

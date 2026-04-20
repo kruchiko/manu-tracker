@@ -55,7 +55,6 @@ function StationPreview({
   location,
   slotCapacity,
   cameraId,
-  capacityPreview,
   pipelineRefs,
   showPipelinesBlock,
 }: {
@@ -63,19 +62,12 @@ function StationPreview({
   location: string;
   slotCapacity: number;
   cameraId: string;
-  capacityPreview: "uniform" | "utilized";
   pipelineRefs: StationPipelineRef[] | undefined;
   showPipelinesBlock: boolean;
 }): React.JSX.Element {
   const displayName = name || "New Station";
   const displayLocation = location || "Location not set";
   const slots = clampSlots(Number.isFinite(slotCapacity) ? slotCapacity : 1);
-  const occupiedForCard =
-    capacityPreview === "utilized"
-      ? Math.min(slots, Math.max(0, Math.round(slots * 0.6)))
-      : slots;
-  const occupiedDash = Math.min(slots, Math.max(0, Math.round(slots * 0.55)));
-  const queueCount = Math.max(0, slots - occupiedDash);
 
   return (
     <div className={prim.previewShell}>
@@ -105,62 +97,16 @@ function StationPreview({
               <span className={styles.previewCapacityLabel}>Capacity</span>
               <div className={styles.previewCapacityValue}>
                 <div className={styles.previewSlotDots}>
-                  {capacityPreview === "uniform"
-                    ? Array.from({ length: slots }).map((_, i) => (
-                        <div key={i} className={styles.previewSlotDot} />
-                      ))
-                    : Array.from({ length: slots }).map((_, i) => (
-                        <div
-                          key={i}
-                          className={
-                            i < occupiedForCard
-                              ? `${styles.previewSlotDot} ${styles.previewSlotDotFilled}`
-                              : `${styles.previewSlotDot} ${styles.previewSlotDotEmpty}`
-                          }
-                        />
-                      ))}
+                  {Array.from({ length: slots }).map((_, i) => (
+                    <div key={i} className={styles.previewSlotDot} />
+                  ))}
                 </div>
                 <span className={styles.previewSlotLabel}>
                   {slots} {slots === 1 ? "slot" : "slots"}
-                  {slotCapacity === 0 && capacityPreview === "uniform" && " (default)"}
+                  {slotCapacity === 0 && " (default)"}
                 </span>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div>
-          <div className={styles.previewSectionLabel}>Live dashboard — utilization view</div>
-          <div className={styles.previewDashCard}>
-            <div className={styles.previewDashTitleRow}>
-              <span className={styles.previewDashName}>{displayName}</span>
-            </div>
-            <div className={styles.previewDashSlotsRow}>
-              <div className={styles.previewDashSlotTrack}>
-                <div className={styles.previewDashSlotDots}>
-                  {Array.from({ length: slots }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={
-                        i < occupiedDash
-                          ? styles.previewDashSlot
-                          : `${styles.previewDashSlot} ${styles.previewDashSlotIdle}`
-                      }
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className={styles.previewDashMetricsEndRow}>
-              <span className={styles.previewDashRatio}>
-                {occupiedDash}/{slots} slots
-              </span>
-              <span className={styles.previewDashQueue}>Queue: {queueCount}</span>
-            </div>
-            <p className={styles.previewDashFootnote}>
-              Slot squares on the dashboard show real-time occupancy once the camera starts scanning
-              trays in and out.
-            </p>
           </div>
         </div>
 
@@ -204,8 +150,6 @@ export interface StationFormProps {
   onSubmit: (values: CreateStationFormValues) => void;
   /** Back control label — design: station name on edit, &quot;Stations&quot; on create */
   backLabel?: string;
-  /** Station card capacity dots: uniform (new) or simulated utilization (edit) */
-  capacityPreview?: "uniform" | "utilized";
   /** When set, shows the &quot;Used in pipelines&quot; block (edit). */
   pipelineRefs?: StationPipelineRef[];
   /** Left column content below fields (e.g. danger zone on edit) */
@@ -221,7 +165,6 @@ export function StationForm({
   onBack,
   onSubmit,
   backLabel = "Stations",
-  capacityPreview = "uniform",
   pipelineRefs,
   dangerZone,
 }: StationFormProps): React.JSX.Element {
@@ -315,7 +258,6 @@ export function StationForm({
           location={watchedLocation}
           slotCapacity={watchedSlotCapacity}
           cameraId={watchedCameraId}
-          capacityPreview={capacityPreview}
           pipelineRefs={pipelineRefs}
           showPipelinesBlock={showPipelinesBlock}
         />
