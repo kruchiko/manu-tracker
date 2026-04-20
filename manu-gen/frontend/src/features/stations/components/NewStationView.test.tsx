@@ -3,27 +3,43 @@ import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import { createWrapper } from "../../../test-utils";
 import { NewStationView } from "./NewStationView";
-
-vi.mock("../hooks/useCreateStation", () => ({
-  useCreateStation: vi.fn(),
-}));
-
+import type { Station } from "../stations.types";
 import { useCreateStation } from "../hooks/useCreateStation";
+import { useAssignEye } from "../hooks/useAssignEye";
+
+vi.mock("../hooks/useCreateStation", () => ({ useCreateStation: vi.fn() }));
+vi.mock("../hooks/useAssignEye", () => ({ useAssignEye: vi.fn() }));
+
+const createdStation: Station = {
+  id: "station-new1",
+  name: "Polishing",
+  location: "Floor 2",
+  eyeId: null,
+  slotCapacity: 1,
+};
+
+function mockDefaultHooks(): void {
+  vi.mocked(useCreateStation).mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue(createdStation),
+    mutate: vi.fn(),
+    isPending: false,
+  } as unknown as ReturnType<typeof useCreateStation>);
+  vi.mocked(useAssignEye).mockReturnValue({
+    mutateAsync: vi.fn().mockResolvedValue(createdStation),
+    mutate: vi.fn(),
+    isPending: false,
+  } as unknown as ReturnType<typeof useAssignEye>);
+}
 
 describe("NewStationView", () => {
   const onBack = vi.fn();
 
   beforeEach(() => {
     vi.resetAllMocks();
+    mockDefaultHooks();
   });
 
   it("should render form fields and preview", () => {
-    vi.mocked(useCreateStation).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      error: null,
-    } as unknown as ReturnType<typeof useCreateStation>);
-
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
     expect(screen.getByRole("heading", { level: 1, name: "New Station" })).toBeInTheDocument();
@@ -34,12 +50,6 @@ describe("NewStationView", () => {
   });
 
   it("should call onBack when back button is clicked", async () => {
-    vi.mocked(useCreateStation).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      error: null,
-    } as unknown as ReturnType<typeof useCreateStation>);
-
     const user = userEvent.setup();
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
@@ -49,30 +59,22 @@ describe("NewStationView", () => {
   });
 
   it("should show validation error when name is empty", async () => {
-    vi.mocked(useCreateStation).mockReturnValue({
-      mutate: vi.fn(),
-      isPending: false,
-      error: null,
-    } as unknown as ReturnType<typeof useCreateStation>);
-
     const user = userEvent.setup();
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
     await user.click(screen.getByRole("button", { name: "Create Station" }));
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Station name is required"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Station name is required")).toBeInTheDocument();
     });
   });
 
-  it("should call mutate with form values on valid submit", async () => {
-    const mutate = vi.fn();
+  it("should call createStation with form values on valid submit", async () => {
+    const createAsync = vi.fn().mockResolvedValue(createdStation);
     vi.mocked(useCreateStation).mockReturnValue({
-      mutate,
+      mutateAsync: createAsync,
+      mutate: vi.fn(),
       isPending: false,
-      error: null,
     } as unknown as ReturnType<typeof useCreateStation>);
 
     const user = userEvent.setup();
@@ -83,45 +85,119 @@ describe("NewStationView", () => {
     await user.click(screen.getByRole("button", { name: "Create Station" }));
 
     await waitFor(() => {
-      expect(mutate).toHaveBeenCalledWith(
-        expect.objectContaining({ name: "Polishing", location: "Floor 2" }),
-        expect.any(Object),
-      );
+      expect(createAsync).toHaveBeenCalledWith({
+        name: "Polishing",
+        location: "Floor 2",
+        slotCapacity: 1,
+      });
     });
   });
 
-  it("should display server error", () => {
+  it("should call assignEye after create when camera ID is set", async () => {
+    const createAsync = vi.fn().mockResolvedValue(createdStation);
+    const assignAsync = vi.fn().mockResolvedValue({ ...createdStation, eyeId: "eye-9" });
     vi.mocked(useCreateStation).mockReturnValue({
+      mutateAsync: createAsync,
       mutate: vi.fn(),
       isPending: false,
-      error: new Error("Duplicate name"),
     } as unknown as ReturnType<typeof useCreateStation>);
+    vi.mocked(useAssignEye).mockReturnValue({
+      mutateAsync: assignAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useAssignEye>);
 
+    const user = userEvent.setup();
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
-    expect(screen.getByText("Duplicate name")).toBeInTheDocument();
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    await user.type(screen.getByPlaceholderText(/cam-01, eye-3/), "eye-9");
+    await user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(createAsync).toHaveBeenCalled();
+      expect(assignAsync).toHaveBeenCalledWith({ stationId: createdStation.id, eyeId: "eye-9" });
+    });
   });
 
-  it("should disable submit button while pending", () => {
+  it("should display submit error when create fails", async () => {
     vi.mocked(useCreateStation).mockReturnValue({
+      mutateAsync: vi.fn().mockRejectedValue(new Error("Duplicate name")),
       mutate: vi.fn(),
-      isPending: true,
-      error: null,
+      isPending: false,
     } as unknown as ReturnType<typeof useCreateStation>);
 
+    const user = userEvent.setup();
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
-    expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    await user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Duplicate name")).toBeInTheDocument();
+    });
+  });
+
+  it("should disable submit while save is in progress", async () => {
+    let resolveCreate!: (s: Station) => void;
+    const createPromise = new Promise<Station>((resolve) => {
+      resolveCreate = resolve;
+    });
+    const createAsync = vi.fn().mockReturnValue(createPromise);
+    vi.mocked(useCreateStation).mockReturnValue({
+      mutateAsync: createAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateStation>);
+
+    const user = userEvent.setup();
+    render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
+
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    const clickPromise = user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    });
+
+    resolveCreate(createdStation);
+    await clickPromise;
+  });
+
+  it("should show recovery message when assign fails after station is created", async () => {
+    const createAsync = vi.fn().mockResolvedValue(createdStation);
+    const assignAsync = vi.fn().mockRejectedValue(new Error("Eye already assigned"));
+    vi.mocked(useCreateStation).mockReturnValue({
+      mutateAsync: createAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateStation>);
+    vi.mocked(useAssignEye).mockReturnValue({
+      mutateAsync: assignAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useAssignEye>);
+
+    const user = userEvent.setup();
+    render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
+
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    await user.type(screen.getByPlaceholderText(/cam-01, eye-3/), "eye-1");
+    await user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Eye already assigned/)).toBeInTheDocument();
+      expect(screen.getByText(/The station was created/)).toBeInTheDocument();
+    });
+    expect(onBack).not.toHaveBeenCalled();
   });
 
   it("should navigate back on successful creation", async () => {
-    const mutate = vi.fn().mockImplementation((_values, options) => {
-      options.onSuccess();
-    });
+    const createAsync = vi.fn().mockResolvedValue(createdStation);
     vi.mocked(useCreateStation).mockReturnValue({
-      mutate,
+      mutateAsync: createAsync,
+      mutate: vi.fn(),
       isPending: false,
-      error: null,
     } as unknown as ReturnType<typeof useCreateStation>);
 
     const user = userEvent.setup();

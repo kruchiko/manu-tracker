@@ -7,16 +7,21 @@ export interface UpdateStationPayload {
   id: string;
   name: string;
   location?: string;
+  slotCapacity?: number;
 }
 
 export function useUpdateStation() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, name, location }: UpdateStationPayload) =>
+    mutationFn: ({ id, name, location, slotCapacity }: UpdateStationPayload) =>
       apiClient.put<Station>(
         `/stations/${id}`,
-        { name, location: location ?? "" },
+        {
+          name,
+          location: location ?? "",
+          ...(slotCapacity !== undefined ? { slotCapacity } : {}),
+        },
         stationSchema,
       ),
     onSuccess: () => {

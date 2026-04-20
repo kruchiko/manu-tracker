@@ -7,6 +7,7 @@ import { useUnassignEye } from "../hooks/useUnassignEye";
 import { usePipelines } from "../../pipelines/hooks/usePipelines";
 import type { Station } from "../stations.types";
 import type { CreateStationFormValues } from "../stations.schema";
+import { clampSlotCapacityForApi } from "../slotCapacity.utils";
 
 interface EditStationViewProps {
   station: Station;
@@ -26,7 +27,7 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
     () => ({
       name: station.name,
       location: station.location,
-      slotCapacity: station.slotCapacity ?? 1,
+      slotCapacity: station.slotCapacity,
       cameraId: station.eyeId ?? "",
     }),
     [station],
@@ -55,23 +56,34 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
     const newEye = (values.cameraId ?? "").trim();
 
     try {
-      await updateStation({
-        id: station.id,
-        name: values.name,
-        location: values.location ?? "",
-      });
-
-      if (oldEye !== newEye) {
-        if (oldEye && !newEye) {
-          await unassignEye(station.id);
-        } else if (newEye) {
-          await assignEye({ stationId: station.id, eyeId: newEye });
-        }
+      try {
+        await updateStation({
+          id: station.id,
+          name: values.name,
+          location: values.location ?? "",
+          slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
+        });
+      } catch (err) {
+        setSubmitError(err instanceof Error ? err.message : "Save failed");
+        return;
       }
 
-      onBack();
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Save failed");
+      try {
+        if (oldEye !== newEye) {
+          if (oldEye && !newEye) {
+            await unassignEye(station.id);
+          } else if (newEye) {
+            await assignEye({ stationId: station.id, eyeId: newEye });
+          }
+        }
+
+        onBack();
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Save failed";
+        setSubmitError(
+          `${msg} Station details were saved. Return to the list and edit this station to fix the camera assignment.`,
+        );
+      }
     } finally {
       setIsSaving(false);
     }
@@ -88,7 +100,6 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
       onBack={onBack}
       onSubmit={handleSubmit}
       backLabel={station.name}
-      capacityPreview="utilized"
       pipelineRefs={pipelineRefs}
       dangerZone={<StationEditDangerZone station={station} onDeleted={onBack} />}
     />

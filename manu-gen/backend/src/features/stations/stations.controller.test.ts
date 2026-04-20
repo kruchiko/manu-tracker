@@ -27,6 +27,7 @@ describe("POST /stations", () => {
     expect(res.body.name).toBe("Polishing");
     expect(res.body.location).toBe("Floor 2");
     expect(res.body.eyeId).toBeNull();
+    expect(res.body.slotCapacity).toBe(1);
   });
 
   it("should default location to empty string", async () => {
@@ -34,6 +35,34 @@ describe("POST /stations", () => {
 
     expect(res.status).toBe(201);
     expect(res.body.location).toBe("");
+    expect(res.body.slotCapacity).toBe(1);
+  });
+
+  it("should persist slotCapacity when provided", async () => {
+    const res = await request(app).post("/stations").send({
+      name: "Finishing",
+      location: "Line A",
+      slotCapacity: 12,
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.slotCapacity).toBe(12);
+  });
+
+  it("should return 400 when slotCapacity is out of range", async () => {
+    const tooLow = await request(app).post("/stations").send({ name: "A", slotCapacity: 0 });
+    expect(tooLow.status).toBe(400);
+
+    const tooHigh = await request(app).post("/stations").send({ name: "B", slotCapacity: 16 });
+    expect(tooHigh.status).toBe(400);
+  });
+
+  it("should return 400 when slotCapacity is not coercible to a valid integer", async () => {
+    const notANumber = await request(app).post("/stations").send({ name: "A", slotCapacity: "nope" });
+    expect(notANumber.status).toBe(400);
+
+    const nullCap = await request(app).post("/stations").send({ name: "B", slotCapacity: null });
+    expect(nullCap.status).toBe(400);
   });
 
   it("should return 400 when name is missing", async () => {
@@ -85,6 +114,49 @@ describe("PUT /stations/:id", () => {
     expect(res.body.id).toBe(id);
     expect(res.body.name).toBe("Glazing Updated");
     expect(res.body.location).toBe("B");
+    expect(res.body.slotCapacity).toBe(1);
+  });
+
+  it("should update slotCapacity", async () => {
+    const createRes = await request(app).post("/stations").send({
+      name: "Press",
+      location: "North",
+      slotCapacity: 3,
+    });
+    const id = createRes.body.id;
+
+    const res = await request(app).put(`/stations/${id}`).send({
+      name: "Press",
+      location: "North",
+      slotCapacity: 8,
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.slotCapacity).toBe(8);
+  });
+
+  it("should preserve slotCapacity when omitted on update", async () => {
+    const createRes = await request(app).post("/stations").send({
+      name: "Cure",
+      slotCapacity: 5,
+    });
+    const id = createRes.body.id;
+
+    const res = await request(app).put(`/stations/${id}`).send({ name: "Cure Renamed" });
+
+    expect(res.status).toBe(200);
+    expect(res.body.slotCapacity).toBe(5);
+  });
+
+  it("should return 400 when slotCapacity is out of range on update", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "SlotTest", slotCapacity: 4 });
+    const id = createRes.body.id;
+
+    const tooLow = await request(app).put(`/stations/${id}`).send({ name: "SlotTest", slotCapacity: 0 });
+    expect(tooLow.status).toBe(400);
+
+    const tooHigh = await request(app).put(`/stations/${id}`).send({ name: "SlotTest", slotCapacity: 20 });
+    expect(tooHigh.status).toBe(400);
   });
 
   it("should default location to empty string when omitted", async () => {

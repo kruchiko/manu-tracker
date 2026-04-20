@@ -11,7 +11,7 @@ import { useDeleteStation } from "../hooks/useDeleteStation";
 
 const stations: Station[] = [
   { id: "station-aaa", name: "Polishing", location: "Floor 2", eyeId: "eye-1", slotCapacity: 3 },
-  { id: "station-bbb", name: "Casting", location: "", eyeId: null },
+  { id: "station-bbb", name: "Casting", location: "", eyeId: null, slotCapacity: 1 },
 ];
 
 function mockDeleteHook(overrides?: Partial<ReturnType<typeof useDeleteStation>>) {
@@ -24,13 +24,18 @@ function mockDeleteHook(overrides?: Partial<ReturnType<typeof useDeleteStation>>
 }
 
 describe("StationTable", () => {
+  let onDeleteError: (message: string) => void;
+
   beforeEach(() => {
     vi.resetAllMocks();
+    onDeleteError = vi.fn<(message: string) => void>();
   });
 
   it("should render station names and locations", () => {
     mockDeleteHook();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText("Polishing")).toBeInTheDocument();
     expect(screen.getByText("Floor 2")).toBeInTheDocument();
@@ -39,21 +44,27 @@ describe("StationTable", () => {
 
   it("should show camera badge when eye is assigned", () => {
     mockDeleteHook();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText("eye-1")).toBeInTheDocument();
   });
 
   it("should show 'No camera' when eye is not assigned", () => {
     mockDeleteHook();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText("No camera")).toBeInTheDocument();
   });
 
   it("should render slot capacity from station data", () => {
     mockDeleteHook();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText("3 slots")).toBeInTheDocument();
     expect(screen.getByText("1 slot")).toBeInTheDocument();
@@ -64,7 +75,9 @@ describe("StationTable", () => {
     mockDeleteHook({ mutate });
 
     const user = userEvent.setup();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     await user.click(
       screen.getByRole("button", { name: "Delete station Polishing" }),
@@ -80,7 +93,9 @@ describe("StationTable", () => {
     mockDeleteHook({ mutate });
 
     const user = userEvent.setup();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     await user.click(
       screen.getByRole("button", { name: "Delete station Polishing" }),
@@ -92,27 +107,32 @@ describe("StationTable", () => {
 
   it("should show em dash for missing location", () => {
     mockDeleteHook();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     expect(screen.getByText("\u2014")).toBeInTheDocument();
   });
 
-  it("should display error message when delete fails", async () => {
+  it("should call onDeleteError when delete fails without changing the actions column layout", async () => {
     const mutate = vi.fn().mockImplementation((_id, options) => {
       options.onError(new Error("Used in 1 pipeline step(s)"));
     });
     mockDeleteHook({ mutate });
 
     const user = userEvent.setup();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
+    render(<StationTable stations={stations} onDeleteError={onDeleteError} />, {
+      wrapper: createWrapper(),
+    });
 
     await user.click(
       screen.getByRole("button", { name: "Delete station Polishing" }),
     );
     await user.click(screen.getByRole("button", { name: "Confirm" }));
 
-    expect(screen.getByText("Used in 1 pipeline step(s)")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "OK" })).toBeInTheDocument();
+    expect(onDeleteError).toHaveBeenCalledWith("Used in 1 pipeline step(s)");
+    expect(screen.queryByText("Used in 1 pipeline step(s)")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Delete station Polishing" })).toBeInTheDocument();
   });
 
   it("should call onSelectStation when a row is clicked", async () => {
@@ -121,7 +141,11 @@ describe("StationTable", () => {
 
     const user = userEvent.setup();
     render(
-      <StationTable stations={stations} onSelectStation={onSelectStation} />,
+      <StationTable
+        stations={stations}
+        onDeleteError={onDeleteError}
+        onSelectStation={onSelectStation}
+      />,
       { wrapper: createWrapper() },
     );
 
@@ -130,22 +154,4 @@ describe("StationTable", () => {
     expect(onSelectStation).toHaveBeenCalledWith(stations[0]);
   });
 
-  it("should dismiss error when OK is clicked", async () => {
-    const mutate = vi.fn().mockImplementation((_id, options) => {
-      options.onError(new Error("Cannot delete"));
-    });
-    mockDeleteHook({ mutate });
-
-    const user = userEvent.setup();
-    render(<StationTable stations={stations} />, { wrapper: createWrapper() });
-
-    await user.click(
-      screen.getByRole("button", { name: "Delete station Polishing" }),
-    );
-    await user.click(screen.getByRole("button", { name: "Confirm" }));
-    await user.click(screen.getByRole("button", { name: "OK" }));
-
-    expect(screen.queryByText("Cannot delete")).not.toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Delete station Polishing" })).toBeInTheDocument();
-  });
 });

@@ -105,15 +105,6 @@
   color: var(--text);
 }
 
-.errorTruncate {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--text-xs);
-  color: var(--status-late);
-}
-
 .stationName {
   font-size: var(--text-base);
   font-weight: var(--weight-semibold);
