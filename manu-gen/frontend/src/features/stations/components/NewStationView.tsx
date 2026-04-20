@@ -3,29 +3,45 @@ import { StationForm } from "./StationForm";
 import { useCreateStation } from "../hooks/useCreateStation";
 import { useAssignEye } from "../hooks/useAssignEye";
 import type { CreateStationFormValues } from "../stations.schema";
+import { clampSlotCapacityForApi } from "../slotCapacity.utils";
 
 interface NewStationViewProps {
   onBack: () => void;
 }
 
 export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Element {
-  const { mutateAsync: createStation, isPending: isCreating } = useCreateStation();
-  const { mutateAsync: assignEye, isPending: isAssigning } = useAssignEye();
+  const { mutateAsync: createStation } = useCreateStation();
+  const { mutateAsync: assignEye } = useAssignEye();
   const [submitError, setSubmitError] = useState<string | null>(null);
-
-  const isSubmitting = isCreating || isAssigning;
+  const [isSaving, setIsSaving] = useState(false);
 
   async function handleSubmit(values: CreateStationFormValues): Promise<void> {
     setSubmitError(null);
+    setIsSaving(true);
+    const camera = (values.cameraId ?? "").trim();
+    const payload: CreateStationFormValues = {
+      ...values,
+      slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
+    };
+    let createdId: string | null = null;
     try {
-      const created = await createStation(values);
-      const camera = (values.cameraId ?? "").trim();
+      const created = await createStation(payload);
+      createdId = created.id;
       if (camera) {
         await assignEye({ stationId: created.id, eyeId: camera });
       }
       onBack();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      if (createdId !== null && camera) {
+        setSubmitError(
+          `${msg} The station was created. Open it from the list to assign the camera, or try again.`,
+        );
+      } else {
+        setSubmitError(msg);
+      }
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -34,7 +50,7 @@ export function NewStationView({ onBack }: NewStationViewProps): React.JSX.Eleme
       title="New Station"
       submitLabel="Create Station"
       defaultValues={{ name: "", location: "", slotCapacity: 1, cameraId: "" }}
-      isSubmitting={isSubmitting}
+      isSubmitting={isSaving}
       errorMessage={submitError}
       onBack={onBack}
       onSubmit={handleSubmit}

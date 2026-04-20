@@ -141,16 +141,58 @@ describe("NewStationView", () => {
     });
   });
 
-  it("should disable submit button while create is pending", () => {
+  it("should disable submit while save is in progress", async () => {
+    let resolveCreate!: (s: Station) => void;
+    const createPromise = new Promise<Station>((resolve) => {
+      resolveCreate = resolve;
+    });
+    const createAsync = vi.fn().mockReturnValue(createPromise);
     vi.mocked(useCreateStation).mockReturnValue({
-      mutateAsync: vi.fn(),
+      mutateAsync: createAsync,
       mutate: vi.fn(),
-      isPending: true,
+      isPending: false,
     } as unknown as ReturnType<typeof useCreateStation>);
 
+    const user = userEvent.setup();
     render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
 
-    expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    const clickPromise = user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Saving..." })).toBeDisabled();
+    });
+
+    resolveCreate(createdStation);
+    await clickPromise;
+  });
+
+  it("should show recovery message when assign fails after station is created", async () => {
+    const createAsync = vi.fn().mockResolvedValue(createdStation);
+    const assignAsync = vi.fn().mockRejectedValue(new Error("Eye already assigned"));
+    vi.mocked(useCreateStation).mockReturnValue({
+      mutateAsync: createAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useCreateStation>);
+    vi.mocked(useAssignEye).mockReturnValue({
+      mutateAsync: assignAsync,
+      mutate: vi.fn(),
+      isPending: false,
+    } as unknown as ReturnType<typeof useAssignEye>);
+
+    const user = userEvent.setup();
+    render(<NewStationView onBack={onBack} />, { wrapper: createWrapper() });
+
+    await user.type(screen.getByPlaceholderText(/Kiln A/), "Polishing");
+    await user.type(screen.getByPlaceholderText(/cam-01, eye-3/), "eye-1");
+    await user.click(screen.getByRole("button", { name: "Create Station" }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/Eye already assigned/)).toBeInTheDocument();
+      expect(screen.getByText(/The station was created/)).toBeInTheDocument();
+    });
+    expect(onBack).not.toHaveBeenCalled();
   });
 
   it("should navigate back on successful creation", async () => {

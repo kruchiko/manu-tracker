@@ -140,6 +140,17 @@ describe("PUT /stations/:id", () => {
     expect(res.body.slotCapacity).toBe(5);
   });
 
+  it("should return 400 when slotCapacity is out of range on update", async () => {
+    const createRes = await request(app).post("/stations").send({ name: "SlotTest", slotCapacity: 4 });
+    const id = createRes.body.id;
+
+    const tooLow = await request(app).put(`/stations/${id}`).send({ name: "SlotTest", slotCapacity: 0 });
+    expect(tooLow.status).toBe(400);
+
+    const tooHigh = await request(app).put(`/stations/${id}`).send({ name: "SlotTest", slotCapacity: 20 });
+    expect(tooHigh.status).toBe(400);
+  });
+
   it("should default location to empty string when omitted", async () => {
     const createRes = await request(app).post("/stations").send({ name: "Moulding", location: "X" });
     const id = createRes.body.id;

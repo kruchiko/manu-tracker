@@ -7,6 +7,7 @@ import { useUnassignEye } from "../hooks/useUnassignEye";
 import { usePipelines } from "../../pipelines/hooks/usePipelines";
 import type { Station } from "../stations.types";
 import type { CreateStationFormValues } from "../stations.schema";
+import { clampSlotCapacityForApi } from "../slotCapacity.utils";
 
 interface EditStationViewProps {
   station: Station;
@@ -59,9 +60,14 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
         id: station.id,
         name: values.name,
         location: values.location ?? "",
-        slotCapacity: values.slotCapacity,
+        slotCapacity: clampSlotCapacityForApi(values.slotCapacity),
       });
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Save failed");
+      return;
+    }
 
+    try {
       if (oldEye !== newEye) {
         if (oldEye && !newEye) {
           await unassignEye(station.id);
@@ -72,7 +78,10 @@ export function EditStationView({ station, onBack }: EditStationViewProps): Reac
 
       onBack();
     } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : "Save failed");
+      const msg = err instanceof Error ? err.message : "Save failed";
+      setSubmitError(
+        `${msg} Station details were saved. Return to the list and edit this station to fix the camera assignment.`,
+      );
     } finally {
       setIsSaving(false);
     }
