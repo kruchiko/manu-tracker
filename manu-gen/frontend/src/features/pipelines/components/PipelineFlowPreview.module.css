@@ -5,13 +5,15 @@
 
 .node {
   display: flex;
-  align-items: flex-start;
-}
-
-.nodeContent {
-  display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.rail {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .dot {
@@ -20,10 +22,10 @@
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-  margin-bottom: var(--space-1);
 }
 
 .name {
+  margin-top: var(--space-1);
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -31,6 +33,19 @@
   line-height: 1.2;
   white-space: nowrap;
   text-align: center;
+}
+
+.detailSlot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  margin-top: 2px;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  /* Reserve two detail lines so dots and rails align across steps */
+  min-height: 2.8em;
 }
 
 .detailLine {
@@ -47,7 +62,13 @@
   width: var(--space-6);
   height: 1.5px;
   background: var(--accent-muted);
-  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.moreTail {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   flex-shrink: 0;
 }
 

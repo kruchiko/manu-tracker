@@ -52,6 +52,38 @@ describe("POST /pipelines", () => {
 
     expect(res.status).toBe(400);
   });
+
+  it("should return 400 when minDurationSeconds exceeds maxDurationSeconds", async () => {
+    const res = await request(app).post("/pipelines").send({
+      name: "Bad range",
+      productType: "Widget",
+      steps: [
+        {
+          stationId,
+          minDurationSeconds: 600,
+          maxDurationSeconds: 120,
+        },
+      ],
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 when minCapacity exceeds maxCapacity", async () => {
+    const res = await request(app).post("/pipelines").send({
+      name: "Bad caps",
+      productType: "Widget2",
+      steps: [
+        {
+          stationId,
+          minCapacity: 10,
+          maxCapacity: 2,
+        },
+      ],
+    });
+
+    expect(res.status).toBe(400);
+  });
 });
 
 describe("GET /pipelines", () => {

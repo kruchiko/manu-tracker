@@ -3,7 +3,9 @@ export interface PipelineStep {
   stationId: string;
   stationName: string;
   position: number;
+  minDurationSeconds: number | null;
   maxDurationSeconds: number | null;
+  minCapacity: number | null;
   maxCapacity: number | null;
 }
 

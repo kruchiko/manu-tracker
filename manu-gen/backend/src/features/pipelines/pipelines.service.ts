@@ -34,7 +34,7 @@ const stmtUpdate = db.prepare(
 const stmtDelete = db.prepare(`DELETE FROM pipelines WHERE id = ?`);
 
 const stmtStepsByPipeline = db.prepare(
-  `SELECT ps.id, ps.pipeline_id, ps.station_id, ps.position, ps.max_duration_seconds, ps.max_capacity, s.name AS station_name
+  `SELECT ps.id, ps.pipeline_id, ps.station_id, ps.position, ps.min_duration_seconds, ps.max_duration_seconds, ps.min_capacity, ps.max_capacity, s.name AS station_name
    FROM pipeline_steps ps
    JOIN stations s ON s.id = ps.station_id
    WHERE ps.pipeline_id = ?
@@ -42,8 +42,8 @@ const stmtStepsByPipeline = db.prepare(
 );
 
 const stmtInsertStep = db.prepare(
-  `INSERT INTO pipeline_steps (pipeline_id, station_id, position, max_duration_seconds, max_capacity)
-   VALUES (@pipeline_id, @station_id, @position, @max_duration_seconds, @max_capacity)`,
+  `INSERT INTO pipeline_steps (pipeline_id, station_id, position, min_duration_seconds, max_duration_seconds, min_capacity, max_capacity)
+   VALUES (@pipeline_id, @station_id, @position, @min_duration_seconds, @max_duration_seconds, @min_capacity, @max_capacity)`,
 );
 
 const stmtDeleteStepsByPipeline = db.prepare(
@@ -72,7 +72,9 @@ function insertSteps(
       pipeline_id: pipelineId,
       station_id: step.stationId,
       position: i + 1,
+      min_duration_seconds: step.minDurationSeconds ?? null,
       max_duration_seconds: step.maxDurationSeconds,
+      min_capacity: step.minCapacity ?? null,
       max_capacity: step.maxCapacity,
     });
   }

@@ -13,7 +13,9 @@ function makeSteps(count: number): PipelineStep[] {
     stationId: `station-${i}`,
     stationName: `Step ${i + 1}`,
     position: i + 1,
+    minDurationSeconds: null,
     maxDurationSeconds: null,
+    minCapacity: null,
     maxCapacity: null,
   }));
 }
@@ -67,7 +69,9 @@ describe("PipelineFlowPreview", () => {
         stationId: "s1",
         stationName: "Cut",
         position: 1,
+        minDurationSeconds: null,
         maxDurationSeconds: 3600,
+        minCapacity: null,
         maxCapacity: 4,
       },
     ];
@@ -75,6 +79,40 @@ describe("PipelineFlowPreview", () => {
 
     expect(screen.getByText("max 60 min")).toBeInTheDocument();
     expect(screen.getByText("max 4/tray")).toBeInTheDocument();
+  });
+
+  it("should show duration and capacity ranges when min and max are set", () => {
+    const steps: PipelineStep[] = [
+      {
+        id: 1,
+        stationId: "s1",
+        stationName: "Cut",
+        position: 1,
+        minDurationSeconds: 3600,
+        maxDurationSeconds: 7200,
+        minCapacity: 2,
+        maxCapacity: 6,
+      },
+    ];
+    render(<PipelineFlowPreview steps={steps} />);
+
+    expect(screen.getByText("60–120 min")).toBeInTheDocument();
+    expect(screen.getByText("2–6/tray")).toBeInTheDocument();
+  });
+
+  it("should recalc visible steps when step count grows without a window resize", () => {
+    const hiddenAt1024 = 5 - calcMaxVisible(1024, 5);
+    const { rerender } = render(<PipelineFlowPreview steps={makeSteps(1)} />);
+
+    expect(screen.queryByRole("button", { name: /more/ })).not.toBeInTheDocument();
+
+    rerender(<PipelineFlowPreview steps={makeSteps(5)} />);
+
+    expect(screen.getByText("Step 2")).toBeInTheDocument();
+    expect(screen.queryByText("Step 3")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: `+${hiddenAt1024} more` }),
+    ).toBeInTheDocument();
   });
 
   it("should truncate with +N more and invoke onMore when clicked", async () => {

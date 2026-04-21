@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import type { PipelineStep } from "../pipelines.types";
 import { calcMaxVisible } from "./pipelineFlowLayout";
 import styles from "./PipelineFlowPreview.module.css";
@@ -8,33 +8,47 @@ interface PipelineFlowPreviewProps {
   onMore?: () => void;
 }
 
-function formatDuration(seconds: number | null): string {
-  if (seconds === null) return "";
-  return `max ${Math.round(seconds / 60)} min`;
+function formatDurationRange(minSeconds: number | null, maxSeconds: number | null): string | null {
+  if (minSeconds !== null && maxSeconds !== null) {
+    return `${Math.round(minSeconds / 60)}–${Math.round(maxSeconds / 60)} min`;
+  }
+  if (maxSeconds !== null) {
+    return `max ${Math.round(maxSeconds / 60)} min`;
+  }
+  if (minSeconds !== null) {
+    return `min ${Math.round(minSeconds / 60)} min`;
+  }
+  return null;
 }
 
-function formatCapacity(cap: number | null): string {
-  if (cap === null) return "";
-  return `max ${cap}/tray`;
+function formatCapacityRange(minCap: number | null, maxCap: number | null): string | null {
+  if (minCap !== null && maxCap !== null) {
+    return `${minCap}–${maxCap}/tray`;
+  }
+  if (maxCap !== null) {
+    return `max ${maxCap}/tray`;
+  }
+  if (minCap !== null) {
+    return `min ${minCap}/tray`;
+  }
+  return null;
 }
 
 export function PipelineFlowPreview({
   steps,
   onMore,
 }: PipelineFlowPreviewProps): React.JSX.Element {
-  const getMax = useCallback(
-    () => calcMaxVisible(window.innerWidth, steps.length),
-    [steps.length],
+  const [maxVisible, setMaxVisible] = useState(() =>
+    calcMaxVisible(window.innerWidth, steps.length),
   );
 
-  const [maxVisible, setMaxVisible] = useState(getMax);
-
   useEffect(() => {
-    function onResize(): void {
+    function update(): void {
       setMaxVisible(calcMaxVisible(window.innerWidth, steps.length));
     }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
   }, [steps.length]);
 
   const truncated = maxVisible < steps.length;
@@ -43,23 +57,32 @@ export function PipelineFlowPreview({
 
   return (
     <div className={styles.row}>
-      {visible.map((step, i) => (
-        <div key={step.id} className={styles.node}>
-          {i > 0 && <div className={styles.connector} />}
-          <div className={styles.nodeContent}>
-            <div className={styles.dot} />
+      {visible.map((step, i) => {
+        const durationText = formatDurationRange(
+          step.minDurationSeconds,
+          step.maxDurationSeconds,
+        );
+        const capacityText = formatCapacityRange(step.minCapacity, step.maxCapacity);
+        return (
+          <div key={step.id} className={styles.node}>
+            <div className={styles.rail}>
+              {i > 0 && <div className={styles.connector} />}
+              <div className={styles.dot} aria-hidden />
+            </div>
             <span className={styles.name}>{step.stationName}</span>
-            {step.maxDurationSeconds !== null && (
-              <span className={styles.detailLine}>{formatDuration(step.maxDurationSeconds)}</span>
-            )}
-            {step.maxCapacity !== null && (
-              <span className={styles.detailLine}>{formatCapacity(step.maxCapacity)}</span>
-            )}
+            <div className={styles.detailSlot}>
+              {durationText !== null && (
+                <span className={styles.detailLine}>{durationText}</span>
+              )}
+              {capacityText !== null && (
+                <span className={styles.detailLine}>{capacityText}</span>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       {truncated && (
-        <>
+        <div className={styles.moreTail}>
           <div className={styles.connector} />
           <button
             type="button"
@@ -72,7 +95,7 @@ export function PipelineFlowPreview({
           >
             +{hiddenCount} more
           </button>
-        </>
+        </div>
       )}
     </div>
   );

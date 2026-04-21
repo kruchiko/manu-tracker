@@ -43,7 +43,9 @@ const SCHEMA: string[] = [
     pipeline_id          TEXT NOT NULL REFERENCES pipelines(id),
     station_id           TEXT NOT NULL REFERENCES stations(id),
     position             INTEGER NOT NULL CHECK (position > 0),
+    min_duration_seconds INTEGER,
     max_duration_seconds INTEGER,
+    min_capacity         INTEGER,
     max_capacity         INTEGER,
     UNIQUE(pipeline_id, position),
     UNIQUE(pipeline_id, station_id)

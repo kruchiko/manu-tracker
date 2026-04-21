@@ -21,19 +21,39 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
     onChange(next);
   }
 
-  function handleDurationChange(index: number, raw: string): void {
+  function handleMinDurationChange(index: number, raw: string): void {
     const next = [...steps];
     const minutes = raw.trim() === "" ? null : Number(raw);
     next[index] = {
       ...next[index],
-      maxDurationSeconds: minutes !== null && !isNaN(minutes) && minutes > 0
-        ? Math.round(minutes * 60)
-        : null,
+      minDurationSeconds:
+        minutes !== null && !isNaN(minutes) && minutes > 0 ? Math.round(minutes * 60) : null,
     };
     onChange(next);
   }
 
-  function handleCapacityChange(index: number, raw: string): void {
+  function handleMaxDurationChange(index: number, raw: string): void {
+    const next = [...steps];
+    const minutes = raw.trim() === "" ? null : Number(raw);
+    next[index] = {
+      ...next[index],
+      maxDurationSeconds:
+        minutes !== null && !isNaN(minutes) && minutes > 0 ? Math.round(minutes * 60) : null,
+    };
+    onChange(next);
+  }
+
+  function handleMinCapacityChange(index: number, raw: string): void {
+    const next = [...steps];
+    const val = raw.trim() === "" ? null : Number(raw);
+    next[index] = {
+      ...next[index],
+      minCapacity: val !== null && !isNaN(val) && val > 0 ? val : null,
+    };
+    onChange(next);
+  }
+
+  function handleMaxCapacityChange(index: number, raw: string): void {
     const next = [...steps];
     const val = raw.trim() === "" ? null : Number(raw);
     next[index] = {
@@ -44,7 +64,16 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
   }
 
   function handleAdd(): void {
-    onChange([...steps, { stationId: "", maxDurationSeconds: null, maxCapacity: null }]);
+    onChange([
+      ...steps,
+      {
+        stationId: "",
+        minDurationSeconds: null,
+        maxDurationSeconds: null,
+        minCapacity: null,
+        maxCapacity: null,
+      },
+    ]);
   }
 
   function handleRemove(index: number): void {
@@ -128,6 +157,8 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
                   type="number"
                   min="1"
                   step="1"
+                  value={formatMinutes(step.minDurationSeconds)}
+                  onChange={(e) => handleMinDurationChange(index, e.target.value)}
                   placeholder="—"
                   className={styles.numInput}
                   title="Min duration in minutes"
@@ -139,7 +170,7 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
                   min="1"
                   step="1"
                   value={formatMinutes(step.maxDurationSeconds)}
-                  onChange={(e) => handleDurationChange(index, e.target.value)}
+                  onChange={(e) => handleMaxDurationChange(index, e.target.value)}
                   placeholder="—"
                   className={styles.numInput}
                   title="Max duration in minutes"
@@ -150,6 +181,8 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
                   type="number"
                   min="1"
                   step="1"
+                  value={step.minCapacity ?? ""}
+                  onChange={(e) => handleMinCapacityChange(index, e.target.value)}
                   placeholder="—"
                   className={styles.numInput}
                   title="Min items per tray"
@@ -161,7 +194,7 @@ export function PipelineStepEditor({ steps, stations, onChange }: PipelineStepEd
                   min="1"
                   step="1"
                   value={step.maxCapacity ?? ""}
-                  onChange={(e) => handleCapacityChange(index, e.target.value)}
+                  onChange={(e) => handleMaxCapacityChange(index, e.target.value)}
                   placeholder="—"
                   className={styles.numInput}
                   title="Max items per tray"
