@@ -103,14 +103,15 @@ Compare measured column widths to your `NODE_WIDTH` / token values. If they diff
 ### Fixes we applied (project-specific)
 
 4. **ResizeObserver on the flow container** replaced the `window.innerWidth` formula so `calcMaxVisible` always uses the real available width.
-5. **Visual spacing without stretching connectors:** `margin-left` on the "+N more" chip (token-aligned, e.g. `var(--space-6)`) plus a matching bump to `MORE_CHIP_WIDTH` in the layout formula.
+5. **Visual spacing without stretching connectors:** `margin-left` on the "+N more" chip (token-aligned, e.g. `var(--space-6)`) plus a matching bump to `PIPELINE_FLOW_LAYOUT.moreTailReservePx` in the truncation formula (and `--pipeline-flow-more-tail-min` in `design-tokens.css`).
 
 ## jsdom test polyfills
 
 When components depend on `ResizeObserver` or `getBoundingClientRect`:
 
-- Add a no-op `ResizeObserver` polyfill in `manu-gen/frontend/src/test-setup.ts`.
+- Add a no-op `ResizeObserver` polyfill in `manu-gen/frontend/src/test-setup.ts` (documented there: it does not fire callbacks).
 - Guard recalc logic with `if (width > 0)` so jsdom's zero-width containers don't collapse visible items to 1.
+- **Regression coverage without Playwright:** `pipelineFlowLayout.contract.test.ts` ties `PIPELINE_FLOW_LAYOUT` literals to `design-tokens.css` strings; `PipelineFlowPreview.test.tsx` includes a describe block that temporarily replaces `ResizeObserver` and mocks `getBoundingClientRect` on `data-testid="pipeline-flow-root"` to assert “+N more” and `onMore`.
 
 ## Hygiene
 

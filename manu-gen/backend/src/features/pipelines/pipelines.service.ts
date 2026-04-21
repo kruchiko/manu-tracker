@@ -73,9 +73,9 @@ function insertSteps(
       station_id: step.stationId,
       position: i + 1,
       min_duration_seconds: step.minDurationSeconds ?? null,
-      max_duration_seconds: step.maxDurationSeconds,
+      max_duration_seconds: step.maxDurationSeconds ?? null,
       min_capacity: step.minCapacity ?? null,
-      max_capacity: step.maxCapacity,
+      max_capacity: step.maxCapacity ?? null,
     });
   }
 }

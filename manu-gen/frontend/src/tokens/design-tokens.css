@@ -146,6 +146,10 @@
 
   /* Pipeline step nodes — same outer diameter on Pipeline list preview and job progress */
   --pipeline-step-node-size: 18px;
+  /* Flow column: one step stack (labels + duration/capacity lines); keep PIPELINE_FLOW_LAYOUT.stepColumnWidthPx aligned */
+  --pipeline-flow-step-width: 5.5rem;
+  /* Reserved width for truncated flow tail (connector + “+N more” chip incl. margin). Must match PIPELINE_FLOW_LAYOUT.moreTailReservePx in pipelineFlowLayout.ts; consumed by truncation math and contract tests, not yet referenced from component CSS. */
+  --pipeline-flow-more-tail-min: 94px;
 
   /* ── 12. Border Radius ── */
   --radius-sm:   4px;

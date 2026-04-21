@@ -86,6 +86,39 @@ describe("POST /pipelines", () => {
   });
 });
 
+describe("PUT /pipelines/:id/steps", () => {
+  it("should persist min duration and min capacity on replace", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Replaceable",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 5 }],
+    });
+    expect(createRes.status).toBe(201);
+    const id = createRes.body.id as string;
+
+    const res = await request(app)
+      .put(`/pipelines/${id}/steps`)
+      .send({
+        steps: [
+          {
+            stationId,
+            minDurationSeconds: 120,
+            maxDurationSeconds: 600,
+            minCapacity: 2,
+            maxCapacity: 10,
+          },
+        ],
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.steps).toHaveLength(1);
+    expect(res.body.steps[0].minDurationSeconds).toBe(120);
+    expect(res.body.steps[0].maxDurationSeconds).toBe(600);
+    expect(res.body.steps[0].minCapacity).toBe(2);
+    expect(res.body.steps[0].maxCapacity).toBe(10);
+  });
+});
+
 describe("GET /pipelines", () => {
   it("should return empty array when no pipelines exist", async () => {
     const res = await request(app).get("/pipelines");

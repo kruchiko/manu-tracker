@@ -35,6 +35,8 @@ docker-compose up --build
 
 Source files are bind-mounted, so changes in `manu-gen/backend/src` and `manu-gen/frontend/src` trigger hot-reload automatically.
 
+The manu-gen backend applies small **SQLite migrations on startup** (see `manu-gen/backend/src/db.ts`), including additive `ALTER TABLE` for older database files on the Docker volume. After pulling schema-related changes, restart the backend container once so migrations run.
+
 To stop and remove containers:
 
 ```bash

@@ -110,4 +110,21 @@ try {
   throw new Error(`stations table migration (slot_capacity) failed: ${detail}`, { cause: err });
 }
 
+try {
+  const pipelineStepColumns = db
+    .prepare(`PRAGMA table_info(pipeline_steps)`)
+    .all() as { name: string }[];
+  if (!pipelineStepColumns.some((c) => c.name === "min_duration_seconds")) {
+    db.exec(`ALTER TABLE pipeline_steps ADD COLUMN min_duration_seconds INTEGER`);
+  }
+  if (!pipelineStepColumns.some((c) => c.name === "min_capacity")) {
+    db.exec(`ALTER TABLE pipeline_steps ADD COLUMN min_capacity INTEGER`);
+  }
+} catch (err) {
+  const detail = err instanceof Error ? err.message : String(err);
+  throw new Error(`pipeline_steps table migration (min duration / min capacity) failed: ${detail}`, {
+    cause: err,
+  });
+}
+
 export default db;

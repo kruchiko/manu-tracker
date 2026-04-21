@@ -112,7 +112,8 @@ describe("PipelineList", () => {
     expect(screen.getByText("1 pipeline")).toBeInTheDocument();
     expect(screen.getByText("Assembly Line")).toBeInTheDocument();
     expect(screen.getByText("Widget")).toBeInTheDocument();
-    expect(screen.getByText("2 steps · ~5 min expected")).toBeInTheDocument();
+    expect(screen.getByText("2 steps")).toBeInTheDocument();
+    expect(screen.getByText("~5 min expected")).toBeInTheDocument();
     expect(screen.getByText("Pipeline")).toBeInTheDocument();
     expect(screen.getByText("Flow")).toBeInTheDocument();
     expect(screen.getByText("Actions")).toBeInTheDocument();

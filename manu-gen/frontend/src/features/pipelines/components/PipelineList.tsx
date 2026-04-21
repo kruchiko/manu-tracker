@@ -143,14 +143,22 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
       key: "pipeline",
       header: "Pipeline",
       render: (pipeline) => (
-        <div>
-          <div className={styles.pipelineName}>{pipeline.name}</div>
-          {pipeline.productType && (
-            <span className={styles.badge}>{pipeline.productType}</span>
-          )}
-          <div className={styles.pipelineMeta}>
-            {pipeline.steps.length} step{pipeline.steps.length !== 1 ? "s" : ""}
-            {pipeline.totalExpectedSeconds !== null && ` · ${formatMinutes(pipeline.totalExpectedSeconds)}`}
+        <div className={styles.pipelineGrid}>
+          <div className={styles.pipelineTitleRow}>{pipeline.name}</div>
+          <div className={styles.pipelineBelow}>
+            {pipeline.productType && (
+              <span className={styles.badge}>{pipeline.productType}</span>
+            )}
+            <div className={styles.pipelineMeta}>
+              <span className={styles.pipelineMetaLine}>
+                {pipeline.steps.length} step{pipeline.steps.length !== 1 ? "s" : ""}
+              </span>
+              {pipeline.totalExpectedSeconds !== null && (
+                <span className={styles.pipelineMetaLine}>
+                  {formatMinutes(pipeline.totalExpectedSeconds)}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       ),
@@ -158,11 +166,15 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
     {
       key: "flow",
       header: "Flow",
+      /* Header centered in column; body stays left — do not use align: "center" on the column (that also centers td). */
+      headerAlign: "center",
       render: (pipeline) => (
-        <PipelineFlowPreview
-          steps={pipeline.steps}
-          onMore={() => onEdit(pipeline)}
-        />
+        <div className={styles.pipelineFlowCell}>
+          <PipelineFlowPreview
+            steps={pipeline.steps}
+            onMore={() => onEdit(pipeline)}
+          />
+        </div>
       ),
     },
     {
@@ -170,8 +182,12 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
       header: "Actions",
       align: "right",
       render: (pipeline) => (
-        <div className={styles.actionsCell}>
-          <PipelineActions pipeline={pipeline} />
+        <div className={styles.actionsStack}>
+          <div className={styles.actionsRail}>
+            <div className={styles.actionsCell}>
+              <PipelineActions pipeline={pipeline} />
+            </div>
+          </div>
         </div>
       ),
     },
@@ -183,12 +199,16 @@ export function PipelineList({ onEdit }: PipelineListProps): React.JSX.Element {
       count={pipelines.length}
       countLabel={pipelines.length === 1 ? "pipeline" : "pipelines"}
     >
-      <DataTable
-        columns={columns}
-        rows={pipelines}
-        getRowKey={(p) => p.id}
-        onRowClick={onEdit}
-      />
+      <div className={styles.pipelineListBody}>
+        <DataTable
+          columns={columns}
+          rows={pipelines}
+          getRowKey={(p) => p.id}
+          onRowClick={onEdit}
+          cellVerticalAlign="top"
+          tableClassName={styles.pipelinesTable}
+        />
+      </div>
     </ListCard>
   );
 }

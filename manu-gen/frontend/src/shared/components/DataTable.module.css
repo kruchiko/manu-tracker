@@ -24,6 +24,10 @@
   text-align: right;
 }
 
+.headerCellCenter {
+  text-align: center;
+}
+
 .row {
   cursor: default;
 }
@@ -39,8 +43,20 @@
   transition: background-color var(--duration-fast) var(--easing-default);
 }
 
+.cellTdTop {
+  vertical-align: top;
+}
+
+.cellTdMiddle {
+  vertical-align: middle;
+}
+
 .cellRight {
   text-align: right;
+}
+
+.cellCenter {
+  text-align: center;
 }
 
 .rowBorder .cell {

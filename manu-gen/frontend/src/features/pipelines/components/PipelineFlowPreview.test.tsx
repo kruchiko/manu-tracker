@@ -1,11 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import { calcMaxVisible } from "./pipelineFlowLayout";
+import { PIPELINE_FLOW_LAYOUT, calcMaxVisible } from "./pipelineFlowLayout";
 import { PipelineFlowPreview } from "./PipelineFlowPreview";
 import type { PipelineStep } from "../pipelines.types";
-
-const defaultInnerWidth = window.innerWidth;
 
 function makeSteps(count: number): PipelineStep[] {
   return Array.from({ length: count }, (_, i) => ({
@@ -21,36 +19,45 @@ function makeSteps(count: number): PipelineStep[] {
 }
 
 describe("calcMaxVisible", () => {
-  it("returns totalSteps when the full flow fits in the flow column", () => {
-    expect(calcMaxVisible(2000, 3)).toBe(3);
+  it("returns totalSteps when the full flow fits", () => {
+    expect(calcMaxVisible(800, 3)).toBe(3);
   });
 
-  it("returns 1 when horizontal space for the flow column is exhausted", () => {
-    expect(calcMaxVisible(600, 5)).toBe(1);
+  it("returns 1 when available width is tiny", () => {
+    expect(calcMaxVisible(50, 5)).toBe(1);
   });
 
-  it("truncates at 1024px viewport for five steps (matches list layout constants)", () => {
-    expect(calcMaxVisible(1024, 5)).toBe(2);
+  it("truncates correctly for a given width", () => {
+    const { stepColumnWidthPx, connectorWidthPx, moreTailReservePx } = PIPELINE_FLOW_LAYOUT;
+    const fiveFull =
+      stepColumnWidthPx * 5 + connectorWidthPx * Math.max(0, 5 - 1);
+    expect(fiveFull).toBe(481);
+    expect(calcMaxVisible(500, 5)).toBe(5);
+    // 481 > 400 → truncated: floor((400 - moreTailReservePx) / (step + connector))
+    expect(calcMaxVisible(400, 5)).toBe(3);
+    expect(
+      Math.floor((400 - moreTailReservePx) / (stepColumnWidthPx + connectorWidthPx)),
+    ).toBe(3);
+  });
+
+  it("shows all when exactly enough space", () => {
+    const { stepColumnWidthPx, connectorWidthPx } = PIPELINE_FLOW_LAYOUT;
+    const threeFull = stepColumnWidthPx * 3 + connectorWidthPx * 2;
+    expect(threeFull).toBe(279);
+    expect(calcMaxVisible(279, 3)).toBe(3);
+  });
+
+  it("never returns more than totalSteps", () => {
+    expect(calcMaxVisible(9999, 2)).toBe(2);
+  });
+
+  it("returns 1 for zero or negative width", () => {
+    expect(calcMaxVisible(0, 5)).toBe(1);
+    expect(calcMaxVisible(-100, 3)).toBe(1);
   });
 });
 
 describe("PipelineFlowPreview", () => {
-  beforeEach(() => {
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      writable: true,
-      value: 1024,
-    });
-  });
-
-  afterEach(() => {
-    Object.defineProperty(window, "innerWidth", {
-      configurable: true,
-      writable: true,
-      value: defaultInnerWidth,
-    });
-  });
-
   it("should render station names for each visible step", () => {
     const steps = makeSteps(2);
     render(<PipelineFlowPreview steps={steps} />);
@@ -120,35 +127,86 @@ describe("PipelineFlowPreview", () => {
     expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
   });
 
-  it("should recalc visible steps when step count grows without a window resize", () => {
-    const hiddenAt1024 = 5 - calcMaxVisible(1024, 5);
-    const { rerender } = render(<PipelineFlowPreview steps={makeSteps(1)} />);
+  it("should not show +N more when a single step fits the preview", () => {
+    render(<PipelineFlowPreview steps={makeSteps(1)} />);
 
+    expect(screen.getByText("Step 1")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /more/ })).not.toBeInTheDocument();
-
-    rerender(<PipelineFlowPreview steps={makeSteps(5)} />);
-
-    expect(screen.getByText("Step 2")).toBeInTheDocument();
-    expect(screen.queryByText("Step 3")).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: `+${hiddenAt1024} more` }),
-    ).toBeInTheDocument();
   });
 
-  it("should truncate with +N more and invoke onMore when clicked", async () => {
-    const user = userEvent.setup();
-    const onMore = vi.fn();
-    const steps = makeSteps(5);
-    const hidden = steps.length - calcMaxVisible(1024, steps.length);
+  it("should render all steps in jsdom (zero-width container shows all)", () => {
+    const steps = makeSteps(8);
+    render(<PipelineFlowPreview steps={steps} />);
 
+    for (let i = 1; i <= 8; i++) {
+      expect(screen.getByText(`Step ${i}`)).toBeInTheDocument();
+    }
+    expect(
+      screen.queryByRole("button", { name: /more/ }),
+    ).not.toBeInTheDocument();
+  });
+});
+
+describe("PipelineFlowPreview truncation (ResizeObserver)", () => {
+  const savedResizeObserver = globalThis.ResizeObserver;
+  const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+
+  beforeEach(() => {
+    globalThis.ResizeObserver = class TestResizeObserver {
+      constructor(private readonly callback: ResizeObserverCallback) {}
+
+      observe(): void {
+        queueMicrotask(() => {
+          this.callback([], this as unknown as ResizeObserver);
+        });
+      }
+
+      unobserve(): void {}
+
+      disconnect(): void {}
+    } as unknown as typeof ResizeObserver;
+  });
+
+  afterEach(() => {
+    globalThis.ResizeObserver = savedResizeObserver;
+    vi.restoreAllMocks();
+  });
+
+  it("shows +N more and calls onMore when the flow root reports a constrained width", async () => {
+    const constrainedWidth = 250;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      if (this.getAttribute("data-testid") === "pipeline-flow-root") {
+        return {
+          width: constrainedWidth,
+          height: 40,
+          top: 0,
+          left: 0,
+          bottom: 40,
+          right: constrainedWidth,
+          x: 0,
+          y: 0,
+          toJSON: () => ({}),
+        } as DOMRect;
+      }
+      return originalGetBoundingClientRect.call(this);
+    });
+
+    const steps = makeSteps(5);
+    const hidden = steps.length - calcMaxVisible(constrainedWidth, steps.length);
+    expect(hidden).toBe(4);
+
+    const onMore = vi.fn();
+    const user = userEvent.setup();
     render(<PipelineFlowPreview steps={steps} onMore={onMore} />);
 
-    const moreBtn = screen.getByRole("button", {
-      name: `+${hidden} more`,
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: `+${hidden} more` })).toBeInTheDocument();
     });
-    expect(moreBtn).toBeInTheDocument();
+    expect(screen.queryByText("Step 2")).not.toBeInTheDocument();
 
-    await user.click(moreBtn);
+    await user.click(screen.getByRole("button", { name: `+${hidden} more` }));
     expect(onMore).toHaveBeenCalledTimes(1);
   });
 });
