@@ -1,12 +1,17 @@
 .row {
   display: flex;
+  flex-wrap: nowrap;
   align-items: flex-start;
+  /* Space between steps so nowrap detail lines never visually merge when the cell is tight */
+  gap: var(--space-3);
 }
 
 .node {
   display: flex;
   flex-direction: column;
+  flex-shrink: 0;
   align-items: center;
+  min-width: max-content;
 }
 
 .rail {
@@ -40,7 +45,6 @@
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  width: 100%;
   margin-top: 2px;
   font-size: var(--text-xs);
   line-height: 1.4;
@@ -49,6 +53,7 @@
 }
 
 .detailLine {
+  display: block;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--text-muted);
@@ -67,9 +72,9 @@
 
 .moreTail {
   display: flex;
+  flex-shrink: 0;
   flex-direction: row;
   align-items: center;
-  flex-shrink: 0;
 }
 
 .moreChip {
