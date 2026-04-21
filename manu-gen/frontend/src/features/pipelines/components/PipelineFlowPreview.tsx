@@ -1,6 +1,6 @@
 import { Fragment, useState, useEffect } from "react";
 import type { PipelineStep } from "../pipelines.types";
-import { buildGridTemplateColumns, calcMaxVisible } from "./pipelineFlowLayout";
+import { calcMaxVisible } from "./pipelineFlowLayout";
 import styles from "./PipelineFlowPreview.module.css";
 
 interface PipelineFlowPreviewProps {
@@ -44,16 +44,6 @@ function formatCapacityRange(
   return null;
 }
 
-/** 1-based CSS grid column for step index `i` (0-based). */
-function dotColumn(i: number): number {
-  return 2 * i + 1;
-}
-
-/** 1-based column for connector before step `i` (i >= 1). */
-function connectorBeforeStepColumn(i: number): number {
-  return 2 * i;
-}
-
 export function PipelineFlowPreview({
   steps,
   onMore,
@@ -75,12 +65,9 @@ export function PipelineFlowPreview({
   const visible = truncated ? steps.slice(0, maxVisible) : steps;
   const hiddenCount = steps.length - maxVisible;
 
-  const gridTemplateColumns = buildGridTemplateColumns(visible.length, truncated);
-
   return (
     <div
       className={styles.flow}
-      style={{ gridTemplateColumns }}
       role="group"
       aria-label={`Pipeline flow, ${steps.length} step${steps.length !== 1 ? "s" : ""}`}
     >
@@ -90,25 +77,18 @@ export function PipelineFlowPreview({
           step.maxDurationSeconds,
         );
         const capacityText = formatCapacityRange(step.minCapacity, step.maxCapacity);
-        const col = dotColumn(i);
         return (
           <Fragment key={step.id}>
             {i > 0 && (
-              <div
-                className={styles.connectorCell}
-                style={{ gridColumn: connectorBeforeStepColumn(i), gridRow: 1 }}
-                aria-hidden
-              >
+              <div className={styles.connectorWrap} aria-hidden>
                 <div className={styles.connector} />
               </div>
             )}
-            <div className={styles.dotCell} style={{ gridColumn: col, gridRow: 1 }}>
-              <div className={styles.dot} aria-hidden />
-            </div>
-            <div className={styles.nameCell} style={{ gridColumn: col, gridRow: 2 }}>
+            <div className={styles.stepFrame}>
+              <div className={styles.rail}>
+                <div className={styles.dot} aria-hidden />
+              </div>
               <span className={styles.name}>{step.stationName}</span>
-            </div>
-            <div className={styles.detailCell} style={{ gridColumn: col, gridRow: 3 }}>
               <div className={styles.detailSlot}>
                 <span
                   className={`${styles.detailLine} ${durationText === null ? styles.detailLinePlaceholder : ""}`}
@@ -129,26 +109,20 @@ export function PipelineFlowPreview({
       })}
       {truncated && (
         <>
-          <div
-            className={styles.connectorCell}
-            style={{ gridColumn: 2 * visible.length, gridRow: 1 }}
-            aria-hidden
-          >
+          <div className={styles.connectorWrap} aria-hidden>
             <div className={styles.connector} />
           </div>
-          <div className={styles.moreCell} style={{ gridColumn: 2 * visible.length + 1, gridRow: 1 }}>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onMore?.();
-              }}
-              className={styles.moreChip}
-              title={`View all ${steps.length} steps`}
-            >
-              +{hiddenCount} more
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onMore?.();
+            }}
+            className={`${styles.moreChip} ${styles.moreChipStandalone}`}
+            title={`View all ${steps.length} steps`}
+          >
+            +{hiddenCount} more
+          </button>
         </>
       )}
     </div>
