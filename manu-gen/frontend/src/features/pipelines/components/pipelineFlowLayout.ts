@@ -1,4 +1,5 @@
 const NODE_WIDTH = 75;
+/** Must match `var(--space-6)` in PipelineFlowPreview grid template. */
 const CONNECTOR_WIDTH = 24;
 const MORE_CHIP_WIDTH = 70;
 const SIDEBAR_WIDTH = 220;
@@ -6,6 +7,23 @@ const CONTENT_PADDING = 72;
 const PIPELINE_COL = 200;
 const ACTIONS_COL = 140;
 const TABLE_CELL_PADDING = 44;
+
+/**
+ * Column tracks for PipelineFlowPreview CSS grid: [dot][conn][dot]…[+conn][+more?].
+ * Connector width token must match CONNECTOR_WIDTH / calcMaxVisible.
+ */
+export function buildGridTemplateColumns(visibleStepCount: number, truncated: boolean): string {
+  if (visibleStepCount <= 0) return "none";
+  const dotTrack = "minmax(min-content, max-content)";
+  const parts: string[] = [dotTrack];
+  for (let i = 1; i < visibleStepCount; i++) {
+    parts.push("var(--space-6)", dotTrack);
+  }
+  if (truncated) {
+    parts.push("var(--space-6)", "max-content");
+  }
+  return parts.join(" ");
+}
 
 /** Layout math for the pipeline flow column — must stay in sync with list + sidebar chrome. */
 export function calcMaxVisible(viewportWidth: number, totalSteps: number): number {

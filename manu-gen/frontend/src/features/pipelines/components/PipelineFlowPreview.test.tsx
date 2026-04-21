@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
-import { calcMaxVisible } from "./pipelineFlowLayout";
+import { buildGridTemplateColumns, calcMaxVisible } from "./pipelineFlowLayout";
 import { PipelineFlowPreview } from "./PipelineFlowPreview";
 import type { PipelineStep } from "../pipelines.types";
 
@@ -19,6 +19,20 @@ function makeSteps(count: number): PipelineStep[] {
     maxCapacity: null,
   }));
 }
+
+describe("buildGridTemplateColumns", () => {
+  it("alternates dot and connector tracks for two steps without tail", () => {
+    expect(buildGridTemplateColumns(2, false)).toBe(
+      "minmax(min-content, max-content) var(--space-6) minmax(min-content, max-content)",
+    );
+  });
+
+  it("appends connector and more chip tracks when truncated", () => {
+    expect(buildGridTemplateColumns(2, true)).toBe(
+      "minmax(min-content, max-content) var(--space-6) minmax(min-content, max-content) var(--space-6) max-content",
+    );
+  });
+});
 
 describe("calcMaxVisible", () => {
   it("returns totalSteps when the full flow fits in the flow column", () => {
