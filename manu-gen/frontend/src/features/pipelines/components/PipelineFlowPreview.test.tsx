@@ -100,6 +100,26 @@ describe("PipelineFlowPreview", () => {
     expect(screen.getByText("2–6/tray")).toBeInTheDocument();
   });
 
+  it("should show max-only labels when min fields are undefined (e.g. older API payloads)", () => {
+    const steps = [
+      {
+        id: 1,
+        stationId: "s1",
+        stationName: "Inspection",
+        position: 1,
+        maxDurationSeconds: 300,
+        maxCapacity: 15,
+      },
+    ] as unknown as PipelineStep[];
+
+    render(<PipelineFlowPreview steps={steps} />);
+
+    expect(screen.getByText("max 5 min")).toBeInTheDocument();
+    expect(screen.getByText("max 15/tray")).toBeInTheDocument();
+    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/undefined/)).not.toBeInTheDocument();
+  });
+
   it("should recalc visible steps when step count grows without a window resize", () => {
     const hiddenAt1024 = 5 - calcMaxVisible(1024, 5);
     const { rerender } = render(<PipelineFlowPreview steps={makeSteps(1)} />);

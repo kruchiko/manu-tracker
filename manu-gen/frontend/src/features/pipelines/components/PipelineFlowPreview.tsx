@@ -8,28 +8,38 @@ interface PipelineFlowPreviewProps {
   onMore?: () => void;
 }
 
-function formatDurationRange(minSeconds: number | null, maxSeconds: number | null): string | null {
-  if (minSeconds !== null && maxSeconds !== null) {
-    return `${Math.round(minSeconds / 60)}–${Math.round(maxSeconds / 60)} min`;
+function formatDurationRange(
+  minSeconds: number | null | undefined,
+  maxSeconds: number | null | undefined,
+): string | null {
+  const min = minSeconds ?? null;
+  const max = maxSeconds ?? null;
+  if (min !== null && max !== null) {
+    return `${Math.round(min / 60)}–${Math.round(max / 60)} min`;
   }
-  if (maxSeconds !== null) {
-    return `max ${Math.round(maxSeconds / 60)} min`;
+  if (max !== null) {
+    return `max ${Math.round(max / 60)} min`;
   }
-  if (minSeconds !== null) {
-    return `min ${Math.round(minSeconds / 60)} min`;
+  if (min !== null) {
+    return `min ${Math.round(min / 60)} min`;
   }
   return null;
 }
 
-function formatCapacityRange(minCap: number | null, maxCap: number | null): string | null {
-  if (minCap !== null && maxCap !== null) {
-    return `${minCap}–${maxCap}/tray`;
+function formatCapacityRange(
+  minCap: number | null | undefined,
+  maxCap: number | null | undefined,
+): string | null {
+  const min = minCap ?? null;
+  const max = maxCap ?? null;
+  if (min !== null && max !== null) {
+    return `${min}–${max}/tray`;
   }
-  if (maxCap !== null) {
-    return `max ${maxCap}/tray`;
+  if (max !== null) {
+    return `max ${max}/tray`;
   }
-  if (minCap !== null) {
-    return `min ${minCap}/tray`;
+  if (min !== null) {
+    return `min ${min}/tray`;
   }
   return null;
 }
