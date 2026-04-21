@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../../shared/api/client";
 import type { Pipeline } from "../pipelines.types";
 import type { StepFormValue } from "../pipelines.schema";
+import { serializePipelineStepsForApi } from "../pipelineSteps.apiPayload";
 
 interface UpdateStepsInput {
   pipelineId: string;
@@ -13,7 +14,9 @@ export function useUpdatePipelineSteps() {
 
   return useMutation({
     mutationFn: ({ pipelineId, steps }: UpdateStepsInput) =>
-      apiClient.put<Pipeline>(`/pipelines/${pipelineId}/steps`, { steps }),
+      apiClient.put<Pipeline>(`/pipelines/${pipelineId}/steps`, {
+        steps: serializePipelineStepsForApi(steps),
+      }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["pipelines"] });
     },

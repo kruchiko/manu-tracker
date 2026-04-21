@@ -35,6 +35,28 @@ describe("createPipeline", () => {
     expect(pipeline.steps[0].maxDurationSeconds).toBe(120);
   });
 
+  it("should persist min duration and min capacity when set", () => {
+    const pipeline = pipelinesService.createPipeline({
+      name: "Ranged",
+      productType: "Gadget",
+      steps: [
+        {
+          stationId,
+          minDurationSeconds: 60,
+          maxDurationSeconds: 300,
+          minCapacity: 2,
+          maxCapacity: 8,
+        },
+      ],
+    });
+
+    const step = pipeline.steps[0];
+    expect(step.minDurationSeconds).toBe(60);
+    expect(step.maxDurationSeconds).toBe(300);
+    expect(step.minCapacity).toBe(2);
+    expect(step.maxCapacity).toBe(8);
+  });
+
   it("should default description to empty string", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "Flow B",

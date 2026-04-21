@@ -43,7 +43,9 @@ const SCHEMA: string[] = [
     pipeline_id          TEXT NOT NULL REFERENCES pipelines(id),
     station_id           TEXT NOT NULL REFERENCES stations(id),
     position             INTEGER NOT NULL CHECK (position > 0),
+    min_duration_seconds INTEGER,
     max_duration_seconds INTEGER,
+    min_capacity         INTEGER,
     max_capacity         INTEGER,
     UNIQUE(pipeline_id, position),
     UNIQUE(pipeline_id, station_id)
@@ -106,6 +108,23 @@ try {
 } catch (err) {
   const detail = err instanceof Error ? err.message : String(err);
   throw new Error(`stations table migration (slot_capacity) failed: ${detail}`, { cause: err });
+}
+
+try {
+  const pipelineStepColumns = db
+    .prepare(`PRAGMA table_info(pipeline_steps)`)
+    .all() as { name: string }[];
+  if (!pipelineStepColumns.some((c) => c.name === "min_duration_seconds")) {
+    db.exec(`ALTER TABLE pipeline_steps ADD COLUMN min_duration_seconds INTEGER`);
+  }
+  if (!pipelineStepColumns.some((c) => c.name === "min_capacity")) {
+    db.exec(`ALTER TABLE pipeline_steps ADD COLUMN min_capacity INTEGER`);
+  }
+} catch (err) {
+  const detail = err instanceof Error ? err.message : String(err);
+  throw new Error(`pipeline_steps table migration (min duration / min capacity) failed: ${detail}`, {
+    cause: err,
+  });
 }
 
 export default db;

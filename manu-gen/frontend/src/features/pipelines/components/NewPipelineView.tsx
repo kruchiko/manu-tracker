@@ -44,7 +44,13 @@ export function NewPipelineView({ onBack }: NewPipelineViewProps): React.JSX.Ele
   const [description, setDescription] = useState("");
   const [productType, setProductType] = useState("");
   const [steps, setSteps] = useState<StepFormValue[]>([
-    { stationId: "", maxDurationSeconds: null, maxCapacity: null },
+    {
+      stationId: "",
+      minDurationSeconds: null,
+      maxDurationSeconds: null,
+      minCapacity: null,
+      maxCapacity: null,
+    },
   ]);
   const [submitted, setSubmitted] = useState(false);
 

@@ -17,7 +17,9 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
   const [steps, setSteps] = useState<StepFormValue[]>(() =>
     pipeline.steps.map((s) => ({
       stationId: s.stationId,
+      minDurationSeconds: s.minDurationSeconds,
       maxDurationSeconds: s.maxDurationSeconds,
+      minCapacity: s.minCapacity,
       maxCapacity: s.maxCapacity,
     })),
   );

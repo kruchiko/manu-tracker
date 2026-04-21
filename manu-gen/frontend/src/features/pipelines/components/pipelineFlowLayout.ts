@@ -1,23 +1,40 @@
-const NODE_WIDTH = 75;
-const CONNECTOR_WIDTH = 24;
-const MORE_CHIP_WIDTH = 70;
-const SIDEBAR_WIDTH = 220;
-const CONTENT_PADDING = 72;
-const PIPELINE_COL = 200;
-const ACTIONS_COL = 140;
-const TABLE_CELL_PADDING = 44;
+/**
+ * Horizontal layout budget for pipeline flow preview truncation (`PipelineFlowPreview`).
+ * These literals approximate **computed** CSS — they are not read from the cascade at runtime.
+ *
+ * Keep aligned with:
+ * - `src/tokens/design-tokens.css`: `--pipeline-flow-step-width`, `--space-6`
+ * - `PipelineFlowPreview.module.css`: step column width + “+N more” chip (incl. margin)
+ *
+ * CI guard: `pipelineFlowLayout.contract.test.ts` asserts token strings still match these values.
+ */
+export const PIPELINE_FLOW_LAYOUT = {
+  /** Effective max step column width — must match `--pipeline-flow-step-width` (77px). */
+  stepColumnWidthPx: 77,
+  /** Connector / gap between step columns — must match `--space-6` (24px). */
+  connectorWidthPx: 24,
+  /**
+   * When truncated: reserve space for the last connector + “+N more” chip
+   * (chip + `margin-left: var(--space-6))`. Re-measure in a real browser if chip styles change.
+   */
+  moreTailReservePx: 94,
+} as const;
 
-/** Layout math for the pipeline flow column — must stay in sync with list + sidebar chrome. */
-export function calcMaxVisible(viewportWidth: number, totalSteps: number): number {
-  const flowSpace =
-    viewportWidth - SIDEBAR_WIDTH - CONTENT_PADDING - PIPELINE_COL - ACTIONS_COL - TABLE_CELL_PADDING;
+/**
+ * How many steps fit in `availableWidth` pixels (measured container width).
+ *
+ * When all steps fit:  N × step + (N−1) × connector
+ * When truncated:      N × (step + connector) + moreTailReserve
+ */
+export function calcMaxVisible(availableWidth: number, totalSteps: number): number {
+  if (availableWidth <= 0) return 1;
 
-  if (flowSpace <= 0) return 1;
+  const { stepColumnWidthPx, connectorWidthPx, moreTailReservePx } = PIPELINE_FLOW_LAYOUT;
+  const perNode = stepColumnWidthPx + connectorWidthPx;
+  const fitsAll =
+    stepColumnWidthPx * totalSteps + connectorWidthPx * Math.max(0, totalSteps - 1);
+  if (fitsAll <= availableWidth) return totalSteps;
 
-  const fitsAll = NODE_WIDTH * totalSteps + CONNECTOR_WIDTH * Math.max(0, totalSteps - 1);
-  if (fitsAll <= flowSpace) return totalSteps;
-
-  const spaceForNodes = flowSpace - MORE_CHIP_WIDTH - CONNECTOR_WIDTH;
-  const perNode = NODE_WIDTH + CONNECTOR_WIDTH;
+  const spaceForNodes = availableWidth - moreTailReservePx;
   return Math.max(1, Math.min(Math.floor(spaceForNodes / perNode), totalSteps));
 }

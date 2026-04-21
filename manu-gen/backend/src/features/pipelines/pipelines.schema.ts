@@ -1,10 +1,37 @@
 import { z } from "zod";
 
-const stepSchema = z.object({
-  stationId: z.string().min(1, "stationId is required"),
-  maxDurationSeconds: z.number().int().min(1).nullable().optional().default(null),
-  maxCapacity: z.number().int().min(1).nullable().optional().default(null),
-});
+const stepSchema = z
+  .object({
+    stationId: z.string().min(1, "stationId is required"),
+    minDurationSeconds: z.number().int().min(1).nullable().optional().default(null),
+    maxDurationSeconds: z.number().int().min(1).nullable().optional().default(null),
+    minCapacity: z.number().int().min(1).nullable().optional().default(null),
+    maxCapacity: z.number().int().min(1).nullable().optional().default(null),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.minDurationSeconds !== null &&
+      data.maxDurationSeconds !== null &&
+      data.minDurationSeconds > data.maxDurationSeconds
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "minDurationSeconds must be less than or equal to maxDurationSeconds",
+        path: ["minDurationSeconds"],
+      });
+    }
+    if (
+      data.minCapacity !== null &&
+      data.maxCapacity !== null &&
+      data.minCapacity > data.maxCapacity
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "minCapacity must be less than or equal to maxCapacity",
+        path: ["minCapacity"],
+      });
+    }
+  });
 
 export const createPipelineSchema = z.object({
   name: z.string().min(1, "name is required"),
@@ -42,7 +69,9 @@ export interface PipelineStepRow {
   pipeline_id: string;
   station_id: string;
   position: number;
+  min_duration_seconds: number | null;
   max_duration_seconds: number | null;
+  min_capacity: number | null;
   max_capacity: number | null;
 }
 
@@ -51,7 +80,9 @@ export interface PipelineStep {
   stationId: string;
   stationName: string;
   position: number;
+  minDurationSeconds: number | null;
   maxDurationSeconds: number | null;
+  minCapacity: number | null;
   maxCapacity: number | null;
 }
 
@@ -76,7 +107,9 @@ export function toPipelineStep(row: PipelineStepJoinRow): PipelineStep {
     stationId: row.station_id,
     stationName: row.station_name,
     position: row.position,
+    minDurationSeconds: row.min_duration_seconds,
     maxDurationSeconds: row.max_duration_seconds,
+    minCapacity: row.min_capacity,
     maxCapacity: row.max_capacity,
   };
 }

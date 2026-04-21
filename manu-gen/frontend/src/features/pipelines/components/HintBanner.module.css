@@ -1,18 +1,29 @@
 .banner {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-6);
+  position: relative;
   border-radius: var(--radius-lg);
   border: 1px solid var(--border);
   background: var(--accent-light);
   padding: var(--space-5) var(--space-6);
   margin-bottom: var(--space-6);
   box-shadow: var(--shadow-sm);
-  position: relative;
 }
 
 .banner.hidden {
   display: none;
+}
+
+.bannerMain {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) 1px 1fr;
+  column-gap: var(--space-6);
+  align-items: stretch;
+}
+
+.bannerDivider {
+  width: 1px;
+  align-self: stretch;
+  margin-block: calc(-1 * var(--space-5));
+  background-color: var(--accent-muted);
 }
 
 .illustration {
@@ -20,21 +31,74 @@
   flex-direction: column;
   gap: var(--space-4);
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .illuRow {
-  display: flex;
-  align-items: center;
-  gap: 0;
+  width: max-content;
 }
 
-.typeIcon {
+/* Two rows share identical flex tracks so connector “links” share one centerline */
+.illuLane {
   display: flex;
   flex-direction: column;
+  gap: 2px;
+  width: max-content;
+}
+
+.illuLaneRail,
+.illuLaneLabels {
+  display: flex;
+  flex-direction: row;
   align-items: center;
-  gap: var(--space-1);
-  width: 44px;
-  flex-shrink: 0;
+}
+
+.illuLaneLabels {
+  align-items: flex-start;
+}
+
+.railColType {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lineSlot {
+  flex: 0 0 calc(var(--space-4) + 4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lineSlotGhost {
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+.nodeSlot {
+  flex: 0 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.labelSlot {
+  flex: 0 0 28px;
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+.railStepCountSlot {
+  flex: 0 0 auto;
+  min-width: 4.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: var(--space-2);
+  box-sizing: border-box;
 }
 
 .typeBox {
@@ -64,36 +128,17 @@
   color: var(--alert-dark);
 }
 
-.illuConnector {
+.illuLine {
   width: var(--space-4);
   height: 1.5px;
-  opacity: 0.4;
   flex-shrink: 0;
-  margin: 0 2px;
-  margin-bottom: var(--space-4);
   background: var(--accent-muted);
+  opacity: 0.4;
 }
 
-.illuConnectorAlert {
+.illuLineAlert {
   background: var(--alert);
   opacity: 0.3;
-}
-
-.illuDots {
-  display: flex;
-  align-items: center;
-}
-
-.illuNodeWrap {
-  display: flex;
-  align-items: center;
-}
-
-.illuNode {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
 }
 
 .illuDot {
@@ -101,6 +146,7 @@
   height: var(--space-4);
   border-radius: 50%;
   background: var(--accent);
+  flex-shrink: 0;
 }
 
 .illuDotAlert {
@@ -117,27 +163,11 @@
   color: var(--alert-dark);
 }
 
-.illuLine {
-  width: var(--space-4);
-  height: 1.5px;
-  background: var(--accent-muted);
-  opacity: 0.4;
-  margin-bottom: var(--space-3);
-  flex-shrink: 0;
-}
-
-.illuLineAlert {
-  background: var(--alert);
-  opacity: 0.3;
-}
-
 .illuStepCount {
   font-family: var(--font-mono);
   font-size: var(--text-illustration-meta);
-  margin-left: var(--space-3);
   white-space: nowrap;
   color: var(--accent);
-  margin-bottom: var(--space-3);
 }
 
 .illuStepCountAlert {
@@ -145,9 +175,7 @@
 }
 
 .textCol {
-  flex: 1;
-  border-left: 1px solid var(--accent-muted);
-  padding-left: var(--space-6);
+  min-width: 0;
 }
 
 .textTitle {

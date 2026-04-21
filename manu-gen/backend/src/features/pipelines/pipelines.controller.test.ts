@@ -52,6 +52,71 @@ describe("POST /pipelines", () => {
 
     expect(res.status).toBe(400);
   });
+
+  it("should return 400 when minDurationSeconds exceeds maxDurationSeconds", async () => {
+    const res = await request(app).post("/pipelines").send({
+      name: "Bad range",
+      productType: "Widget",
+      steps: [
+        {
+          stationId,
+          minDurationSeconds: 600,
+          maxDurationSeconds: 120,
+        },
+      ],
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 when minCapacity exceeds maxCapacity", async () => {
+    const res = await request(app).post("/pipelines").send({
+      name: "Bad caps",
+      productType: "Widget2",
+      steps: [
+        {
+          stationId,
+          minCapacity: 10,
+          maxCapacity: 2,
+        },
+      ],
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("PUT /pipelines/:id/steps", () => {
+  it("should persist min duration and min capacity on replace", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Replaceable",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: 60, maxCapacity: 5 }],
+    });
+    expect(createRes.status).toBe(201);
+    const id = createRes.body.id as string;
+
+    const res = await request(app)
+      .put(`/pipelines/${id}/steps`)
+      .send({
+        steps: [
+          {
+            stationId,
+            minDurationSeconds: 120,
+            maxDurationSeconds: 600,
+            minCapacity: 2,
+            maxCapacity: 10,
+          },
+        ],
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.steps).toHaveLength(1);
+    expect(res.body.steps[0].minDurationSeconds).toBe(120);
+    expect(res.body.steps[0].maxDurationSeconds).toBe(600);
+    expect(res.body.steps[0].minCapacity).toBe(2);
+    expect(res.body.steps[0].maxCapacity).toBe(10);
+  });
 });
 
 describe("GET /pipelines", () => {

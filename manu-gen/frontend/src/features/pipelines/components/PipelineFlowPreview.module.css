@@ -1,17 +1,45 @@
-.row {
-  display: flex;
-  align-items: flex-start;
+/**
+ * Single CSS grid — dots (row 1) and meta (row 2) share the SAME column tracks.
+ * Step columns use minmax(0, Xrem) so content can never widen a track.
+ * This guarantees dot positions are identical regardless of detail text.
+ */
+.flowContainer {
+  width: 100%;
 }
 
-.node {
-  display: flex;
-  align-items: flex-start;
+.flow {
+  display: grid;
+  width: max-content;
+  max-width: 100%;
+  padding-bottom: var(--space-1);
 }
 
-.nodeContent {
+/* ── Row 1 cells ── */
+
+.stepDotCell {
   display: flex;
-  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.connectorCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.connector {
+  width: 100%;
+  height: 1.5px;
+  background: var(--accent-muted);
+}
+
+.moreChipCell {
+  display: flex;
+  align-items: center;
+  overflow: visible;
 }
 
 .dot {
@@ -20,10 +48,22 @@
   border-radius: 50%;
   background: var(--accent);
   flex-shrink: 0;
-  margin-bottom: var(--space-1);
+}
+
+/* ── Row 2 cells ── */
+
+.stepMetaCell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: var(--space-2);
+  min-width: 0;
+  overflow: hidden;
 }
 
 .name {
+  width: 100%;
+  min-width: 0;
   font-family: var(--font-body);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -31,30 +71,49 @@
   line-height: 1.2;
   white-space: nowrap;
   text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.detailSlot {
+  display: grid;
+  width: 100%;
+  grid-template-rows: auto auto;
+  row-gap: 2px;
+  align-items: start;
+  justify-items: center;
+  margin-top: var(--space-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
 }
 
 .detailLine {
+  display: block;
+  max-width: 100%;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--text-muted);
   letter-spacing: var(--tracking-wide);
-  white-space: nowrap;
   text-align: center;
   line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.connector {
-  width: var(--space-6);
-  height: 1.5px;
-  background: var(--accent-muted);
-  margin-top: 8px;
-  flex-shrink: 0;
+.detailLinePlaceholder {
+  color: transparent;
+  user-select: none;
 }
+
+/* ── "+N more" chip ── */
 
 .moreChip {
   display: inline-flex;
+  flex-shrink: 0;
   align-items: center;
   height: var(--btn-height-sm);
+  margin-left: var(--space-6);
   padding: 0 var(--space-3);
   border: none;
   border-radius: var(--radius-sm);
