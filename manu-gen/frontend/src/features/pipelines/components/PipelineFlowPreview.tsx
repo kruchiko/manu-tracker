@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { Fragment, useState, useEffect } from "react";
 import type { PipelineStep } from "../pipelines.types";
 import { calcMaxVisible } from "./pipelineFlowLayout";
 import styles from "./PipelineFlowPreview.module.css";
@@ -74,26 +74,32 @@ export function PipelineFlowPreview({
         );
         const capacityText = formatCapacityRange(step.minCapacity, step.maxCapacity);
         return (
-          <div key={step.id} className={styles.node}>
-            <div className={styles.rail}>
-              {i > 0 && <div className={styles.connector} />}
-              <div className={styles.dot} aria-hidden />
+          <Fragment key={step.id}>
+            {i > 0 && (
+              <div className={styles.connectorWrap} aria-hidden>
+                <div className={styles.connector} />
+              </div>
+            )}
+            <div className={styles.node}>
+              <div className={styles.rail}>
+                <div className={styles.dot} aria-hidden />
+              </div>
+              <span className={styles.name}>{step.stationName}</span>
+              <div className={styles.detailSlot}>
+                {durationText !== null && (
+                  <span className={styles.detailLine}>{durationText}</span>
+                )}
+                {capacityText !== null && (
+                  <span className={styles.detailLine}>{capacityText}</span>
+                )}
+              </div>
             </div>
-            <span className={styles.name}>{step.stationName}</span>
-            <div className={styles.detailSlot}>
-              {durationText !== null && (
-                <span className={styles.detailLine}>{durationText}</span>
-              )}
-              {capacityText !== null && (
-                <span className={styles.detailLine}>{capacityText}</span>
-              )}
-            </div>
-          </div>
+          </Fragment>
         );
       })}
       {truncated && (
-        <div className={styles.moreTail}>
-          <div className={styles.connector} />
+        <div className={styles.tailGroup}>
+          <div className={styles.connector} aria-hidden />
           <button
             type="button"
             onClick={(e) => {
