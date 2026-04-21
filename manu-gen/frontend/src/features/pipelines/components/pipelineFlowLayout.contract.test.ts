@@ -9,7 +9,7 @@ const tokensCss = readFileSync(tokensPath, "utf8");
 
 describe("pipeline flow layout vs design tokens", () => {
   it("still declares the step width and connector gap this truncation math assumes", () => {
-    expect(tokensCss).toMatch(/--pipeline-flow-step-width:\s*5\.5rem/);
+    expect(tokensCss).toMatch(/--pipeline-flow-step-width:\s*77px/);
     expect(tokensCss).toMatch(/--space-6:\s*24px/);
   });
 

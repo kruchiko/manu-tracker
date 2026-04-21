@@ -9,7 +9,7 @@
  * CI guard: `pipelineFlowLayout.contract.test.ts` asserts token strings still match these values.
  */
 export const PIPELINE_FLOW_LAYOUT = {
-  /** Effective max step column width in px (minmax(0, 5.5rem) at 14px root ≈ 77px). */
+  /** Effective max step column width — must match `--pipeline-flow-step-width` (77px). */
   stepColumnWidthPx: 77,
   /** Connector / gap between step columns — must match `--space-6` (24px). */
   connectorWidthPx: 24,
