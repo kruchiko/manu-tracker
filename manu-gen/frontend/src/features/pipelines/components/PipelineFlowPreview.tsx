@@ -86,12 +86,18 @@ export function PipelineFlowPreview({
               </div>
               <span className={styles.name}>{step.stationName}</span>
               <div className={styles.detailSlot}>
-                {durationText !== null && (
-                  <span className={styles.detailLine}>{durationText}</span>
-                )}
-                {capacityText !== null && (
-                  <span className={styles.detailLine}>{capacityText}</span>
-                )}
+                <span
+                  className={`${styles.detailLine} ${durationText === null ? styles.detailLinePlaceholder : ""}`}
+                  aria-hidden={durationText === null}
+                >
+                  {durationText ?? "\u00a0"}
+                </span>
+                <span
+                  className={`${styles.detailLine} ${capacityText === null ? styles.detailLinePlaceholder : ""}`}
+                  aria-hidden={capacityText === null}
+                >
+                  {capacityText ?? "\u00a0"}
+                </span>
               </div>
             </div>
           </Fragment>
