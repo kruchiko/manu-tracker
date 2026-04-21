@@ -153,7 +153,11 @@ describe("PipelineFlowPreview truncation (ResizeObserver)", () => {
 
   beforeEach(() => {
     globalThis.ResizeObserver = class TestResizeObserver {
-      constructor(private readonly callback: ResizeObserverCallback) {}
+      private readonly callback: ResizeObserverCallback;
+
+      constructor(callback: ResizeObserverCallback) {
+        this.callback = callback;
+      }
 
       observe(): void {
         queueMicrotask(() => {
