@@ -38,12 +38,9 @@ function showCurrentlyHere(entry: JobHistoryEntry, isLast: boolean): boolean {
   return entry.phase === "arrived" || entry.phase === "scan";
 }
 
-function dotClass(i: number): string {
-  const k = i % 4;
-  if (k === 1) return `${styles.dot} ${styles.dot1}`;
-  if (k === 2) return `${styles.dot} ${styles.dot2}`;
-  if (k === 3) return `${styles.dot} ${styles.dot3}`;
-  return styles.dot;
+function dotClass(phase: JobHistoryPhase, isHere: boolean): string {
+  if (isHere) return styles.dotActive;
+  return phase === "departed" ? styles.dotOut : styles.dot;
 }
 
 function barClass(i: number, scan: boolean): string {
@@ -105,7 +102,7 @@ export function JobHistory({ job, onClose, embedded }: JobHistoryProps) {
             return (
               <div key={entry.id} className={styles.row}>
                 {!isLast && <div className={styles.line} aria-hidden />}
-                <div className={dotClass(colorIdx)} aria-hidden />
+                <div className={dotClass(entry.phase, showCurrentlyHere(entry, isLast))} aria-hidden />
                 <div>
                   <p className={styles.phaseLabel}>{phaseLabel[entry.phase]}</p>
                   <p className={styles.entryTitle}>{entryTitle(entry)}</p>

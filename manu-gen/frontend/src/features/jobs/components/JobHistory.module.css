@@ -57,13 +57,22 @@
   color: var(--text-muted);
 }
 
+/*
+ * Timeline geometry (Playwright-verified)
+ * ────────────────────────────────────────
+ * dot:    13px wide, 2px border, 2px outer shadow  → visual radius = 13/2 + 2 = 8.5px
+ * scroll: padding-left 26px  → dot left -24px centres it at 26 - 24 + 13/2 = 8.5px
+ * line:   left -18px, width 1px  → centres at 26 - 18 + 0.5 = 8.5px (aligned with dot)
+ * row:    padding 7px 0; line top 21px, bottom -8px bridges the 7px gap to next row's dot
+ */
+
 /* Scrollable timeline — embedded and standalone */
 .timelineScroll {
   position: relative;
   max-height: 280px;
   overflow-y: auto;
   overflow-x: hidden;
-  padding-left: var(--space-6);
+  padding-left: 26px;
   min-height: 0;
 }
 
@@ -82,18 +91,19 @@
 
 .entryTitle {
   font-family: var(--font-body);
+  font-size: 12px;
   font-weight: var(--weight-medium);
   color: var(--text);
 }
 
 .timeStamp {
-  font-size: var(--text-xs);
+  font-size: 10px;
   color: var(--text-muted);
 }
 
 .row {
   position: relative;
-  padding-bottom: var(--space-5);
+  padding: 7px 0;
 }
 
 .row:last-child {
@@ -102,34 +112,46 @@
 
 .line {
   position: absolute;
-  left: -16px;
-  top: 12px;
-  height: 100%;
+  left: -18px;
+  top: 21px;
+  bottom: -8px;
   width: 1px;
   background: var(--border-strong);
 }
 
 .dot {
   position: absolute;
-  left: -20px;
-  top: 6px;
-  height: 8px;
-  width: 8px;
+  left: -24px;
+  top: 8px;
+  box-sizing: border-box;
+  height: 13px;
+  width: 13px;
   border-radius: 9999px;
-  border: 2px solid var(--chart-1);
-  background: var(--surface);
+  border: 2px solid var(--surface);
+  background: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
 }
 
-.dot1 {
-  border-color: var(--chart-2);
+.dotOut {
+  composes: dot;
+  background: var(--text-muted);
+  box-shadow: 0 0 0 2px var(--border);
 }
 
-.dot2 {
-  border-color: var(--chart-3);
+.dotActive {
+  composes: dot;
+  box-shadow: 0 0 0 2px var(--accent);
+  animation: dotPulse 2s ease-in-out infinite;
 }
 
-.dot3 {
-  border-color: var(--chart-4);
+@keyframes dotPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
 }
 
 .barTrack {

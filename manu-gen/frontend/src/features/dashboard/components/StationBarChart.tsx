@@ -10,6 +10,7 @@ import {
 import type { StationDuration } from "../dashboard.types";
 import { formatDuration } from "../dashboard.utils";
 import { buildStationColorMap } from "../dashboard.colors";
+import styles from "./StationBarChart.module.css";
 
 interface StationBarChartProps {
   durations: StationDuration[];
@@ -29,10 +30,10 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Array<
   if (!active || !payload?.[0]) return null;
   const d = payload[0].payload;
   return (
-    <div className="rounded-md border bg-white px-3 py-2 text-sm shadow-lg">
-      <p className="mb-1 font-medium text-gray-900">{d.name}</p>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-gray-600">
-        <span>Avg</span><span className="font-medium">{formatDuration(d.avg)}</span>
+    <div className={styles.tooltip}>
+      <p className={styles.tooltipTitle}>{d.name}</p>
+      <div className={styles.tooltipGrid}>
+        <span>Avg</span><span className={styles.tooltipValue}>{formatDuration(d.avg)}</span>
         <span>Median</span><span>{formatDuration(d.median)}</span>
         <span>Min</span><span>{formatDuration(d.min)}</span>
         <span>Max</span><span>{formatDuration(d.max)}</span>
@@ -61,7 +62,7 @@ export function StationBarChart({ durations }: StationBarChartProps) {
         <XAxis
           type="number"
           tickFormatter={(v: number) => formatDuration(v)}
-          tick={{ fontSize: 11, fill: "#9ca3af" }}
+          tick={{ fontSize: 11, fill: "var(--text-muted)" }}
           axisLine={false}
           tickLine={false}
         />
@@ -69,7 +70,7 @@ export function StationBarChart({ durations }: StationBarChartProps) {
           type="category"
           dataKey="name"
           width={100}
-          tick={{ fontSize: 12, fill: "#374151" }}
+          tick={{ fontSize: 12, fill: "var(--text-secondary)" }}
           axisLine={false}
           tickLine={false}
         />

@@ -8,7 +8,7 @@ import { usePipeline } from "../../pipelines/hooks/usePipeline";
 import { JobJourneyChart } from "./JobJourneyChart";
 import { JobHistory } from "./JobHistory";
 import { JobDetailKpis } from "./JobDetailKpis";
-import { PipelineProgress } from "./PipelineProgress";
+import { PipelineProgress, countCompletedSteps } from "./PipelineProgress";
 import { QrPreview } from "./QrPreview";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { useJobHistory } from "../hooks/useJobHistory";
@@ -71,9 +71,14 @@ export function JobDetailPage({
     });
   }
 
+  const completedCount =
+    pipelineBlock && pipelineData?.steps?.length
+      ? countCompletedSteps(pipelineData.steps, pipelineBlock.stepPosition, entries)
+      : 0;
+
   const stationsHint =
     pipelineBlock && pipelineData?.steps?.length
-      ? `${pipelineBlock.stepPosition} of ${pipelineBlock.totalSteps} stations`
+      ? `${completedCount} of ${pipelineBlock.totalSteps} stations`
       : null;
 
   return (

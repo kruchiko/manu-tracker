@@ -98,19 +98,19 @@
 }
 
 .metaLabel {
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 9px;
   font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-wider);
   text-transform: uppercase;
   color: var(--text-muted);
-  color: color-mix(in srgb, var(--accent-muted) 42%, var(--text-muted));
 }
 
 .metaValue {
   font-family: var(--font-body);
   font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   color: var(--text);
   line-height: 1.45;
 }
@@ -123,9 +123,11 @@
 
 .metaAllocList {
   margin: 0;
-  padding-left: 1.15em;
+  padding-left: 0;
+  list-style: none;
   font-family: var(--font-body);
   font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
   line-height: 1.45;
   color: var(--text);
 }
