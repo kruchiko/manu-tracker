@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 import type { PipelineStep } from "../../pipelines/pipelines.types";
 import type { JobHistoryEntry, JobPipelineProgress } from "../jobs.types";
 import { formatDuration } from "../utils/duration";
+import { resolveStepStatuses, type ResolvedPipelineStep } from "./pipelineProgress.utils";
 import styles from "./PipelineProgress.module.css";
 
 interface PipelineProgressProps {
@@ -15,53 +16,7 @@ interface PipelineProgressProps {
   flush?: boolean;
 }
 
-type StepStatus = "completed" | "current" | "upcoming";
-
-interface ResolvedStep {
-  step: PipelineStep;
-  status: StepStatus;
-  actualSeconds: number | null;
-}
-
-function resolveStepStatuses(
-  steps: PipelineStep[],
-  currentStepPosition: number,
-  historyEntries: JobHistoryEntry[],
-): ResolvedStep[] {
-  const durationByStation = new Map<string, number>();
-  const departedStations = new Set<string>();
-
-  for (const entry of historyEntries) {
-    if (entry.phase === "departed") {
-      departedStations.add(entry.station);
-    }
-    if (entry.durationSeconds === null || entry.durationSeconds <= 0) continue;
-    if (entry.phase !== "departed" && entry.phase !== "scan") continue;
-    durationByStation.set(
-      entry.station,
-      (durationByStation.get(entry.station) ?? 0) + entry.durationSeconds,
-    );
-  }
-
-  return steps.map((step) => {
-    let status: StepStatus;
-    if (step.position === currentStepPosition && currentStepPosition > 0) {
-      status = "current";
-    } else if (departedStations.has(step.stationName) || step.position < currentStepPosition) {
-      status = "completed";
-    } else {
-      status = "upcoming";
-    }
-
-    return {
-      step,
-      status,
-      actualSeconds: durationByStation.get(step.stationName) ?? null,
-    };
-  });
-}
-
-function StepNode({ resolved }: { resolved: ResolvedStep }) {
+function StepNode({ resolved }: { resolved: ResolvedPipelineStep }) {
   const { step, status, actualSeconds } = resolved;
 
   const overThreshold =
@@ -122,16 +77,6 @@ function StepNode({ resolved }: { resolved: ResolvedStep }) {
       </p>
     </div>
   );
-}
-
-export function countCompletedSteps(
-  steps: PipelineStep[],
-  currentStepPosition: number,
-  historyEntries: JobHistoryEntry[],
-): number {
-  return resolveStepStatuses(steps, currentStepPosition, historyEntries).filter(
-    (r) => r.status === "completed",
-  ).length;
 }
 
 function Connector({ completed }: { completed: boolean }) {
