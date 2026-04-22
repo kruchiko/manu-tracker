@@ -263,7 +263,22 @@ export function CustomerOrderDetail({
   }, [order]);
 
   if (isLoading) return <p className={styles.loading}>Loading...</p>;
-  if (error) return <p className={styles.error}>Error: {error.message}</p>;
+  if (error) {
+    return (
+      <div className={styles.root}>
+        <ScreenHeader
+          variant="hero"
+          backLabel="Back"
+          backAriaLabel="Back to customer orders"
+          onBack={onBack}
+          title="Unable to load order"
+        />
+        <p className={styles.error} role="alert">
+          {error.message}
+        </p>
+      </div>
+    );
+  }
   if (!order) return null;
 
   const overdue = dueIsPast(order.dueDate);

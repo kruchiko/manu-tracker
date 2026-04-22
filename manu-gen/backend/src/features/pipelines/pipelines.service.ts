@@ -5,6 +5,7 @@ import type {
   CreatePipelineInput,
   UpdatePipelineInput,
   ReplacePipelineStepsInput,
+  UpdatePipelineWithStepsInput,
   Pipeline,
   PipelineRow,
   PipelineStepJoinRow,
@@ -29,6 +30,10 @@ const stmtGetByProductType = db.prepare(
 
 const stmtUpdate = db.prepare(
   `UPDATE pipelines SET name = COALESCE(@name, name), description = COALESCE(@description, description), product_type = COALESCE(@product_type, product_type) WHERE id = @id`,
+);
+
+const stmtReplacePipelineFields = db.prepare(
+  `UPDATE pipelines SET name = @name, description = @description, product_type = @product_type WHERE id = @id`,
 );
 
 const stmtDelete = db.prepare(`DELETE FROM pipelines WHERE id = ?`);
@@ -64,7 +69,7 @@ function getStepRows(pipelineId: string): PipelineStepJoinRow[] {
 
 function insertSteps(
   pipelineId: string,
-  steps: CreatePipelineInput["steps"],
+  steps: ReplacePipelineStepsInput["steps"],
 ): void {
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
@@ -113,17 +118,61 @@ export function listPipelines({
   return rows.map((row) => toPipeline(row, getStepRows(row.id)));
 }
 
+function assertProductTypeChangeAllowed(
+  pipelineId: string,
+  currentProductType: string,
+  nextProductType: string | undefined,
+): void {
+  if (nextProductType === undefined || nextProductType === currentProductType) {
+    return;
+  }
+  const jobCount = countJobsUsingPipeline(pipelineId);
+  if (jobCount > 0) {
+    throw new AppError(
+      422,
+      `Cannot change product type while ${jobCount} job(s) still reference this pipeline`,
+    );
+  }
+}
+
 export function updatePipeline(id: string, input: UpdatePipelineInput): Pipeline {
   const row = stmtGetById.get(id) as PipelineRow | undefined;
   if (!row) {
     throw new AppError(404, `Pipeline with id ${id} not found`);
   }
+  assertProductTypeChangeAllowed(id, row.product_type, input.productType);
   stmtUpdate.run({
     id,
     name: input.name ?? null,
     description: input.description ?? null,
     product_type: input.productType ?? null,
   });
+  return getPipelineById(id);
+}
+
+const updatePipelineAndReplaceStepsTx = db.transaction(
+  (id: string, input: UpdatePipelineWithStepsInput): void => {
+    const row = stmtGetById.get(id) as PipelineRow | undefined;
+    if (!row) {
+      throw new AppError(404, `Pipeline with id ${id} not found`);
+    }
+    assertProductTypeChangeAllowed(id, row.product_type, input.productType);
+    stmtReplacePipelineFields.run({
+      id,
+      name: input.name,
+      description: input.description ?? "",
+      product_type: input.productType,
+    });
+    stmtDeleteStepsByPipeline.run(id);
+    insertSteps(id, input.steps);
+  },
+);
+
+export function updatePipelineAndReplaceSteps(
+  id: string,
+  input: UpdatePipelineWithStepsInput,
+): Pipeline {
+  updatePipelineAndReplaceStepsTx(id, input);
   return getPipelineById(id);
 }
 

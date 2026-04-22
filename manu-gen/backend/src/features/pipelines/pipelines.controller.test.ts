@@ -128,6 +128,63 @@ describe("GET /pipelines", () => {
   });
 });
 
+describe("PUT /pipelines/:id", () => {
+  it("should replace metadata and steps in one request", async () => {
+    const s2 = stationsService.createStation({ name: "Station 2" });
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Original",
+      productType: "Widget",
+      description: "Old",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+    expect(createRes.status).toBe(201);
+    const id = createRes.body.id as string;
+
+    const res = await request(app)
+      .put(`/pipelines/${id}`)
+      .send({
+        name: "Renamed",
+        productType: "Widget",
+        description: "New",
+        steps: [
+          { stationId, maxDurationSeconds: 30 },
+          { stationId: s2.id, maxDurationSeconds: 45 },
+        ],
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe("Renamed");
+    expect(res.body.description).toBe("New");
+    expect(res.body.steps).toHaveLength(2);
+    expect(res.body.steps[1].stationId).toBe(s2.id);
+  });
+
+  it("should return 422 when changing product type while jobs reference the pipeline", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Busy",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+    const id = createRes.body.id as string;
+
+    await request(app).post("/jobs").send({
+      productType: "Widget",
+      quantity: 1,
+      pipelineId: id,
+    });
+
+    const res = await request(app).put(`/pipelines/${id}`).send({
+      name: "Busy",
+      productType: "Gadget",
+      description: "",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+
+    expect(res.status).toBe(422);
+    expect(String(res.body.error)).toMatch(/product type|reference/i);
+  });
+});
+
 describe("PATCH /pipelines/:id", () => {
   it("should update pipeline metadata", async () => {
     const createRes = await request(app).post("/pipelines").send({
@@ -149,6 +206,26 @@ describe("PATCH /pipelines/:id", () => {
     expect(res.body.name).toBe("Renamed");
     expect(res.body.description).toBe("New desc");
     expect(res.body.productType).toBe("Widget");
+  });
+
+  it("should return 422 when changing product type while jobs reference the pipeline", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Busy",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+    const id = createRes.body.id as string;
+
+    await request(app).post("/jobs").send({
+      productType: "Widget",
+      quantity: 1,
+      pipelineId: id,
+    });
+
+    const res = await request(app).patch(`/pipelines/${id}`).send({ productType: "Gadget" });
+
+    expect(res.status).toBe(422);
+    expect(String(res.body.error)).toMatch(/product type|reference/i);
   });
 
   it("should return 400 when name is empty string", async () => {

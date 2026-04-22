@@ -5,6 +5,7 @@ import { zodToAppError } from "../../shared/validation.js";
 import {
   createPipelineSchema,
   updatePipelineSchema,
+  updatePipelineWithStepsSchema,
   replacePipelineStepsSchema,
 } from "./pipelines.schema.js";
 import * as pipelinesService from "./pipelines.service.js";
@@ -84,6 +85,21 @@ pipelinesRouter.put("/:id/steps", (req, res, next) => {
     const id = parsePipelineId(req.params.id);
     const input = replacePipelineStepsSchema.parse(req.body);
     const pipeline = pipelinesService.replaceSteps(id, input);
+    res.json(pipeline);
+  } catch (err) {
+    if (err instanceof ZodError) {
+      next(zodToAppError(err));
+      return;
+    }
+    next(err);
+  }
+});
+
+pipelinesRouter.put("/:id", (req, res, next) => {
+  try {
+    const id = parsePipelineId(req.params.id);
+    const input = updatePipelineWithStepsSchema.parse(req.body);
+    const pipeline = pipelinesService.updatePipelineAndReplaceSteps(id, input);
     res.json(pipeline);
   } catch (err) {
     if (err instanceof ZodError) {

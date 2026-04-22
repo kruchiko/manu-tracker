@@ -125,6 +125,7 @@ export function deleteJob(id: number): void {
   deleteJobTx(id);
 }
 
+/** Board row SELECT shared by `stmtJobBoard` (full board) and `stmtJobBoardById` (single job). Keep columns aligned when changing the board query. */
 const stmtJobBoardSelect = `
   SELECT
     o.id,
@@ -181,24 +182,6 @@ const stmtJobBoardById = db.prepare(`${stmtJobBoardSelect}
 export function getJobBoard(): BoardJob[] {
   const rows = stmtJobBoard.all() as BoardJobRow[];
   return rows.map(toBoardJob);
-}
-
-function buildJobDetail(id: number): JobDetail {
-  const row = stmtGetById.get(id) as JobRow | undefined;
-  if (!row) {
-    throw new AppError(404, `Job with id ${id} not found`);
-  }
-  const boardRow = stmtJobBoardById.get(id) as BoardJobRow | undefined;
-  if (!boardRow) {
-    throw new AppError(404, `Job with id ${id} not found`);
-  }
-  const allocated = row.allocated_quantity ?? 0;
-  return {
-    ...toJob(row),
-    pipeline: jobPipelineProgressFromBoardRow(boardRow),
-    allocations: listAllocations(id),
-    availableToAllocate: Math.max(0, row.quantity - allocated),
-  };
 }
 
 interface RawJobHistoryRow {
@@ -386,6 +369,24 @@ export function addAllocation(jobId: number, input: CreateAllocationInput): Allo
 export function listAllocations(jobId: number): Allocation[] {
   const rows = stmtListAllocations.all(jobId) as AllocationRow[];
   return rows.map(toAllocation);
+}
+
+function buildJobDetail(id: number): JobDetail {
+  const row = stmtGetById.get(id) as JobRow | undefined;
+  if (!row) {
+    throw new AppError(404, `Job with id ${id} not found`);
+  }
+  const boardRow = stmtJobBoardById.get(id) as BoardJobRow | undefined;
+  if (!boardRow) {
+    throw new AppError(404, `Job with id ${id} not found`);
+  }
+  const allocated = row.allocated_quantity ?? 0;
+  return {
+    ...toJob(row),
+    pipeline: jobPipelineProgressFromBoardRow(boardRow),
+    allocations: listAllocations(id),
+    availableToAllocate: Math.max(0, row.quantity - allocated),
+  };
 }
 
 export function removeAllocation(jobId: number, allocationId: number): void {

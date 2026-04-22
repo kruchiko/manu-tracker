@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { FormPageLayout } from "../../../shared/components/FormPageLayout";
-import { useUpdatePipelineMetadata } from "../hooks/useUpdatePipelineMetadata";
-import { useUpdatePipelineSteps } from "../hooks/useUpdatePipelineSteps";
+import { useSavePipeline } from "../hooks/useSavePipeline";
 import { useStations } from "../../stations/hooks/useStations";
 import { PipelineStepEditor } from "./PipelineStepEditor";
 import type { Pipeline } from "../pipelines.types";
@@ -41,10 +40,9 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
         maxCapacity: s.maxCapacity,
       })),
     );
-  }, [pipeline]);
+  }, [pipeline.id]);
 
-  const updateMetadata = useUpdatePipelineMetadata();
-  const updateSteps = useUpdatePipelineSteps();
+  const savePipeline = useSavePipeline();
   const { data: stations } = useStations();
 
   const validSteps = steps.filter((s) => s.stationId.length > 0);
@@ -60,22 +58,20 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
     const trimmedProduct = productType.trim();
     if (!trimmedName || !trimmedProduct) return;
     try {
-      await updateMetadata.mutateAsync({
+      await savePipeline.mutateAsync({
         pipelineId: pipeline.id,
-        body: {
-          name: trimmedName,
-          productType: trimmedProduct,
-          description,
-        },
+        name: trimmedName,
+        productType: trimmedProduct,
+        description,
+        steps: validSteps,
       });
-      await updateSteps.mutateAsync({ pipelineId: pipeline.id, steps: validSteps });
       onBack();
     } catch {
       /* mutation surfaces error UI */
     }
   }
 
-  const isSubmitting = updateMetadata.isPending || updateSteps.isPending;
+  const isSubmitting = savePipeline.isPending;
 
   return (
     <FormPageLayout
@@ -151,10 +147,8 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
             </div>
           </div>
 
-          {(updateMetadata.error ?? updateSteps.error) && (
-            <div className={prim.serverError}>
-              {(updateMetadata.error ?? updateSteps.error)?.message}
-            </div>
+          {savePipeline.error && (
+            <div className={prim.serverError}>{savePipeline.error.message}</div>
           )}
         </div>
       }
