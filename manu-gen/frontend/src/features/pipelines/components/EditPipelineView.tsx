@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FormPageLayout } from "../../../shared/components/FormPageLayout";
+import { useUpdatePipelineMetadata } from "../hooks/useUpdatePipelineMetadata";
 import { useUpdatePipelineSteps } from "../hooks/useUpdatePipelineSteps";
 import { useStations } from "../../stations/hooks/useStations";
 import { PipelineStepEditor } from "./PipelineStepEditor";
@@ -14,6 +15,9 @@ interface EditPipelineViewProps {
 }
 
 export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): React.JSX.Element {
+  const [name, setName] = useState(pipeline.name);
+  const [productType, setProductType] = useState(pipeline.productType);
+  const [description, setDescription] = useState(pipeline.description ?? "");
   const [steps, setSteps] = useState<StepFormValue[]>(() =>
     pipeline.steps.map((s) => ({
       stationId: s.stationId,
@@ -24,6 +28,22 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
     })),
   );
 
+  useEffect(() => {
+    setName(pipeline.name);
+    setProductType(pipeline.productType);
+    setDescription(pipeline.description ?? "");
+    setSteps(
+      pipeline.steps.map((s) => ({
+        stationId: s.stationId,
+        minDurationSeconds: s.minDurationSeconds,
+        maxDurationSeconds: s.maxDurationSeconds,
+        minCapacity: s.minCapacity,
+        maxCapacity: s.maxCapacity,
+      })),
+    );
+  }, [pipeline]);
+
+  const updateMetadata = useUpdatePipelineMetadata();
   const updateSteps = useUpdatePipelineSteps();
   const { data: stations } = useStations();
 
@@ -34,13 +54,28 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
     .filter((s) => s.maxCapacity !== null)
     .reduce((min, s) => Math.min(min, s.maxCapacity!), Infinity);
 
-  function handleSubmit(): void {
+  async function handleSubmit(): Promise<void> {
     if (validSteps.length === 0) return;
-    updateSteps.mutate(
-      { pipelineId: pipeline.id, steps: validSteps },
-      { onSuccess: () => onBack() },
-    );
+    const trimmedName = name.trim();
+    const trimmedProduct = productType.trim();
+    if (!trimmedName || !trimmedProduct) return;
+    try {
+      await updateMetadata.mutateAsync({
+        pipelineId: pipeline.id,
+        body: {
+          name: trimmedName,
+          productType: trimmedProduct,
+          description,
+        },
+      });
+      await updateSteps.mutateAsync({ pipelineId: pipeline.id, steps: validSteps });
+      onBack();
+    } catch {
+      /* mutation surfaces error UI */
+    }
   }
+
+  const isSubmitting = updateMetadata.isPending || updateSteps.isPending;
 
   return (
     <FormPageLayout
@@ -48,30 +83,52 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
       onBack={onBack}
       title="Edit Pipeline"
       onCancel={onBack}
-      onSubmit={handleSubmit}
+      onSubmit={() => void handleSubmit()}
       submitLabel="Save changes"
-      isSubmitting={updateSteps.isPending}
+      isSubmitting={isSubmitting}
       left={
         <div className={prim.formCard}>
           <h2 className={prim.formSectionTitle}>Pipeline details</h2>
           <div>
             <div className={prim.fieldGroup}>
-              <label className={prim.fieldLabel}>Name</label>
-              <input className={prim.input} type="text" value={pipeline.name} readOnly />
+              <label className={prim.fieldLabel} htmlFor="edit-pipeline-name">
+                Name
+              </label>
+              <input
+                id="edit-pipeline-name"
+                className={prim.input}
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="off"
+              />
             </div>
             <div className={prim.fieldGroup}>
-              <label className={prim.fieldLabel}>Product type</label>
-              <input className={prim.input} type="text" value={pipeline.productType} readOnly />
+              <label className={prim.fieldLabel} htmlFor="edit-pipeline-product">
+                Product type
+              </label>
+              <input
+                id="edit-pipeline-product"
+                className={prim.input}
+                type="text"
+                value={productType}
+                onChange={(e) => setProductType(e.target.value)}
+                autoComplete="off"
+              />
             </div>
-            {pipeline.description && (
-              <div className={prim.fieldGroup}>
-                <label className={prim.fieldLabel}>
-                  Description{" "}
-                  <span className={prim.fieldOptional}>(optional)</span>
-                </label>
-                <input className={prim.input} type="text" value={pipeline.description} readOnly />
-              </div>
-            )}
+            <div className={prim.fieldGroup}>
+              <label className={prim.fieldLabel} htmlFor="edit-pipeline-desc">
+                Description <span className={prim.fieldOptional}>(optional)</span>
+              </label>
+              <input
+                id="edit-pipeline-desc"
+                className={prim.input}
+                type="text"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                autoComplete="off"
+              />
+            </div>
           </div>
 
           <div className={styles.summary}>
@@ -94,8 +151,10 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
             </div>
           </div>
 
-          {updateSteps.error && (
-            <div className={prim.serverError}>{updateSteps.error.message}</div>
+          {(updateMetadata.error ?? updateSteps.error) && (
+            <div className={prim.serverError}>
+              {(updateMetadata.error ?? updateSteps.error)?.message}
+            </div>
           )}
         </div>
       }

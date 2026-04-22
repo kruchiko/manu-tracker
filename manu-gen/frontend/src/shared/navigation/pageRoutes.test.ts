@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+  CUSTOMER_ORDER_ID_QUERY,
   DEFAULT_PAGE,
+  customerOrderDetailUrl,
   JOB_DETAIL_RETURN_FROM_LIVE_OPS,
   JOB_DETAIL_RETURN_FROM_PARAM,
   JOB_NEW_SEGMENT,
@@ -46,6 +48,12 @@ describe("jobDetailUrlFromLiveOperations", () => {
     expect(jobDetailUrlFromLiveOperations(42)).toBe(
       `/jobs/42?${liveOpsReturnSearch}`,
     );
+  });
+});
+
+describe("customerOrderDetailUrl", () => {
+  it("builds customer orders path with orderId query", () => {
+    expect(customerOrderDetailUrl(7)).toBe(`/customer-orders?${CUSTOMER_ORDER_ID_QUERY}=7`);
   });
 });
 

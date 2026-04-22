@@ -68,6 +68,13 @@ describe("getJobById", () => {
 
     expect(found.id).toBe(created.id);
     expect(found.productType).toBe("Widget");
+    expect(found.pipeline).toMatchObject({
+      id: pipelineId,
+      stepPosition: 0,
+      totalSteps: 1,
+    });
+    expect(found.allocations).toEqual([]);
+    expect(found.availableToAllocate).toBe(5);
   });
 
   it("should throw 404 when job does not exist", () => {
@@ -139,6 +146,8 @@ describe("buildJobHistoryEntries", () => {
     expect(entries[0].durationSeconds).toBeNull();
     expect(entries[1].phase).toBe("departed");
     expect(entries[1].durationSeconds).toBe(300);
+    expect(entries[0].stationId).toBe("s1");
+    expect(entries[1].stationId).toBe("s1");
   });
 
   it("should handle scan-only events", () => {
@@ -180,7 +189,7 @@ describe("allocations", () => {
 
   describe("addAllocation", () => {
     it("should allocate a quantity from a job to an order line", () => {
-      const { lineId } = createOrderWithLine();
+      const { lineId, orderId } = createOrderWithLine();
       const job = jobsService.createJob({ productType: "Widget", quantity: 20, pipelineId });
 
       const alloc = jobsService.addAllocation(job.id, { orderLineId: lineId, quantity: 5 });
@@ -190,6 +199,7 @@ describe("allocations", () => {
       expect(alloc.orderLineId).toBe(lineId);
       expect(alloc.quantity).toBe(5);
       expect(alloc.customerName).toBe("Acme");
+      expect(alloc.customerOrderId).toBe(orderId);
     });
 
     it("should reject duplicate allocation for same job + order line", () => {

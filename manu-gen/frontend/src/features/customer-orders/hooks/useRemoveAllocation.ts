@@ -11,9 +11,10 @@ export function useRemoveAllocation() {
   return useMutation({
     mutationFn: ({ jobId, allocationId }: RemoveAllocationInput) =>
       apiClient.delete(`/jobs/${jobId}/allocations/${allocationId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    onSuccess: (_data, variables) => {
+      void queryClient.invalidateQueries({ queryKey: ["customer-orders"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      void queryClient.invalidateQueries({ queryKey: ["jobs", "detail", variables.jobId] });
     },
   });
 }

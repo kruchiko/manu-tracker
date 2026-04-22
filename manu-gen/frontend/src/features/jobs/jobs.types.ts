@@ -1,6 +1,6 @@
 export type JobStatus = "pending" | "in_progress" | "completed";
 
-/** Pipeline timing block — same shape as board jobs; optional on GET /jobs/:id until API is enriched (see GitHub #28). */
+/** Pipeline timing block — same shape as board jobs (`GET /jobs/board`, `GET /jobs/:id`). */
 export interface JobPipelineProgress {
   id: string;
   name: string;
@@ -8,6 +8,18 @@ export interface JobPipelineProgress {
   totalSteps: number;
   expectedSeconds: number | null;
   elapsedSeconds: number | null;
+}
+
+/** One row from `GET /jobs/:id` `allocations` (and `POST` allocation response). */
+export interface JobAllocation {
+  id: number;
+  orderLineId: number;
+  jobId: number;
+  quantity: number;
+  orderNumber: string;
+  customerName: string;
+  productType: string;
+  customerOrderId: number;
 }
 
 export interface Job {
@@ -22,8 +34,12 @@ export interface Job {
   pipelineId: string;
   pipelineName: string;
   status: JobStatus;
-  /** Present when backend exposes pipeline progress on single-job responses. */
+  /** Present on `GET /jobs/:id` and `GET /jobs/tray/:trayCode` (GitHub #28). */
   pipeline?: JobPipelineProgress;
+  /** Present on single-job GET — links to customer orders (GitHub #35). */
+  allocations?: JobAllocation[];
+  /** Units still assignable to order lines (`quantity - allocatedQuantity`); single-job GET only. */
+  availableToAllocate?: number;
 }
 
 export type JobsResponse = Job[];
@@ -37,6 +53,8 @@ export type JobHistoryPhase = "arrived" | "departed" | "scan";
 export interface JobHistoryEntry {
   id: number;
   phase: JobHistoryPhase;
+  /** Station id — stable key for timeline chrome (GitHub #29). */
+  stationId: string;
   station: string;
   at: string;
   durationSeconds: number | null;

@@ -128,6 +128,43 @@ describe("GET /pipelines", () => {
   });
 });
 
+describe("PATCH /pipelines/:id", () => {
+  it("should update pipeline metadata", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "Original",
+      productType: "Widget",
+      description: "Old desc",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+    expect(createRes.status).toBe(201);
+    const id = createRes.body.id as string;
+
+    const res = await request(app).patch(`/pipelines/${id}`).send({
+      name: "Renamed",
+      productType: "Widget",
+      description: "New desc",
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.name).toBe("Renamed");
+    expect(res.body.description).toBe("New desc");
+    expect(res.body.productType).toBe("Widget");
+  });
+
+  it("should return 400 when name is empty string", async () => {
+    const createRes = await request(app).post("/pipelines").send({
+      name: "X",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: 60 }],
+    });
+    const id = createRes.body.id as string;
+
+    const res = await request(app).patch(`/pipelines/${id}`).send({ name: "" });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("GET /pipelines/:id", () => {
   it("should return the pipeline when it exists", async () => {
     const createRes = await request(app).post("/pipelines").send({

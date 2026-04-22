@@ -1,7 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { pagePath } from "../../../shared/navigation/pageRoutes";
+import {
+  CUSTOMER_ORDER_ID_QUERY,
+  pagePath,
+} from "../../../shared/navigation/pageRoutes";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import sectionPanel from "../../../shared/components/SectionPanel.module.css";
@@ -15,8 +18,28 @@ type OrdersView = "list" | "create";
 
 export function CustomerOrdersPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
+
+  useEffect(() => {
+    if (selectedId !== null || ordersView !== "list") return;
+    const raw = searchParams.get(CUSTOMER_ORDER_ID_QUERY);
+    if (raw == null || !/^\d+$/.test(raw)) return;
+    const id = Number(raw);
+    if (id > 0) setSelectedId(id);
+  }, [searchParams, selectedId, ordersView]);
+
+  function clearOrderIdQuery(): void {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete(CUSTOMER_ORDER_ID_QUERY);
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   const orderMetricsEnabled = selectedId === null && ordersView === "list";
   const {
@@ -35,7 +58,13 @@ export function CustomerOrdersPage() {
   if (selectedId !== null) {
     return (
       <div className={pageShell.column}>
-        <CustomerOrderDetail orderId={selectedId} onBack={() => setSelectedId(null)} />
+        <CustomerOrderDetail
+          orderId={selectedId}
+          onBack={() => {
+            setSelectedId(null);
+            clearOrderIdQuery();
+          }}
+        />
       </div>
     );
   }

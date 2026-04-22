@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Printer } from "lucide-react";
 import { ConfirmDialog } from "../../../shared/components/ConfirmDialog";
 import { ScreenHeader } from "../../../shared/components/ScreenHeader";
@@ -12,6 +13,7 @@ import { QrPreview } from "./QrPreview";
 import { JobStatusBadge } from "./JobStatusBadge";
 import { useJobHistory } from "../hooks/useJobHistory";
 import { useDeleteJob } from "../hooks/useDeleteJob";
+import { customerOrderDetailUrl } from "../../../shared/navigation/pageRoutes";
 import type { Job } from "../jobs.types";
 import { computeJobJourneyStats } from "../utils/jobJourneyStats";
 import styles from "./JobDetailPage.module.css";
@@ -41,6 +43,7 @@ export function JobDetailPage({
   const entries = historyData ?? [];
   const stats = computeJobJourneyStats(entries);
   const pipelineBlock = job.pipeline;
+  const allocations = job.allocations ?? [];
 
   const deleteMutation = useDeleteJob();
   const printedRef = useRef(false);
@@ -116,9 +119,34 @@ export function JobDetailPage({
         <div className={styles.leftCol}>
           <div className={`${styles.metaGrid} ${styles.hideOnPrint}`}>
             <div className={styles.metaCell}>
-              <div className={styles.metaLabel}>Customer Order</div>
-              <div className={styles.metaValueMuted}>None — manual job</div>
+              <div className={styles.metaLabel}>Customer orders</div>
+              {allocations.length === 0 ? (
+                <div className={styles.metaValueMuted}>None — manual job</div>
+              ) : (
+                <ul className={styles.metaAllocList}>
+                  {allocations.map((a) => (
+                    <li key={a.id}>
+                      <Link
+                        className={styles.metaOrderLink}
+                        to={customerOrderDetailUrl(a.customerOrderId)}
+                      >
+                        {a.orderNumber}
+                      </Link>
+                      <span className={styles.metaAllocMeta}>
+                        {" "}
+                        · {a.customerName} · {a.quantity} pcs
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
+            {job.availableToAllocate !== undefined && (
+              <div className={styles.metaCell}>
+                <div className={styles.metaLabel}>Available to allocate</div>
+                <div className={styles.metaValue}>{job.availableToAllocate} pcs</div>
+              </div>
+            )}
             <div className={styles.metaCell}>
               <div className={styles.metaLabel}>Status</div>
               <div className={styles.metaValue}>
@@ -197,9 +225,8 @@ export function JobDetailPage({
               ) : (
                 <div className={styles.placeholder}>
                   <p>
-                    Pipeline progress (current stage and timing) will appear here once{" "}
-                    <code className={styles.code}>GET /jobs/:id</code> includes the same pipeline
-                    block as the job board. Tracked in GitHub issue #28.
+                    Pipeline layout could not be loaded (steps missing). Open Pipelines to verify
+                    this job&apos;s pipeline definition.
                   </p>
                 </div>
               )}

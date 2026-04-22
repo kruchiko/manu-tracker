@@ -10,12 +10,13 @@ import type {
   JobRow,
   BoardJobRow,
   BoardJob,
+  JobDetail,
   JobHistoryEntry,
   JobHistoryPhase,
   AllocationRow,
   Allocation,
 } from "./jobs.schema.js";
-import { toJob, toBoardJob, toAllocation } from "./jobs.schema.js";
+import { toJob, toBoardJob, toAllocation, jobPipelineProgressFromBoardRow } from "./jobs.schema.js";
 import { stmtInsertAllocation } from "../../shared/allocation-statements.js";
 
 const QR_OPTIONS = {
@@ -70,7 +71,7 @@ const createJobTx = db.transaction((input: CreateJobInput): number => {
   return nextId;
 });
 
-export function createJob(input: CreateJobInput): Job {
+export function createJob(input: CreateJobInput): JobDetail {
   const pipeline = getPipelineById(input.pipelineId);
   if (pipeline.productType && pipeline.productType !== input.productType) {
     throw new AppError(
@@ -88,20 +89,16 @@ export function createJob(input: CreateJobInput): Job {
   return getJobById(id);
 }
 
-export function getJobById(id: number): Job {
-  const row = stmtGetById.get(id) as JobRow | undefined;
-  if (!row) {
-    throw new AppError(404, `Job with id ${id} not found`);
-  }
-  return toJob(row);
+export function getJobById(id: number): JobDetail {
+  return buildJobDetail(id);
 }
 
-export function getJobByTrayCode(trayCode: string): Job {
+export function getJobByTrayCode(trayCode: string): JobDetail {
   const row = stmtGetByTrayCode.get(trayCode) as JobRow | undefined;
   if (!row) {
     throw new AppError(404, `Job with tray code ${trayCode} not found`);
   }
-  return toJob(row);
+  return buildJobDetail(row.id);
 }
 
 export function listJobs({ limit = 50, offset = 0 }: { limit?: number; offset?: number } = {}): Job[] {
@@ -128,7 +125,7 @@ export function deleteJob(id: number): void {
   deleteJobTx(id);
 }
 
-const stmtJobBoard = db.prepare(`
+const stmtJobBoardSelect = `
   SELECT
     o.id,
     o.job_number,
@@ -169,14 +166,39 @@ const stmtJobBoard = db.prepare(`
   LEFT JOIN stations s ON s.id = ranked.station_id AND ranked.phase != 'departed'
   JOIN pipelines pl ON pl.id = o.pipeline_id
   LEFT JOIN pipeline_steps ps ON ps.pipeline_id = o.pipeline_id AND ps.station_id = ranked.station_id AND ranked.phase != 'departed'
+`;
+
+const stmtJobBoard = db.prepare(`${stmtJobBoardSelect}
   ORDER BY
     CASE WHEN ranked.captured_at IS NULL THEN 1 ELSE 0 END,
     ranked.captured_at ASC
 `);
 
+const stmtJobBoardById = db.prepare(`${stmtJobBoardSelect}
+  WHERE o.id = ?
+`);
+
 export function getJobBoard(): BoardJob[] {
   const rows = stmtJobBoard.all() as BoardJobRow[];
   return rows.map(toBoardJob);
+}
+
+function buildJobDetail(id: number): JobDetail {
+  const row = stmtGetById.get(id) as JobRow | undefined;
+  if (!row) {
+    throw new AppError(404, `Job with id ${id} not found`);
+  }
+  const boardRow = stmtJobBoardById.get(id) as BoardJobRow | undefined;
+  if (!boardRow) {
+    throw new AppError(404, `Job with id ${id} not found`);
+  }
+  const allocated = row.allocated_quantity ?? 0;
+  return {
+    ...toJob(row),
+    pipeline: jobPipelineProgressFromBoardRow(boardRow),
+    allocations: listAllocations(id),
+    availableToAllocate: Math.max(0, row.quantity - allocated),
+  };
 }
 
 interface RawJobHistoryRow {
@@ -218,6 +240,7 @@ export function buildJobHistoryEntries(rows: RawJobHistoryRow[]): JobHistoryEntr
       result.push({
         id: row.id,
         phase: "departed",
+        stationId: row.station_id,
         station: row.station_name,
         at: atIso,
         durationSeconds,
@@ -230,6 +253,7 @@ export function buildJobHistoryEntries(rows: RawJobHistoryRow[]): JobHistoryEntr
       result.push({
         id: row.id,
         phase: "arrived",
+        stationId: row.station_id,
         station: row.station_name,
         at: atIso,
         durationSeconds: null,
@@ -243,6 +267,7 @@ export function buildJobHistoryEntries(rows: RawJobHistoryRow[]): JobHistoryEntr
     result.push({
       id: row.id,
       phase: "scan",
+      stationId: row.station_id,
       station: row.station_name,
       at: atIso,
       durationSeconds,
@@ -273,7 +298,7 @@ export async function generateQrDataUrl(id: number): Promise<string> {
 
 const stmtListAllocations = db.prepare(`
   SELECT ja.id, ja.order_line_id, ja.job_id, ja.quantity,
-         co.order_number, co.customer_name, ol.product_type
+         co.order_number, co.customer_name, ol.product_type, co.id AS customer_order_id
   FROM job_allocations ja
   JOIN order_lines ol ON ol.id = ja.order_line_id
   JOIN customer_orders co ON co.id = ol.customer_order_id
@@ -283,7 +308,7 @@ const stmtListAllocations = db.prepare(`
 
 const stmtGetAllocation = db.prepare(
   `SELECT ja.id, ja.order_line_id, ja.job_id, ja.quantity,
-          co.order_number, co.customer_name, ol.product_type
+          co.order_number, co.customer_name, ol.product_type, co.id AS customer_order_id
    FROM job_allocations ja
    JOIN order_lines ol ON ol.id = ja.order_line_id
    JOIN customer_orders co ON co.id = ol.customer_order_id
@@ -308,7 +333,7 @@ const stmtJobAvailable = db.prepare(`
 
 const stmtGetAllocationById = db.prepare(
   `SELECT ja.id, ja.order_line_id, ja.job_id, ja.quantity,
-          co.order_number, co.customer_name, ol.product_type
+          co.order_number, co.customer_name, ol.product_type, co.id AS customer_order_id
    FROM job_allocations ja
    JOIN order_lines ol ON ol.id = ja.order_line_id
    JOIN customer_orders co ON co.id = ol.customer_order_id
@@ -334,7 +359,7 @@ const addAllocationTx = db.transaction(
     if (input.quantity > available) {
       throw new AppError(
         422,
-        `Job ${jobId} only has ${available} items available (requested ${input.quantity})`,
+        `Cannot allocate ${input.quantity} units: only ${available} remain unallocated on ${job.jobNumber} (quantity ${job.quantity}, already allocated ${job.allocatedQuantity}).`,
       );
     }
     try {

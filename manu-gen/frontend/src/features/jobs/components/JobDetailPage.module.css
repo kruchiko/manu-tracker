@@ -86,7 +86,7 @@
   border-right: none;
 }
 
-.metaCell:nth-child(n + 5) {
+.metaGrid > .metaCell:nth-last-child(-n + 2) {
   border-bottom: none;
 }
 
@@ -119,6 +119,31 @@
   font-family: var(--font-body);
   font-size: var(--text-sm);
   color: var(--text-muted);
+}
+
+.metaAllocList {
+  margin: 0;
+  padding-left: 1.15em;
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.metaOrderLink {
+  font-weight: var(--weight-semibold);
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.metaOrderLink:hover {
+  color: color-mix(in srgb, var(--accent) 88%, var(--text));
+}
+
+.metaAllocMeta {
+  color: var(--text-muted);
+  font-weight: var(--weight-regular);
 }
 
 .qrCard {
