@@ -184,6 +184,18 @@ describe("deletePipeline", () => {
 });
 
 describe("updatePipeline", () => {
+  it("should allow product type change when no jobs reference the pipeline", () => {
+    const pipeline = pipelinesService.createPipeline({
+      name: "Idle",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: null }],
+    });
+
+    const updated = pipelinesService.updatePipeline(pipeline.id, { productType: "Gadget" });
+
+    expect(updated.productType).toBe("Gadget");
+  });
+
   it("should reject product type change when jobs reference the pipeline", () => {
     const pipeline = pipelinesService.createPipeline({
       name: "In Use",

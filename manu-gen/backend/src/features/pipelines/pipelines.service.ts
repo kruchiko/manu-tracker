@@ -67,10 +67,15 @@ function getStepRows(pipelineId: string): PipelineStepJoinRow[] {
   return stmtStepsByPipeline.all(pipelineId) as PipelineStepJoinRow[];
 }
 
-function insertSteps(
-  pipelineId: string,
-  steps: ReplacePipelineStepsInput["steps"],
-): void {
+interface StepInput {
+  stationId: string;
+  minDurationSeconds?: number | null;
+  maxDurationSeconds?: number | null;
+  minCapacity?: number | null;
+  maxCapacity?: number | null;
+}
+
+function insertSteps(pipelineId: string, steps: StepInput[]): void {
   for (let i = 0; i < steps.length; i++) {
     const step = steps[i];
     stmtInsertStep.run({

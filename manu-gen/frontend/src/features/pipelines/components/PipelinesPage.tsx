@@ -29,7 +29,7 @@ export function PipelinesPage(): React.JSX.Element {
   }
 
   if (view.kind === "edit") {
-    return <EditPipelineView pipeline={view.pipeline} onBack={handleBack} />;
+    return <EditPipelineView key={view.pipeline.id} pipeline={view.pipeline} onBack={handleBack} />;
   }
 
   return (

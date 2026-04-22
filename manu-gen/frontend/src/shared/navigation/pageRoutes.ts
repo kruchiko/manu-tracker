@@ -16,10 +16,10 @@ const ALL_PAGE_IDS: readonly PageId[] = [
 
 export const DEFAULT_PAGE: PageId = "stations";
 
-/** Query param on `/jobs/:id` when opening a job from Live Operations (sidebar stays on Live Ops). */
 /** Query param on `/customer-orders` to open a specific order detail from deep links (e.g. job allocations). */
 export const CUSTOMER_ORDER_ID_QUERY = "orderId" as const;
 
+/** Query param on `/jobs/:id` when opening a job from Live Operations (sidebar stays on Live Ops). */
 export const JOB_DETAIL_RETURN_FROM_PARAM = "from" as const;
 
 /** Query value paired with {@link JOB_DETAIL_RETURN_FROM_PARAM} for the Live Ops → Jobs handoff. */

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FormPageLayout } from "../../../shared/components/FormPageLayout";
 import { useSavePipeline } from "../hooks/useSavePipeline";
 import { useStations } from "../../stations/hooks/useStations";
@@ -26,21 +26,6 @@ export function EditPipelineView({ pipeline, onBack }: EditPipelineViewProps): R
       maxCapacity: s.maxCapacity,
     })),
   );
-
-  useEffect(() => {
-    setName(pipeline.name);
-    setProductType(pipeline.productType);
-    setDescription(pipeline.description ?? "");
-    setSteps(
-      pipeline.steps.map((s) => ({
-        stationId: s.stationId,
-        minDurationSeconds: s.minDurationSeconds,
-        maxDurationSeconds: s.maxDurationSeconds,
-        minCapacity: s.minCapacity,
-        maxCapacity: s.maxCapacity,
-      })),
-    );
-  }, [pipeline.id]);
 
   const savePipeline = useSavePipeline();
   const { data: stations } = useStations();

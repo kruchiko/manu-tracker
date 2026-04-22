@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
 import {
@@ -16,19 +16,20 @@ import styles from "./CustomerOrdersPage.module.css";
 
 type OrdersView = "list" | "create";
 
+function parseOrderIdFromParams(params: URLSearchParams): number | null {
+  const raw = params.get(CUSTOMER_ORDER_ID_QUERY);
+  if (raw == null || !/^\d+$/.test(raw)) return null;
+  const id = Number(raw);
+  return id > 0 ? id : null;
+}
+
 export function CustomerOrdersPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(
+    () => parseOrderIdFromParams(searchParams),
+  );
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
-
-  useEffect(() => {
-    if (selectedId !== null || ordersView !== "list") return;
-    const raw = searchParams.get(CUSTOMER_ORDER_ID_QUERY);
-    if (raw == null || !/^\d+$/.test(raw)) return;
-    const id = Number(raw);
-    if (id > 0) setSelectedId(id);
-  }, [searchParams, selectedId, ordersView]);
 
   function clearOrderIdQuery(): void {
     setSearchParams(
