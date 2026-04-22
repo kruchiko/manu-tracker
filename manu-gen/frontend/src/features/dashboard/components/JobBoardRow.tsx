@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import type { BoardJob, BoardJobPipeline, JobStatus } from "../dashboard.types";
 import { formatDuration, parseUtc } from "../dashboard.utils";
+import styles from "./JobBoardRow.module.css";
 
 const STATUS_LABEL: Record<JobStatus, string> = {
   pending: "Pending",
@@ -8,10 +9,10 @@ const STATUS_LABEL: Record<JobStatus, string> = {
   completed: "Completed",
 };
 
-const STATUS_COLOR: Record<JobStatus, string> = {
-  pending: "bg-gray-100 text-gray-700",
-  in_progress: "bg-yellow-100 text-yellow-800",
-  completed: "bg-green-100 text-green-800",
+const STATUS_STYLE: Record<JobStatus, string> = {
+  pending: styles.badgePending,
+  in_progress: styles.badgeInProgress,
+  completed: styles.badgeCompleted,
 };
 
 interface JobBoardRowProps {
@@ -27,24 +28,25 @@ function formatLastSeen(iso: string): string {
   return isToday ? `${time} today` : date.toLocaleDateString([], { month: "short", day: "numeric" }) + ` ${time}`;
 }
 
-function durationColorClass(seconds: number | null, threshold: number | null): string {
-  if (seconds === null) return "text-gray-400";
+function durationClass(seconds: number | null, threshold: number | null): string {
+  if (seconds === null) return styles.durationNeutral;
   if (threshold !== null) {
-    if (seconds >= threshold) return "text-red-700 bg-red-50";
-    if (seconds >= threshold * 0.75) return "text-yellow-700 bg-yellow-50";
-    return "text-green-700 bg-green-50";
+    if (seconds >= threshold) return styles.durationDanger;
+    if (seconds >= threshold * 0.75) return styles.durationWarn;
+    return styles.durationOk;
   }
-  if (seconds < 3600) return "text-green-700 bg-green-50";
-  if (seconds < 14400) return "text-yellow-700 bg-yellow-50";
-  return "text-red-700 bg-red-50";
+  if (seconds < 3600) return styles.durationOk;
+  if (seconds < 14400) return styles.durationWarn;
+  return styles.durationDanger;
 }
 
-function pipelineProgressColor(pipeline: BoardJobPipeline): string {
-  if (pipeline.expectedSeconds === null || pipeline.elapsedSeconds === null) return "bg-blue-500";
+function progressFillClass(pipeline: BoardJobPipeline): string {
+  if (pipeline.expectedSeconds === null || pipeline.elapsedSeconds === null)
+    return styles.progressFillDefault;
   const ratio = pipeline.elapsedSeconds / pipeline.expectedSeconds;
-  if (ratio >= 1) return "bg-red-500";
-  if (ratio >= 0.75) return "bg-yellow-500";
-  return "bg-green-500";
+  if (ratio >= 1) return styles.progressFillDanger;
+  if (ratio >= 0.75) return styles.progressFillWarn;
+  return styles.progressFillOk;
 }
 
 function useLiveDuration(arrivedAt: string | null, active: boolean): number | null {
@@ -61,22 +63,22 @@ function useLiveDuration(arrivedAt: string | null, active: boolean): number | nu
 }
 
 function PipelineProgressBar({ pipeline }: { pipeline: BoardJobPipeline }) {
-  const fillColor = pipelineProgressColor(pipeline);
+  const fillClass = progressFillClass(pipeline);
   const completedFraction = pipeline.stepPosition / pipeline.totalSteps;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex h-2 w-20 overflow-hidden rounded-full bg-gray-200">
+    <div className={styles.progressRow}>
+      <div className={styles.progressTrack}>
         <div
-          className={`rounded-full transition-all ${fillColor}`}
+          className={`${styles.progressFill} ${fillClass}`}
           style={{ width: `${Math.min(100, completedFraction * 100)}%` }}
         />
       </div>
-      <span className="whitespace-nowrap text-xs text-gray-500">
+      <span className={styles.progressLabel}>
         {pipeline.stepPosition}/{pipeline.totalSteps}
       </span>
       {pipeline.expectedSeconds !== null && pipeline.elapsedSeconds !== null && (
-        <span className="whitespace-nowrap text-xs text-gray-400">
+        <span className={styles.progressElapsed}>
           {formatDuration(pipeline.elapsedSeconds)}/{formatDuration(pipeline.expectedSeconds)}
         </span>
       )}
@@ -86,7 +88,7 @@ function PipelineProgressBar({ pipeline }: { pipeline: BoardJobPipeline }) {
 
 export function JobBoardRow({ job, onSelect }: JobBoardRowProps) {
   const durationSeconds = useLiveDuration(job.stationArrivedAt, job.currentStation !== null);
-  const colorClass = durationColorClass(durationSeconds, job.maxDurationSeconds);
+  const durClass = durationClass(durationSeconds, job.maxDurationSeconds);
 
   return (
     <tr
@@ -98,38 +100,36 @@ export function JobBoardRow({ job, onSelect }: JobBoardRowProps) {
         }
       }}
       tabIndex={0}
-      className="cursor-pointer border-b transition-colors hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+      className={styles.row}
     >
-      <td className="py-3 pr-4 font-mono text-sm">{job.jobNumber}</td>
-      <td className="py-3 pr-4 text-sm">{job.productType}</td>
-      <td className="py-3 pr-4 text-sm">
-        <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLOR[job.status]}`}>
+      <td className={`${styles.td} ${styles.mono}`}>{job.jobNumber}</td>
+      <td className={styles.td}>{job.productType}</td>
+      <td className={styles.td}>
+        <span className={`${styles.badge} ${STATUS_STYLE[job.status]}`}>
           {STATUS_LABEL[job.status]}
         </span>
       </td>
-      <td className="py-3 pr-4 text-sm">
-        <span className="text-gray-700">{job.pipeline.name}</span>
+      <td className={styles.td}>
+        <span className={styles.pipelineName}>{job.pipeline.name}</span>
       </td>
-      <td className="py-3 pr-4 text-sm">
+      <td className={styles.td}>
         <PipelineProgressBar pipeline={job.pipeline} />
       </td>
-      <td className="py-3 pr-4 text-sm">
+      <td className={styles.td}>
         {job.currentStation ? job.currentStation.name : (
-          <span className="italic text-gray-400">(not yet seen)</span>
+          <span className={styles.mutedItalic}>(not yet seen)</span>
         )}
       </td>
-      <td className="py-3 pr-4 text-sm">
+      <td className={styles.td}>
         {durationSeconds !== null ? (
-          <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${colorClass}`}>
-            {formatDuration(durationSeconds)}
-          </span>
+          <span className={durClass}>{formatDuration(durationSeconds)}</span>
         ) : (
-          <span className="text-gray-400">--</span>
+          <span className={styles.muted}>--</span>
         )}
       </td>
-      <td className="py-3 text-sm">
+      <td className={`${styles.td} ${styles.tdLast}`}>
         {job.lastSeenAt ? formatLastSeen(job.lastSeenAt) : (
-          <span className="text-gray-400">--</span>
+          <span className={styles.muted}>--</span>
         )}
       </td>
     </tr>

@@ -1,7 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { pagePath } from "../../../shared/navigation/pageRoutes";
+import {
+  CUSTOMER_ORDER_ID_QUERY,
+  pagePath,
+} from "../../../shared/navigation/pageRoutes";
 import { PageHeader } from "../../../shared/components/PageHeader";
 import pageShell from "../../../shared/components/PageShell.module.css";
 import sectionPanel from "../../../shared/components/SectionPanel.module.css";
@@ -13,10 +16,31 @@ import styles from "./CustomerOrdersPage.module.css";
 
 type OrdersView = "list" | "create";
 
+function parseOrderIdFromParams(params: URLSearchParams): number | null {
+  const raw = params.get(CUSTOMER_ORDER_ID_QUERY);
+  if (raw == null || !/^\d+$/.test(raw)) return null;
+  const id = Number(raw);
+  return id > 0 ? id : null;
+}
+
 export function CustomerOrdersPage() {
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState<number | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [selectedId, setSelectedId] = useState<number | null>(
+    () => parseOrderIdFromParams(searchParams),
+  );
   const [ordersView, setOrdersView] = useState<OrdersView>("list");
+
+  function clearOrderIdQuery(): void {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete(CUSTOMER_ORDER_ID_QUERY);
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   const orderMetricsEnabled = selectedId === null && ordersView === "list";
   const {
@@ -35,7 +59,13 @@ export function CustomerOrdersPage() {
   if (selectedId !== null) {
     return (
       <div className={pageShell.column}>
-        <CustomerOrderDetail orderId={selectedId} onBack={() => setSelectedId(null)} />
+        <CustomerOrderDetail
+          orderId={selectedId}
+          onBack={() => {
+            setSelectedId(null);
+            clearOrderIdQuery();
+          }}
+        />
       </div>
     );
   }

@@ -56,6 +56,16 @@ export function toJob(row: JobRow): Job {
   };
 }
 
+/** Same semantics as board `pipeline` (GitHub #28). */
+export interface JobPipelineProgress {
+  id: string;
+  name: string;
+  stepPosition: number;
+  totalSteps: number;
+  expectedSeconds: number | null;
+  elapsedSeconds: number | null;
+}
+
 export interface BoardJobRow {
   id: number;
   job_number: string;
@@ -87,21 +97,25 @@ export interface BoardJob {
   lastSeenAt: string | null;
   stationArrivedAt: string | null;
   maxDurationSeconds: number | null;
-  pipeline: {
-    id: string;
-    name: string;
-    stepPosition: number;
-    totalSteps: number;
-    expectedSeconds: number | null;
-    elapsedSeconds: number | null;
-  };
+  pipeline: JobPipelineProgress;
 }
 
-export function toBoardJob(row: BoardJobRow): BoardJob {
+export function jobPipelineProgressFromBoardRow(row: BoardJobRow): JobPipelineProgress {
   const firstEventMs = row.first_event_at ? new Date(row.first_event_at + "Z").getTime() : null;
   const elapsedSeconds =
     firstEventMs !== null ? Math.floor((Date.now() - firstEventMs) / 1000) : null;
 
+  return {
+    id: row.pipeline_id,
+    name: row.pipeline_name,
+    stepPosition: row.pipeline_step_position ?? 0,
+    totalSteps: row.pipeline_total_steps,
+    expectedSeconds: row.pipeline_expected_seconds,
+    elapsedSeconds,
+  };
+}
+
+export function toBoardJob(row: BoardJobRow): BoardJob {
   return {
     id: row.id,
     jobNumber: row.job_number,
@@ -116,14 +130,7 @@ export function toBoardJob(row: BoardJobRow): BoardJob {
     lastSeenAt: row.last_seen_at ? toIso(row.last_seen_at) : null,
     stationArrivedAt: row.station_arrived_at ? toIso(row.station_arrived_at) : null,
     maxDurationSeconds: row.max_duration_seconds ?? null,
-    pipeline: {
-      id: row.pipeline_id,
-      name: row.pipeline_name,
-      stepPosition: row.pipeline_step_position ?? 0,
-      totalSteps: row.pipeline_total_steps,
-      expectedSeconds: row.pipeline_expected_seconds,
-      elapsedSeconds,
-    },
+    pipeline: jobPipelineProgressFromBoardRow(row),
   };
 }
 
@@ -132,6 +139,8 @@ export type JobHistoryPhase = "arrived" | "departed" | "scan";
 export interface JobHistoryEntry {
   id: number;
   phase: JobHistoryPhase;
+  /** Station id for theming / deep links (GitHub #29 audit). */
+  stationId: string;
   station: string;
   at: string;
   durationSeconds: number | null;
@@ -152,6 +161,7 @@ export interface AllocationRow {
   order_number: string;
   customer_name: string;
   product_type: string;
+  customer_order_id: number;
 }
 
 export interface Allocation {
@@ -162,6 +172,7 @@ export interface Allocation {
   orderNumber: string;
   customerName: string;
   productType: string;
+  customerOrderId: number;
 }
 
 export function toAllocation(row: AllocationRow): Allocation {
@@ -173,5 +184,14 @@ export function toAllocation(row: AllocationRow): Allocation {
     orderNumber: row.order_number,
     customerName: row.customer_name,
     productType: row.product_type,
+    customerOrderId: row.customer_order_id,
   };
 }
+
+/** `GET /jobs/:id` and `GET /jobs/tray/:trayCode` — pipeline progress, allocations, capacity (#28, #35). */
+export type JobDetail = Job & {
+  pipeline: JobPipelineProgress;
+  allocations: Allocation[];
+  /** Units of this job’s `quantity` not yet tied to an order line (`quantity - allocatedQuantity`). */
+  availableToAllocate: number;
+};

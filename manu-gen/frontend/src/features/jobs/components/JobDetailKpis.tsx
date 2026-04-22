@@ -3,20 +3,41 @@ import { formatDuration } from "../utils/duration";
 import type { JobJourneyStats } from "../utils/jobJourneyStats";
 import styles from "./JobDetailKpis.module.css";
 
-function StatCard({
+/** Three journey metrics on job detail — aligned primary values; optional station line above value. */
+function JourneyStatCard({
   label,
   value,
-  sub,
+  preValue,
 }: {
   label: string;
   value: string;
-  sub?: string;
+  preValue?: string;
+}): React.JSX.Element {
+  return (
+    <div className={`${styles.card} ${styles.journeyCard}`}>
+      <p className={styles.label}>{label}</p>
+      <div className={styles.journeySpacer} aria-hidden />
+      <div className={styles.journeyMetric}>
+        <p className={styles.journeyPre}>{preValue?.trim() ? preValue : "\u00a0"}</p>
+        <p className={styles.journeyValue}>{value}</p>
+      </div>
+    </div>
+  );
+}
+
+/** Pipeline ETA — layout unchanged from original stacked card (no alignment requirement vs journey row). */
+function PipelineEtaCard({
+  value,
+  sub,
+}: {
+  value: string;
+  sub: string;
 }): React.JSX.Element {
   return (
     <div className={styles.card}>
-      <p className={styles.label}>{label}</p>
+      <p className={styles.label}>Pipeline ETA</p>
       <p className={styles.value}>{value}</p>
-      {sub && <p className={styles.sub}>{sub}</p>}
+      <p className={styles.sub}>{sub}</p>
     </div>
   );
 }
@@ -37,22 +58,21 @@ export function JobDetailKpis({ stats, pipeline }: JobDetailKpisProps): React.JS
 
   return (
     <div className={`${styles.grid} ${gridClass}`}>
-      <StatCard
+      <JourneyStatCard
         label="Total tracked time"
         value={stats.totalTrackedSeconds > 0 ? formatDuration(stats.totalTrackedSeconds) : "—"}
       />
-      <StatCard
+      <JourneyStatCard
         label="Station visits"
         value={stats.stationVisits > 0 ? String(stats.stationVisits) : "—"}
       />
-      <StatCard
+      <JourneyStatCard
         label="Longest dwell"
         value={stats.longestDwellSeconds > 0 ? formatDuration(stats.longestDwellSeconds) : "—"}
-        sub={stats.longestDwellStation || undefined}
+        preValue={stats.longestDwellStation ?? undefined}
       />
       {showEta && pipeline != null && (
-        <StatCard
-          label="Pipeline ETA"
+        <PipelineEtaCard
           value={
             pipeline.elapsedSeconds! <= pipeline.expectedSeconds!
               ? formatDuration(pipeline.expectedSeconds! - pipeline.elapsedSeconds!)

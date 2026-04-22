@@ -1,7 +1,9 @@
+import { Fragment } from "react";
 import { Check } from "lucide-react";
 import type { PipelineStep } from "../../pipelines/pipelines.types";
 import type { JobHistoryEntry, JobPipelineProgress } from "../jobs.types";
 import { formatDuration } from "../utils/duration";
+import { resolveStepStatuses, type ResolvedPipelineStep } from "./pipelineProgress.utils";
 import styles from "./PipelineProgress.module.css";
 
 interface PipelineProgressProps {
@@ -14,48 +16,7 @@ interface PipelineProgressProps {
   flush?: boolean;
 }
 
-type StepStatus = "completed" | "current" | "upcoming";
-
-interface ResolvedStep {
-  step: PipelineStep;
-  status: StepStatus;
-  actualSeconds: number | null;
-}
-
-function resolveStepStatuses(
-  steps: PipelineStep[],
-  currentStepPosition: number,
-  historyEntries: JobHistoryEntry[],
-): ResolvedStep[] {
-  const durationByStation = new Map<string, number>();
-  for (const entry of historyEntries) {
-    if (entry.durationSeconds === null || entry.durationSeconds <= 0) continue;
-    if (entry.phase !== "departed" && entry.phase !== "scan") continue;
-    durationByStation.set(
-      entry.station,
-      (durationByStation.get(entry.station) ?? 0) + entry.durationSeconds,
-    );
-  }
-
-  return steps.map((step) => {
-    let status: StepStatus;
-    if (step.position < currentStepPosition) {
-      status = "completed";
-    } else if (step.position === currentStepPosition) {
-      status = "current";
-    } else {
-      status = "upcoming";
-    }
-
-    return {
-      step,
-      status,
-      actualSeconds: durationByStation.get(step.stationName) ?? null,
-    };
-  });
-}
-
-function StepNode({ resolved }: { resolved: ResolvedStep }) {
+function StepNode({ resolved }: { resolved: ResolvedPipelineStep }) {
   const { step, status, actualSeconds } = resolved;
 
   const overThreshold =
@@ -82,22 +43,36 @@ function StepNode({ resolved }: { resolved: ResolvedStep }) {
             ? styles.ringCompleted
             : status === "current"
               ? styles.ringCurrent
-              : ""
+              : styles.ringPending
         }`}
       >
         {status === "completed" ? (
-          <Check className={styles.checkIcon} size={10} strokeWidth={3} aria-hidden />
+          <Check className={styles.checkIcon} size={12} strokeWidth={3} aria-hidden />
         ) : status === "current" ? (
           <span className={styles.pulse} />
         ) : null}
       </div>
       <p
-        className={`${styles.stationLabel} ${status === "upcoming" ? styles.stationMuted : ""}`}
+        className={`${styles.stationLabel} ${
+          status === "completed"
+            ? styles.stationLabelDone
+            : status === "current"
+              ? styles.stationLabelActive
+              : styles.stationLabelPending
+        }`}
         title={step.stationName}
       >
         {step.stationName}
       </p>
-      <p className={`${styles.durationLabel} ${overThreshold ? styles.durationWarn : ""}`}>
+      <p
+        className={`${styles.durationLabel} ${
+          overThreshold
+            ? styles.durationWarn
+            : status === "current"
+              ? styles.durationLabelActive
+              : ""
+        }`}
+      >
         {durationText}
       </p>
     </div>
@@ -150,10 +125,12 @@ export function PipelineProgress({
       <div className={styles.scroll}>
         <div className={styles.track}>
           {resolved.map((r, i) => (
-            <div key={r.step.id} className={styles.stepColumn}>
-              <StepNode resolved={r} />
+            <Fragment key={r.step.id}>
+              <div className={styles.stepColumn}>
+                <StepNode resolved={r} />
+              </div>
               {i < resolved.length - 1 && <Connector completed={r.status === "completed"} />}
-            </div>
+            </Fragment>
           ))}
         </div>
       </div>

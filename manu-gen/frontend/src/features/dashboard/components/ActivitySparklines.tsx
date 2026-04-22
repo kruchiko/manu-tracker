@@ -2,6 +2,7 @@ import { LineChart, Line, ResponsiveContainer, Tooltip } from "recharts";
 import { useActivity } from "../hooks/useActivity";
 import { buildStationColorMap } from "../dashboard.colors";
 import { useOverviewVisible } from "../OverviewVisibleContext";
+import styles from "./ActivitySparklines.module.css";
 
 function formatHour(iso: string): string {
   const d = new Date(iso + "Z");
@@ -12,9 +13,9 @@ function SparkTooltip({ active, payload }: { active?: boolean; payload?: Array<{
   if (!active || !payload?.[0]) return null;
   const { hour, count } = payload[0].payload;
   return (
-    <div className="rounded border bg-white px-2 py-1 text-xs shadow">
-      <span className="font-medium">{formatHour(hour)}</span>
-      <span className="ml-2 text-gray-500">{count} visits</span>
+    <div className={styles.tooltip}>
+      <span className={styles.tooltipLabel}>{formatHour(hour)}</span>
+      <span className={styles.tooltipCount}>{count} visits</span>
     </div>
   );
 }
@@ -24,25 +25,25 @@ export function ActivitySparklines() {
   const { data, isLoading } = useActivity(visible);
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">Loading activity...</p>;
+    return <p className={styles.loading}>Loading activity...</p>;
   }
 
   const stations = data ?? [];
 
   if (stations.length === 0) {
-    return <p className="text-sm text-gray-500">No station activity in the last 24 hours.</p>;
+    return <p className={styles.empty}>No station activity in the last 24 hours.</p>;
   }
 
   const colorMap = buildStationColorMap(stations.map((s) => s.stationName));
 
   return (
-    <div className="space-y-4">
+    <div className={styles.list}>
       {stations.map((station) => (
-        <div key={station.stationId} className="flex items-center gap-4">
-          <span className="w-28 shrink-0 truncate text-sm font-medium text-gray-700">
+        <div key={station.stationId} className={styles.row}>
+          <span className={styles.stationName}>
             {station.stationName}
           </span>
-          <div className="flex-1">
+          <div className={styles.chart}>
             <ResponsiveContainer width="100%" height={36}>
               <LineChart data={station.buckets}>
                 <Tooltip content={<SparkTooltip />} />
@@ -57,7 +58,7 @@ export function ActivitySparklines() {
               </LineChart>
             </ResponsiveContainer>
           </div>
-          <span className="w-14 shrink-0 text-right text-xs text-gray-400">
+          <span className={styles.total}>
             {station.buckets.reduce((sum, b) => sum + b.count, 0)} total
           </span>
         </div>

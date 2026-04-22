@@ -2,52 +2,53 @@ import { useDurations } from "../hooks/useDurations";
 import { formatDuration } from "../dashboard.utils";
 import { StationBarChart } from "./StationBarChart";
 import { useOverviewVisible } from "../OverviewVisibleContext";
+import styles from "./StationDurations.module.css";
 
 export function StationDurations() {
   const visible = useOverviewVisible();
   const { data, isLoading, error } = useDurations(visible);
 
   if (isLoading) {
-    return <p className="text-sm text-gray-500">Loading analytics...</p>;
+    return <p className={styles.loading}>Loading analytics...</p>;
   }
 
   if (error) {
-    return <p className="text-sm text-red-600">Failed to load analytics: {error.message}</p>;
+    return <p className={styles.error}>Failed to load analytics: {error.message}</p>;
   }
 
   const durations = data ?? [];
 
   if (durations.length === 0) {
-    return <p className="text-sm text-gray-500">No stage duration data yet. Durations appear once jobs move between stations.</p>;
+    return <p className={styles.empty}>No stage duration data yet. Durations appear once jobs move between stations.</p>;
   }
 
   return (
-    <div className="space-y-6">
+    <div className={styles.stack}>
       <StationBarChart durations={durations} />
 
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm" role="grid">
+      <div className={styles.scrollX}>
+        <table className={styles.table} role="grid">
           <thead>
-            <tr className="border-b text-left text-gray-500">
-              <th className="py-2 pr-4 font-medium">Station</th>
-              <th className="py-2 pr-4 font-medium">Avg</th>
-              <th className="py-2 pr-4 font-medium">Median</th>
-              <th className="py-2 pr-4 font-medium">Min</th>
-              <th className="py-2 pr-4 font-medium">Max</th>
-              <th className="py-2 pr-4 font-medium">P95</th>
-              <th className="py-2 font-medium">Jobs</th>
+            <tr className={styles.headerRow}>
+              <th className={styles.th}>Station</th>
+              <th className={styles.th}>Avg</th>
+              <th className={styles.th}>Median</th>
+              <th className={styles.th}>Min</th>
+              <th className={styles.th}>Max</th>
+              <th className={styles.th}>P95</th>
+              <th className={`${styles.th} ${styles.thLast}`}>Jobs</th>
             </tr>
           </thead>
           <tbody>
             {durations.map((d) => (
-              <tr key={d.stationId} className="border-b">
-                <td className="py-3 pr-4 font-medium text-gray-900">{d.stationName}</td>
-                <td className="py-3 pr-4">{formatDuration(d.avgSeconds)}</td>
-                <td className="py-3 pr-4">{formatDuration(d.medianSeconds)}</td>
-                <td className="py-3 pr-4">{formatDuration(d.minSeconds)}</td>
-                <td className="py-3 pr-4">{formatDuration(d.maxSeconds)}</td>
-                <td className="py-3 pr-4">{formatDuration(d.p95Seconds)}</td>
-                <td className="py-3">{d.jobCount}</td>
+              <tr key={d.stationId} className={styles.bodyRow}>
+                <td className={styles.tdStation}>{d.stationName}</td>
+                <td className={styles.td}>{formatDuration(d.avgSeconds)}</td>
+                <td className={styles.td}>{formatDuration(d.medianSeconds)}</td>
+                <td className={styles.td}>{formatDuration(d.minSeconds)}</td>
+                <td className={styles.td}>{formatDuration(d.maxSeconds)}</td>
+                <td className={styles.td}>{formatDuration(d.p95Seconds)}</td>
+                <td className={styles.tdLast}>{d.jobCount}</td>
               </tr>
             ))}
           </tbody>

@@ -1,0 +1,62 @@
+.loading {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.empty {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.stationName {
+  width: 112px;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--text-secondary);
+}
+
+.chart {
+  flex: 1;
+}
+
+.total {
+  width: 56px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+}
+
+.tooltip {
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-xs);
+  box-shadow: var(--shadow-sm);
+}
+
+.tooltipLabel {
+  font-weight: var(--weight-medium);
+}
+
+.tooltipCount {
+  margin-left: var(--space-2);
+  color: var(--text-muted);
+}

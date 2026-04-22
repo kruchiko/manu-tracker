@@ -183,6 +183,62 @@ describe("deletePipeline", () => {
   });
 });
 
+describe("updatePipeline", () => {
+  it("should allow product type change when no jobs reference the pipeline", () => {
+    const pipeline = pipelinesService.createPipeline({
+      name: "Idle",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: null }],
+    });
+
+    const updated = pipelinesService.updatePipeline(pipeline.id, { productType: "Gadget" });
+
+    expect(updated.productType).toBe("Gadget");
+  });
+
+  it("should reject product type change when jobs reference the pipeline", () => {
+    const pipeline = pipelinesService.createPipeline({
+      name: "In Use",
+      productType: "Widget",
+      steps: [{ stationId, maxDurationSeconds: null }],
+    });
+
+    jobsService.createJob({
+      productType: "Widget",
+      quantity: 1,
+      pipelineId: pipeline.id,
+    });
+
+    expect(() =>
+      pipelinesService.updatePipeline(pipeline.id, { productType: "Gadget" }),
+    ).toThrow(expect.objectContaining({ statusCode: 422 }));
+  });
+});
+
+describe("updatePipelineAndReplaceSteps", () => {
+  it("should update metadata and replace steps atomically", () => {
+    const s2 = stationsService.createStation({ name: "Station 2" });
+    const pipeline = pipelinesService.createPipeline({
+      name: "A",
+      productType: "Widget",
+      description: "d0",
+      steps: [{ stationId, maxDurationSeconds: 10 }],
+    });
+
+    const updated = pipelinesService.updatePipelineAndReplaceSteps(pipeline.id, {
+      name: "B",
+      productType: "Widget",
+      description: "d1",
+      steps: [{ stationId: s2.id, maxDurationSeconds: 20 }],
+    });
+
+    expect(updated.name).toBe("B");
+    expect(updated.description).toBe("d1");
+    expect(updated.steps).toHaveLength(1);
+    expect(updated.steps[0].stationId).toBe(s2.id);
+  });
+});
+
 describe("replaceSteps", () => {
   it("should replace all steps in a pipeline", () => {
     const s2 = stationsService.createStation({ name: "Station 2" });

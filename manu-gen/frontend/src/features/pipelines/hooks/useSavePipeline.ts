@@ -4,21 +4,28 @@ import type { Pipeline } from "../pipelines.types";
 import type { StepFormValue } from "../pipelines.schema";
 import { serializePipelineStepsForApi } from "../pipelineSteps.apiPayload";
 
-interface UpdateStepsInput {
+export interface SavePipelineInput {
   pipelineId: string;
+  name: string;
+  description: string;
+  productType: string;
   steps: StepFormValue[];
 }
 
-export function useUpdatePipelineSteps() {
+export function useSavePipeline() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ pipelineId, steps }: UpdateStepsInput) =>
-      apiClient.put<Pipeline>(`/pipelines/${pipelineId}/steps`, {
+    mutationFn: ({ pipelineId, name, description, productType, steps }: SavePipelineInput) =>
+      apiClient.put<Pipeline>(`/pipelines/${pipelineId}`, {
+        name,
+        description,
+        productType,
         steps: serializePipelineStepsForApi(steps),
       }),
-    onSuccess: () => {
+    onSuccess: (_data, { pipelineId }) => {
       void queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+      void queryClient.invalidateQueries({ queryKey: ["pipelines", pipelineId] });
     },
   });
 }

@@ -105,6 +105,13 @@ describe("GET /jobs/:id", () => {
 
     expect(res.status).toBe(200);
     expect(res.body.productType).toBe("Widget");
+    expect(res.body.pipeline).toMatchObject({
+      id: pipelineId,
+      stepPosition: 0,
+      totalSteps: 1,
+    });
+    expect(res.body.allocations).toEqual([]);
+    expect(res.body.availableToAllocate).toBe(5);
   });
 
   it("should return 404 for non-existent job", async () => {
@@ -203,7 +210,7 @@ describe("allocation endpoints", () => {
         .send({ orderLineId: lineId, quantity: 10 });
 
       expect(res.status).toBe(422);
-      expect(res.body.error).toContain("available");
+      expect(res.body.error).toMatch(/unallocated|Cannot allocate/i);
     });
 
     it("should return 422 when job product type does not match order line", async () => {

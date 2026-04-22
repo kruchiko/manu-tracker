@@ -1,0 +1,135 @@
+.row {
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--duration-fast) var(--easing-default);
+}
+
+.row:hover {
+  background: var(--surface-2);
+}
+
+.row:focus {
+  outline: none;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.td {
+  padding: var(--space-3) var(--space-4) var(--space-3) 0;
+  font-size: var(--text-sm);
+}
+
+.tdLast {
+  padding-right: 0;
+}
+
+.mono {
+  font-family: var(--font-mono);
+}
+
+.badge {
+  display: inline-block;
+  border-radius: 9999px;
+  padding: 2px var(--space-2);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+.badgePending {
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.badgeInProgress {
+  background: var(--status-warn-bg);
+  color: var(--status-warn);
+}
+
+.badgeCompleted {
+  background: var(--status-ok-bg);
+  color: var(--status-ok);
+}
+
+.pipelineName {
+  color: var(--text-secondary);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.mutedItalic {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Duration severity badges */
+.durationNeutral {
+  color: var(--text-muted);
+}
+
+.durationOk {
+  composes: badge;
+  background: var(--status-ok-bg);
+  color: var(--status-ok);
+}
+
+.durationWarn {
+  composes: badge;
+  background: var(--status-warn-bg);
+  color: var(--status-warn);
+}
+
+.durationDanger {
+  composes: badge;
+  background: var(--status-late-bg);
+  color: var(--status-late);
+}
+
+/* Pipeline progress bar */
+.progressRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.progressTrack {
+  display: flex;
+  height: 8px;
+  width: 80px;
+  overflow: hidden;
+  border-radius: 9999px;
+  background: var(--surface-2);
+}
+
+.progressFill {
+  border-radius: 9999px;
+  transition: width var(--duration-normal) var(--easing-default);
+}
+
+.progressFillOk {
+  background: var(--status-ok);
+}
+
+.progressFillWarn {
+  background: var(--status-warn);
+}
+
+.progressFillDanger {
+  background: var(--status-late);
+}
+
+.progressFillDefault {
+  background: var(--accent);
+}
+
+.progressLabel {
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+.progressElapsed {
+  white-space: nowrap;
+  font-size: var(--text-xs);
+  color: var(--text-disabled);
+}

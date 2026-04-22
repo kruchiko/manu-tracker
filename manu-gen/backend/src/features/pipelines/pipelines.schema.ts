@@ -56,6 +56,16 @@ export const replacePipelineStepsSchema = z.object({
 
 export type ReplacePipelineStepsInput = z.infer<typeof replacePipelineStepsSchema>;
 
+/** Full replace of metadata and steps in one request (atomic on the server). */
+export const updatePipelineWithStepsSchema = z.object({
+  name: z.string().min(1, "name is required"),
+  description: z.string().optional().default(""),
+  productType: z.string().min(1, "productType is required"),
+  steps: z.array(stepSchema).min(1, "at least one step is required"),
+});
+
+export type UpdatePipelineWithStepsInput = z.infer<typeof updatePipelineWithStepsSchema>;
+
 export interface PipelineRow {
   id: string;
   name: string;
