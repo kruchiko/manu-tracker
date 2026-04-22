@@ -25,7 +25,8 @@ docs/design/v2/
 │   └── manutrack-landing-v2.html           ← Marketing landing page
 │
 ├── branding/
-│   └── manutracker-logo-v3-fixed.html      ← Approved logo treatments at multiple sizes
+│   ├── manutracker-logo-v3-fixed.html      ← Approved ManuTracker logo treatments at multiple sizes
+│   └── argus-logo.html                     ← ARGUS brand identity (mark, lockups, palette, typography)
 │
 └── specs/
     ├── manutrack-prd-v1.md                 ← Product Requirements Document
@@ -41,9 +42,11 @@ docs/design/v2/
 
 2. **Open `prototypes/manutracker-full-prototype-v2.html` in a browser** — navigate using the pill bar at the bottom. This shows all 16 screens with realistic data.
 
-3. **Import `tokens/manutracker-tokens-v2.css`** — this is the canonical token file. All CSS custom properties are defined here. Never hardcode hex values; always reference tokens.
+3. **Open `branding/argus-logo.html` in a browser** — ARGUS wordmark, icon mark, variants, color chips, and typography specimen (Google Fonts: Syne, DM Mono).
 
-4. **Check `REVIEW.md`** — this contains the design review findings. All 7 Critical items have been resolved. Remaining suggestions are tracked for iterative improvement.
+4. **Import `tokens/manutracker-tokens-v2.css`** — this is the canonical token file. All CSS custom properties are defined here. Never hardcode hex values; always reference tokens.
+
+5. **Check `REVIEW.md`** — this contains the design review findings. All 7 Critical items have been resolved. Remaining suggestions are tracked for iterative improvement.
 
 ---
 

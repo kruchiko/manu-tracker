@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARGUS — Brand Identity (ManuTracker Palette)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Gruppo&family=Barlow+Condensed:wght@500;600;700;800&family=Barlow:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+  :root {
+    --ink:     #0d1f3c;
+    --steel:   #0d1f3c;
+    --panel:   #1a3d6e;
+    --rule:    #1a2f4a;
+    --mid:     #5a7a9e;
+    --ghost:   #5a7a9e;
+    --accent:  #1a5faa;
+    --accent2: #90c4f0;
+    --alert:   #c45c1a;
+    --white:   #ffffff;
+    --dim:     rgba(255,255,255,0.45);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--ink);
+    color: var(--white);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 72px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 80px;
+  }
+
+  .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--ghost);
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .hero {
+    background: linear-gradient(170deg, #0d1f3c 0%, #1a3a6e 100%);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 36px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(26,95,170,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--rule) 1px, transparent 1px),
+      linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.25;
+    pointer-events: none;
+  }
+
+  .wordmark {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .wordmark-name {
+    font-family: 'Gruppo', sans-serif;
+    font-size: 56px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    color: var(--white);
+  }
+
+  .wordmark-tagline {
+    font-size: 13px;
+    font-weight: 400;
+    letter-spacing: 0.10em;
+    color: rgba(144,196,240,0.75);
+    text-transform: uppercase;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2px;
+  }
+
+  .tile {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 220px;
+  }
+
+  .tile.light {
+    background: #f2f5f7;
+  }
+
+  .tile.mid {
+    background: #162d52;
+  }
+
+  .tile-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--ghost);
+    text-align: center;
+    align-self: flex-end;
+    margin-top: auto;
+  }
+
+  .tile.light .tile-label { color: #6b7280; }
+
+  .lockup-h {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .lockup-h-text {
+    font-family: 'Gruppo', sans-serif;
+    font-size: 32px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  .lockup-h-text.dark-ver {
+    color: #1a1f2e;
+  }
+
+  .colors-row {
+    display: flex;
+    gap: 2px;
+  }
+
+  .chip {
+    flex: 1;
+    height: 72px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 10px 14px;
+  }
+
+  .chip-name {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: rgba(255,255,255,0.6);
+  }
+
+  .chip-hex {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.9);
+  }
+
+  .chip-hex.dark { color: rgba(0,0,0,0.55); }
+  .chip-name.dark { color: rgba(0,0,0,0.4); }
+
+  .type-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+  }
+
+  .type-tile {
+    background: var(--panel);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 40px;
+  }
+
+  .type-display {
+    font-family: 'Gruppo', sans-serif;
+    font-size: 48px;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    line-height: 1;
+    color: var(--white);
+    margin-bottom: 12px;
+  }
+
+  .type-mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    letter-spacing: 0.08em;
+  }
+
+  .type-body {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--dim);
+    margin-top: 16px;
+    font-weight: 400;
+  }
+
+  .note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    color: var(--ghost);
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+    margin-top: 20px;
+    line-height: 1.8;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div>
+    <div class="label">/ Primary lockup — ManuTracker palette</div>
+    <div class="hero">
+      <svg width="110" height="110" viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg" style="position:relative;z-index:1;flex-shrink:0;">
+        <defs>
+          <radialGradient id="irisGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#90c4f0"/>
+            <stop offset="100%" stop-color="#1a5faa"/>
+          </radialGradient>
+          <radialGradient id="pupilGrad" cx="38%" cy="36%" r="62%">
+            <stop offset="0%" stop-color="#1a3a6e"/>
+            <stop offset="100%" stop-color="#0d1f3c"/>
+          </radialGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="outerClip">
+            <circle cx="55" cy="55" r="48"/>
+          </clipPath>
+          <linearGradient id="scanLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#90c4f0" stop-opacity="0"/>
+            <stop offset="50%" stop-color="#90c4f0" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#90c4f0" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+
+        <circle cx="55" cy="55" r="52" stroke="#1a2f4a" stroke-width="1.5" fill="none"/>
+        <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="0.75" fill="none" opacity="0.6"/>
+
+        <g stroke="#1a5faa" stroke-width="1" opacity="0.5">
+          <line x1="55" y1="3" x2="55" y2="10" transform="rotate(0 55 55)"/>
+          <line x1="55" y1="3" x2="55" y2="10" transform="rotate(90 55 55)"/>
+          <line x1="55" y1="3" x2="55" y2="10" transform="rotate(180 55 55)"/>
+          <line x1="55" y1="3" x2="55" y2="10" transform="rotate(270 55 55)"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(30 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(60 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(120 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(150 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(210 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(240 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(300 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5" x2="55" y2="9" transform="rotate(330 55 55)" stroke-width="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(15 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(45 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(75 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(105 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(135 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(165 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(195 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(225 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(255 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(285 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(315 55 55)" stroke-width="0.5" opacity="0.6"/>
+          <line x1="55" y1="5.5" x2="55" y2="8" transform="rotate(345 55 55)" stroke-width="0.5" opacity="0.6"/>
+        </g>
+
+        <circle cx="55" cy="55" r="36" fill="none" stroke="url(#irisGrad)" stroke-width="1" opacity="0.3" filter="url(#glow)"/>
+
+        <g clip-path="url(#outerClip)">
+          <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+          <g fill="url(#irisGrad)" opacity="0.85">
+            <path d="M55 21 L66 34 L44 34 Z" opacity="0.9"/>
+            <path d="M55 21 L80 38 L72 52 L66 34 Z" opacity="0.7"/>
+            <path d="M80 38 L89 55 L72 67 L72 52 Z" opacity="0.6"/>
+            <path d="M89 55 L66 76 L44 76 L21 55 L55 21" opacity="0"/>
+          </g>
+          <circle cx="55" cy="55" r="34" fill="none" stroke="url(#irisGrad)" stroke-width="14" stroke-opacity="0.15"/>
+          <path d="M55 22 L68 32 L68 44 L55 38 L42 44 L42 32 Z" fill="url(#irisGrad)" opacity="0.22"/>
+          <path d="M55 22 L55 38 L68 44 L80 37 L75 24 Z" fill="url(#irisGrad)" opacity="0.18"/>
+          <path d="M55 88 L68 78 L68 66 L55 72 L42 66 L42 78 Z" fill="url(#irisGrad)" opacity="0.22"/>
+          <path d="M55 88 L55 72 L68 66 L80 73 L75 86 Z" fill="url(#irisGrad)" opacity="0.18"/>
+          <path d="M21 55 L34 42 L46 42 L40 55 L46 68 L34 68 Z" fill="url(#irisGrad)" opacity="0.22"/>
+          <path d="M89 55 L76 42 L64 42 L70 55 L64 68 L76 68 Z" fill="url(#irisGrad)" opacity="0.22"/>
+          <g stroke="#90c4f0" stroke-width="0.6" opacity="0.4">
+            <line x1="55" y1="21" x2="55" y2="55"/>
+            <line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+            <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/>
+            <line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+            <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/>
+            <line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+          </g>
+          <circle cx="55" cy="55" r="34" fill="none" stroke="url(#irisGrad)" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="55" cy="55" r="20" fill="none" stroke="url(#irisGrad)" stroke-width="1" opacity="0.5"/>
+          <circle cx="55" cy="55" r="18" fill="url(#pupilGrad)"/>
+          <g fill="#90c4f0" opacity="0.9">
+            <circle cx="55" cy="55" r="3.5"/>
+            <circle cx="55" cy="44" r="1.8"/>
+            <circle cx="55" cy="66" r="1.8"/>
+            <circle cx="65.5" cy="49.5" r="1.8"/>
+            <circle cx="65.5" cy="60.5" r="1.8"/>
+            <circle cx="44.5" cy="49.5" r="1.8"/>
+            <circle cx="44.5" cy="60.5" r="1.8"/>
+          </g>
+          <ellipse cx="46" cy="46" rx="5" ry="3.5" fill="white" opacity="0.08" transform="rotate(-30 46 46)"/>
+          <rect x="7" y="52" width="96" height="2" fill="url(#scanLine)" opacity="0.5">
+            <animateTransform attributeName="transform" type="translate" values="0,-48; 0,48; 0,-48" dur="4s" repeatCount="indefinite"/>
+          </rect>
+        </g>
+
+        <g stroke="#1a5faa" stroke-width="0.75" opacity="0.6">
+          <line x1="14" y1="22" x2="14" y2="17"/><line x1="9" y1="22" x2="14" y2="22"/>
+          <line x1="96" y1="22" x2="96" y2="17"/><line x1="96" y1="22" x2="101" y2="22"/>
+          <line x1="14" y1="88" x2="14" y2="93"/><line x1="9" y1="88" x2="14" y2="88"/>
+          <line x1="96" y1="88" x2="96" y2="93"/><line x1="96" y1="88" x2="101" y2="88"/>
+        </g>
+      </svg>
+
+      <div class="wordmark" style="position:relative;z-index:1;">
+        <div class="wordmark-name">ARGUS</div>
+        <div class="wordmark-tagline">Manufacturing Intelligence</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label">/ Logo variants</div>
+    <div class="grid">
+
+      <div class="tile">
+        <svg width="72" height="72" viewBox="0 0 110 110" fill="none">
+          <defs>
+            <radialGradient id="iG2" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#90c4f0"/><stop offset="100%" stop-color="#1a5faa"/></radialGradient>
+            <radialGradient id="pG2" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#1a3a6e"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+            <clipPath id="oc2"><circle cx="55" cy="55" r="48"/></clipPath>
+          </defs>
+          <circle cx="55" cy="55" r="52" stroke="#1a2f4a" stroke-width="1.5" fill="none"/>
+          <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="0.75" fill="none" opacity="0.6"/>
+          <g stroke="#1a5faa" stroke-width="1" opacity="0.5">
+            <line x1="55" y1="3" x2="55" y2="10" transform="rotate(0 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(90 55 55)"/>
+            <line x1="55" y1="3" x2="55" y2="10" transform="rotate(180 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(270 55 55)"/>
+            <line x1="55" y1="5" x2="55" y2="9" transform="rotate(30 55 55)" stroke-width="0.6"/><line x1="55" y1="5" x2="55" y2="9" transform="rotate(60 55 55)" stroke-width="0.6"/>
+            <line x1="55" y1="5" x2="55" y2="9" transform="rotate(120 55 55)" stroke-width="0.6"/><line x1="55" y1="5" x2="55" y2="9" transform="rotate(150 55 55)" stroke-width="0.6"/>
+            <line x1="55" y1="5" x2="55" y2="9" transform="rotate(210 55 55)" stroke-width="0.6"/><line x1="55" y1="5" x2="55" y2="9" transform="rotate(240 55 55)" stroke-width="0.6"/>
+            <line x1="55" y1="5" x2="55" y2="9" transform="rotate(300 55 55)" stroke-width="0.6"/><line x1="55" y1="5" x2="55" y2="9" transform="rotate(330 55 55)" stroke-width="0.6"/>
+          </g>
+          <g clip-path="url(#oc2)">
+            <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+            <g stroke="#90c4f0" stroke-width="0.6" opacity="0.4">
+              <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+              <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+              <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+            </g>
+            <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iG2)" stroke-width="1.5" opacity="0.8"/>
+            <circle cx="55" cy="55" r="20" fill="none" stroke="url(#iG2)" stroke-width="1" opacity="0.5"/>
+            <circle cx="55" cy="55" r="18" fill="url(#pG2)"/>
+            <g fill="#90c4f0" opacity="0.9">
+              <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+              <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+              <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+            </g>
+            <ellipse cx="46" cy="46" rx="5" ry="3.5" fill="white" opacity="0.08" transform="rotate(-30 46 46)"/>
+          </g>
+          <g stroke="#1a5faa" stroke-width="0.75" opacity="0.6">
+            <line x1="14" y1="22" x2="14" y2="17"/><line x1="9" y1="22" x2="14" y2="22"/>
+            <line x1="96" y1="22" x2="96" y2="17"/><line x1="96" y1="22" x2="101" y2="22"/>
+            <line x1="14" y1="88" x2="14" y2="93"/><line x1="9" y1="88" x2="14" y2="88"/>
+            <line x1="96" y1="88" x2="96" y2="93"/><line x1="96" y1="88" x2="101" y2="88"/>
+          </g>
+        </svg>
+        <div class="tile-label">Icon — Dark background</div>
+      </div>
+
+      <div class="tile mid">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+          <svg width="52" height="52" viewBox="0 0 110 110" fill="none">
+            <defs>
+              <radialGradient id="iG3" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#90c4f0"/><stop offset="100%" stop-color="#1a5faa"/></radialGradient>
+              <radialGradient id="pG3" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#1a3a6e"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+              <clipPath id="oc3"><circle cx="55" cy="55" r="48"/></clipPath>
+            </defs>
+            <circle cx="55" cy="55" r="52" stroke="#1a2f4a" stroke-width="1.5" fill="none"/>
+            <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="0.75" fill="none" opacity="0.6"/>
+            <g stroke="#1a5faa" stroke-width="1" opacity="0.5">
+              <line x1="55" y1="3" x2="55" y2="10" transform="rotate(0 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(90 55 55)"/>
+              <line x1="55" y1="3" x2="55" y2="10" transform="rotate(180 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(270 55 55)"/>
+            </g>
+            <g clip-path="url(#oc3)">
+              <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+              <g stroke="#90c4f0" stroke-width="0.6" opacity="0.4">
+                <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+              </g>
+              <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iG3)" stroke-width="1.5" opacity="0.8"/>
+              <circle cx="55" cy="55" r="20" fill="none" stroke="url(#iG3)" stroke-width="1" opacity="0.5"/>
+              <circle cx="55" cy="55" r="18" fill="url(#pG3)"/>
+              <g fill="#90c4f0" opacity="0.9">
+                <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+                <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+                <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+              </g>
+            </g>
+          </svg>
+          <div style="text-align:center;">
+            <div style="font-family:'Gruppo',sans-serif;font-size:24px;font-weight:400;letter-spacing:0.12em;color:#ffffff;line-height:1;">ARGUS</div>
+            <div style="font-size:9px;font-weight:400;letter-spacing:0.10em;color:rgba(144,196,240,0.75);margin-top:8px;">MANUFACTURING INTELLIGENCE</div>
+          </div>
+        </div>
+        <div class="tile-label">Stacked lockup</div>
+      </div>
+
+      <div class="tile light">
+        <svg width="72" height="72" viewBox="0 0 110 110" fill="none">
+          <defs>
+            <radialGradient id="iG4" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#90c4f0"/><stop offset="100%" stop-color="#1a5faa"/></radialGradient>
+            <radialGradient id="pG4" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#1a3a6e"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+            <clipPath id="oc4"><circle cx="55" cy="55" r="48"/></clipPath>
+          </defs>
+          <circle cx="55" cy="55" r="52" stroke="#dde2e8" stroke-width="1.5" fill="none"/>
+          <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="0.75" fill="none" opacity="0.5"/>
+          <g stroke="#1a5faa" stroke-width="1" opacity="0.35">
+            <line x1="55" y1="3" x2="55" y2="10" transform="rotate(0 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(90 55 55)"/>
+            <line x1="55" y1="3" x2="55" y2="10" transform="rotate(180 55 55)"/><line x1="55" y1="3" x2="55" y2="10" transform="rotate(270 55 55)"/>
+          </g>
+          <g clip-path="url(#oc4)">
+            <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+            <g stroke="#90c4f0" stroke-width="0.6" opacity="0.4">
+              <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+              <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+              <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+            </g>
+            <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iG4)" stroke-width="1.5" opacity="0.8"/>
+            <circle cx="55" cy="55" r="20" fill="none" stroke="url(#iG4)" stroke-width="1" opacity="0.5"/>
+            <circle cx="55" cy="55" r="18" fill="url(#pG4)"/>
+            <g fill="#90c4f0" opacity="0.9">
+              <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+              <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+              <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+            </g>
+          </g>
+          <g stroke="#1a5faa" stroke-width="0.75" opacity="0.5">
+            <line x1="14" y1="22" x2="14" y2="17"/><line x1="9" y1="22" x2="14" y2="22"/>
+            <line x1="96" y1="22" x2="96" y2="17"/><line x1="96" y1="22" x2="101" y2="22"/>
+            <line x1="14" y1="88" x2="14" y2="93"/><line x1="9" y1="88" x2="14" y2="88"/>
+            <line x1="96" y1="88" x2="96" y2="93"/><line x1="96" y1="88" x2="101" y2="88"/>
+          </g>
+        </svg>
+        <div class="tile-label" style="color:#6b7280">Icon — Light background</div>
+      </div>
+
+      <div class="tile" style="min-height:140px;">
+        <div class="lockup-h">
+          <svg width="38" height="38" viewBox="0 0 110 110" fill="none">
+            <defs>
+              <radialGradient id="iG5" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#90c4f0"/><stop offset="100%" stop-color="#1a5faa"/></radialGradient>
+              <radialGradient id="pG5" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#1a3a6e"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+              <clipPath id="oc5"><circle cx="55" cy="55" r="48"/></clipPath>
+            </defs>
+            <circle cx="55" cy="55" r="52" stroke="#1a2f4a" stroke-width="2" fill="none"/>
+            <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="1" fill="none" opacity="0.6"/>
+            <g clip-path="url(#oc5)">
+              <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+              <g stroke="#90c4f0" stroke-width="0.8" opacity="0.4">
+                <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+              </g>
+              <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iG5)" stroke-width="2" opacity="0.8"/>
+              <circle cx="55" cy="55" r="18" fill="url(#pG5)"/>
+              <g fill="#90c4f0" opacity="0.9">
+                <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+                <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+                <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+              </g>
+            </g>
+          </svg>
+          <div class="lockup-h-text">ARGUS</div>
+        </div>
+        <div class="tile-label">Horizontal — compact</div>
+      </div>
+
+      <div class="tile light" style="min-height:140px;">
+        <div class="lockup-h">
+          <svg width="38" height="38" viewBox="0 0 110 110" fill="none">
+            <defs>
+              <radialGradient id="iG6" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#90c4f0"/><stop offset="100%" stop-color="#1a5faa"/></radialGradient>
+              <radialGradient id="pG6" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#1a3a6e"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+              <clipPath id="oc6"><circle cx="55" cy="55" r="48"/></clipPath>
+            </defs>
+            <circle cx="55" cy="55" r="52" stroke="#dde2e8" stroke-width="2" fill="none"/>
+            <circle cx="55" cy="55" r="48" stroke="#1a5faa" stroke-width="1" fill="none" opacity="0.5"/>
+            <g clip-path="url(#oc6)">
+              <circle cx="55" cy="55" r="34" fill="#0d1f3c"/>
+              <g stroke="#90c4f0" stroke-width="0.8" opacity="0.4">
+                <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+              </g>
+              <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iG6)" stroke-width="2" opacity="0.8"/>
+              <circle cx="55" cy="55" r="18" fill="url(#pG6)"/>
+              <g fill="#90c4f0" opacity="0.9">
+                <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+                <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+                <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+              </g>
+            </g>
+          </svg>
+          <div class="lockup-h-text dark-ver">ARGUS</div>
+        </div>
+        <div class="tile-label">Horizontal — light bg</div>
+      </div>
+
+      <div class="tile" style="background:#1a1008;min-height:140px;border-color:#3a2810;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <svg width="52" height="52" viewBox="0 0 110 110" fill="none">
+            <defs>
+              <radialGradient id="iGa" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e8943a"/><stop offset="100%" stop-color="#c45c1a"/></radialGradient>
+              <radialGradient id="pGa" cx="38%" cy="36%" r="62%"><stop offset="0%" stop-color="#3a2200"/><stop offset="100%" stop-color="#0d1f3c"/></radialGradient>
+              <clipPath id="oca"><circle cx="55" cy="55" r="48"/></clipPath>
+            </defs>
+            <circle cx="55" cy="55" r="52" stroke="#3a2810" stroke-width="1.5" fill="none"/>
+            <circle cx="55" cy="55" r="48" stroke="#c45c1a" stroke-width="0.75" fill="none" opacity="0.6"/>
+            <g clip-path="url(#oca)">
+              <circle cx="55" cy="55" r="34" fill="#1a1008"/>
+              <g stroke="#e8943a" stroke-width="0.6" opacity="0.35">
+                <line x1="55" y1="21" x2="55" y2="55"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(60 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(120 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(180 55 55)"/>
+                <line x1="55" y1="21" x2="55" y2="55" transform="rotate(240 55 55)"/><line x1="55" y1="21" x2="55" y2="55" transform="rotate(300 55 55)"/>
+              </g>
+              <circle cx="55" cy="55" r="34" fill="none" stroke="url(#iGa)" stroke-width="1.5" opacity="0.8"/>
+              <circle cx="55" cy="55" r="20" fill="none" stroke="url(#iGa)" stroke-width="1" opacity="0.5"/>
+              <circle cx="55" cy="55" r="18" fill="url(#pGa)"/>
+              <g fill="#e8943a" opacity="0.9">
+                <circle cx="55" cy="55" r="3.5"/><circle cx="55" cy="44" r="1.8"/><circle cx="55" cy="66" r="1.8"/>
+                <circle cx="65.5" cy="49.5" r="1.8"/><circle cx="65.5" cy="60.5" r="1.8"/>
+                <circle cx="44.5" cy="49.5" r="1.8"/><circle cx="44.5" cy="60.5" r="1.8"/>
+              </g>
+            </g>
+          </svg>
+          <div>
+            <div style="font-family:'Gruppo',sans-serif;font-size:24px;font-weight:400;letter-spacing:0.12em;color:#ffffff;line-height:1;">ARGUS</div>
+            <div style="font-size:9px;font-weight:400;letter-spacing:0.10em;color:rgba(196,92,26,0.7);margin-top:8px;">MANUFACTURING INTELLIGENCE</div>
+          </div>
+        </div>
+        <div class="tile-label" style="color:#6b4400;">Alert accent (CTA / signal variant)</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label">/ App palette (design-tokens.css)</div>
+    <div class="colors-row">
+      <div class="chip" style="background:#0d1f3c;">
+        <div class="chip-name">Sidebar BG</div>
+        <div class="chip-hex">#0d1f3c</div>
+      </div>
+      <div class="chip" style="background:#1a3a6e;">
+        <div class="chip-name">Sidebar Active</div>
+        <div class="chip-hex">#1a3a6e</div>
+      </div>
+      <div class="chip" style="background:#1a5faa;">
+        <div class="chip-name">Accent</div>
+        <div class="chip-hex">#1a5faa</div>
+      </div>
+      <div class="chip" style="background:#90c4f0;">
+        <div class="chip-name">Accent Light</div>
+        <div class="chip-hex">#90c4f0</div>
+      </div>
+      <div class="chip" style="background:#c45c1a;">
+        <div class="chip-name">Alert / CTA</div>
+        <div class="chip-hex">#c45c1a</div>
+      </div>
+      <div class="chip" style="background:#f2f5f7;">
+        <div class="chip-name dark">App BG</div>
+        <div class="chip-hex dark">#f2f5f7</div>
+      </div>
+      <div class="chip" style="background:#ffffff;border:1px solid #dde2e8;">
+        <div class="chip-name dark">Surface</div>
+        <div class="chip-hex dark">#ffffff</div>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <div class="label">/ Typography system</div>
+    <div class="type-section">
+      <div class="type-tile">
+        <div class="label" style="margin-bottom:12px;">Display — Gruppo 400 (logo only)</div>
+        <div class="type-display">ARGUS</div>
+        <div style="font-family:'Barlow',sans-serif;font-size:18px;font-weight:400;letter-spacing:0.10em;color:rgba(144,196,240,0.75);margin-bottom:16px;">Manufacturing<br>Intelligence</div>
+        <div class="label" style="margin-bottom:8px;">Headings — Barlow Condensed 700</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:#ffffff;letter-spacing:0.06em;margin-bottom:4px;">Live Operations</div>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:600;color:rgba(255,255,255,0.7);letter-spacing:0.06em;">Customer Orders</div>
+      </div>
+      <div class="type-tile">
+        <div class="label" style="margin-bottom:12px;">Body — Barlow 400 / Mono — DM Mono 400</div>
+        <div class="type-mono" style="font-size:18px;margin-bottom:16px;">JOB-0042 · STATION-03<br>SCAN 14:22:08 UTC</div>
+        <div class="type-body">
+          Every tray carries a unique identity. Every station records the moment. The factory becomes legible — not to workers, but to the intelligence layer watching above it.
+        </div>
+        <div style="margin-top:20px;font-family:'DM Mono',monospace;font-size:10px;color:#5a7a9e;letter-spacing:0.1em;">
+          STATUS: IN_PROGRESS · DWELL: 4m 12s<br>
+          PIPELINE: HIP_IMPLANT · STEP: 3/8<br>
+          BOTTLENECK: INSPECTION · VIOLATIONS: 0
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--panel);border:1px solid var(--rule);border-radius:4px;padding:48px;">
+    <div class="label">/ Color mapping</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:40px;margin-top:8px;">
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#90c4f0;margin-bottom:10px;font-family:'DM Mono',monospace;">THE MARK</div>
+        <div style="font-size:14px;line-height:1.7;color:var(--dim);">The ARGUS eye mark uses the ManuTracker sidebar gradient as its iris. #90c4f0 (active accent) replaces Scan Ray for data nodes. #1a5faa (accent) replaces Iris Blue for rings and tick marks. The pupil darkens into #0d1f3c (sidebar bg).</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#90c4f0;margin-bottom:10px;font-family:'DM Mono',monospace;">THE FONTS</div>
+        <div style="font-size:14px;line-height:1.7;color:var(--dim);">Gruppo is used exclusively for the "ARGUS" wordmark. Barlow Condensed continues as the heading font. Barlow handles body and tagline text. DM Mono covers data fields and system labels. Four fonts, four jobs — no conflicts.</div>
+      </div>
+      <div>
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.12em;color:#90c4f0;margin-bottom:10px;font-family:'DM Mono',monospace;">THE SIGNAL</div>
+        <div style="font-size:14px;line-height:1.7;color:var(--dim);">Orange #c45c1a remains a signal-only color — CTAs and alerts. The alert variant of the mark uses this burnt orange instead of the original amber yellow, maintaining the ManuTracker "orange = attention" rule.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    This file shows the ARGUS brand identity rendered with the existing ManuTracker design-tokens.css palette.<br>
+    No new colors are introduced. All values map to existing tokens.<br>
+    Comparison: open argus-logo.html (original palette) alongside this file.
+  </div>
+
+</div>
+</body>
+</html>
