@@ -1,4 +1,21 @@
-# Manu-Tracker
+# Manu-Tracker (archived — moved to agrus-ops)
+
+> **This monorepo has been split into separate repositories under the [agrus-ops](https://github.com/agrus-ops) organization:**
+>
+> | Repo | Description |
+> |------|-------------|
+> | [agrus-ops/manu-gen](https://github.com/agrus-ops/manu-gen) | Backend API + Frontend Dashboard |
+> | [agrus-ops/manu-eye](https://github.com/agrus-ops/manu-eye) | IoT camera station (Python + OpenCV) |
+> | [agrus-ops/manu-infra](https://github.com/agrus-ops/manu-infra) | Production infrastructure |
+>
+> **Please use the new repos for all development going forward.**
+
+---
+
+<details>
+<summary>Original README (for reference)</summary>
+
+## Overview
 
 Ceramic order tracking system — QR labels on trays, cameras at stations, live status on screen.
 
@@ -76,3 +93,5 @@ To clean the local database, stop the backend then run `cd manu-gen/backend && y
                   ▼
                SQLite ──> Dashboard
 ```
+
+</details>
